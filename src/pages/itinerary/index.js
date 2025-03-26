@@ -21,15 +21,20 @@ import {
     CircularProgress,
     Grid,
     TextField,
-    TablePagination
+    TablePagination,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions
 } from "@mui/material";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
-import { getAllInquiries } from "../../api/inquiryAPI";
+import { deleteInquiry, getAllInquiries } from "../../api/inquiryAPI";
 import { useDispatch } from "react-redux";
 import { setSelectedInquiry } from "../../reduxcomponents/slices/inquirySlice";
 
 const Inquiry = () => {
-  const dispatch = useDispatch();
+    const dispatch = useDispatch();
     const navigate = useNavigate();
     const [inquiries, setInquiries] = useState([]);
     const [filteredInquiries, setFilteredInquiries] = useState([]);
@@ -38,7 +43,8 @@ const Inquiry = () => {
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(0);
     const rowsPerPage = 30;
-
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [selectedInquiryId, setSelectedInquiryId] = useState(null);
     useEffect(() => {
         const fetchInquiries = async () => {
             try {
@@ -74,9 +80,29 @@ const Inquiry = () => {
     };
     const handleInquiryClick = (inquiry) => {
         dispatch(setSelectedInquiry(inquiry));
-       navigate(`/createItinerary`);  
+        navigate(`/createItinerary`);
     }
+    const handleOpenDeleteDialog = (inquiryId) => {
+        setSelectedInquiryId(inquiryId);
+        setDeleteDialogOpen(true);
+    };
 
+    const handleCloseDeleteDialog = () => {
+        setDeleteDialogOpen(false);
+        setSelectedInquiryId(null);
+    };
+
+    const handleConfirmDelete = async () => {
+        try {
+            await deleteInquiry(selectedInquiryId);
+            setInquiries(inquiries.filter(inquiry => inquiry._id !== selectedInquiryId));
+            setFilteredInquiries(filteredInquiries.filter(inquiry => inquiry._id !== selectedInquiryId));
+        } catch (error) {
+            console.error("Error deleting inquiry:", error);
+        } finally {
+            handleCloseDeleteDialog();
+        }
+    };
     return (
         <Container>
             <Typography variant="h4" gutterBottom align="left" sx={{ fontWeight: "bold", color: "#333" }}>
@@ -134,7 +160,7 @@ const Inquiry = () => {
                                                 color="primary"
                                                 // sx={{ mb: 2, display: "block", mx: "auto" }}
                                                 // onClick={() => navigate("/createItinerary")}
-                                                onClick={()=>handleInquiryClick(inquiry)}
+                                                onClick={() => handleInquiryClick(inquiry)}
                                             >
                                                 Generate
                                             </Button>
@@ -151,7 +177,7 @@ const Inquiry = () => {
                                                 </IconButton>
                                             </Tooltip>
                                             <Tooltip title="Delete Inquiry">
-                                                <IconButton>
+                                                <IconButton onClick={() => handleOpenDeleteDialog(inquiry._id)}>
                                                     <Delete color="error" />
                                                 </IconButton>
                                             </Tooltip>
@@ -180,14 +206,27 @@ const Inquiry = () => {
                     </Table>
                 </TableContainer>
                 <TablePagination
-                        rowsPerPageOptions={[30]}
-                        component="div"
-                        count={filteredInquiries.length}
-                        rowsPerPage={rowsPerPage}
-                        page={page}
-                        onPageChange={handleChangePage}
-                    />
-                </>
+                    rowsPerPageOptions={[30]}
+                    component="div"
+                    count={filteredInquiries.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onPageChange={handleChangePage}
+                />
+                <Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog}>
+                    <DialogTitle>Confirm Deletion</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            Are you sure you want to delete this inquiry? This action cannot be undone.
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleCloseDeleteDialog} color="primary">Cancel</Button>
+                        <Button onClick={handleConfirmDelete} color="error" autoFocus>Delete</Button>
+                    </DialogActions>
+                </Dialog>
+
+            </>
             )}
         </Container>
     );

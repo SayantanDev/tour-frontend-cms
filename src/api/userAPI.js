@@ -1,7 +1,6 @@
 import axios from './interceptor';
 
-// export const USER_URL = `${process.env.REACT_APP_BASE_URL}/users`;
-const USER_URL = 'https://tour-backend-live.onrender.com/api/v1/users';
+export const USER_URL = `${process.env.REACT_APP_BASE_URL}/users`;
 
 export function addUser(obj) {
     const ADDUSER_URL = `${USER_URL}/registerUser`;
