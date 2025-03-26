@@ -1,0 +1,190 @@
+
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+
+@font-face {
+  font-family: 'open_sansextrabold';
+  src: url('../assets/fonts/opensans-extrabold-webfont.woff2') format('woff2'),
+    url('../assets/fonts/opensans-extrabold-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+
+}
+
+@font-face {
+  font-family: 'open_sansbold';
+  src: url('../assets/fonts/opensans-bold-webfont.woff2') format('woff2'),
+    url('../assets/fonts/opensans-bold-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+
+}
+
+@font-face {
+  font-family: 'open_sanslight';
+  src: url('../assets/fonts/opensans-light-webfont.woff2') format('woff2'),
+    url('../assets/fonts/opensans-light-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+
+}
+
+@font-face {
+  font-family: 'open_sansregular';
+  src: url('../assets/fonts/opensans-regular-webfont.woff2') format('woff2'),
+    url('../assets/fonts/opensans-regular-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+
+}
+
+@font-face {
+  font-family: 'open_sanssemibold';
+  src: url('../assets/fonts/opensans-semibold-webfont.woff2') format('woff2'),
+    url('../assets/fonts/opensans-semibold-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+
+}
+
+$PrimaryColor : #0F61A9;
+$SecondaryColor : #212222;
+$SecondaryNewColor : #222222;
+$HeadingParaColor : #141414;
+$RequiredColor : #D32F2F;
+$TopMessageColor : #e5f6fd;
+$TopMessageFontColor: #11506b;
+$GreenBgColor: #2e7d32;
+$RedBgColor: #d32f2f;
+$GreyBgColor: #e0e0e0;
+$TableHeadBg : #eff2f7;
+$DashboardMainBg : #f2f6f9;
+$OrangeBgColor: #EF6C00;
+$FooterBgColor: #2F3139;
+
+$BodyFont: 14px;
+$HeadingH1Font: 24px;
+
+/*--Mixins Starts Here--*/
+@mixin border-radius($val) {
+  border-radius: $val;
+  -webkit-border-radius: $val;
+  -ms-border-radius: $val;
+}
+
+@mixin boxShadow($val) {
+  box-shadow: $val;
+  -webkit-box-shadow: $val;
+  -ms-box-shadow: $val;
+}
+
+body {
+  top: 0 !important;
+}
+
+body,
+.MuiGrid-root .MuiPaper-root {
+  font-size: $BodyFont;
+  color: $SecondaryNewColor;
+  font-family: 'open_sansregular', sans-serif !important;
+}
+
+label {
+  display: block;
+}
+
+h1,
+p,
+label {
+  color: $SecondaryNewColor;
+}
+
+h1 {
+  font-size: $HeadingH1Font;
+  font-weight: 400;
+  margin-top: 0;
+}
+
+h2,
+h3 {
+  color: #000;
+  margin: 0px 0px 8px 0px;
+}
+
+a {
+  color: $PrimaryColor;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+p,
+label,
+a {
+  font-size: $BodyFont;
+}
+
+.align-right {
+  text-align: right !important;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.align-center {
+  text-align: center !important;
+}
+
+.mar-0 {
+  margin: 0 !important;
+}
+
+.mar-16 {
+  margin-top: 16px !important;
+}
+.mb-15{
+  margin-bottom: 15px!important;
+}
+.mar-top-9 {
+  margin-top: 9px;
+  margin-bottom: 0;
+}
+
+.pt-0 {
+  padding-top: 0px !important;
+}
+
+.pr-0 {
+  padding-right: 0 !important;
+}
+
+.pl-0 {
+  padding-left: 0 !important;
+}
+
+ul {
+  li {
+    font-size: $BodyFont;
+    color: #000;
+  }
+}
+
+p {
+  margin-top: 0;
+}
+
+.required {
+  color: $RequiredColor;
+}
+
+.login-container {
+  position: 'absolute';
+  top: '50%';
+  right: '10%'; 
+  transform: 'translateY(-50%)';
+}
+.login-paper {
+  padding: '20px';
+  background-color: 'rgba(255, 255, 255, 0.8)';
+  backdrop-filter: 'blur(10px)';
+}

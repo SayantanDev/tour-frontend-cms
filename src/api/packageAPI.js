@@ -1,0 +1,28 @@
+import axios from './interceptor';
+
+export const PKG_URL = `${process.env.REACT_APP_BASE_URL}/packages`;
+
+export function getAllPackages() {
+    const GETPKG_URL = `${PKG_URL}/getAll`;
+    return axios.get(GETPKG_URL);
+};
+
+export function getSinglePackages(id) {
+    const GETPKG_URL = `${PKG_URL}/getsingle/${id}`;
+    return axios.get(GETPKG_URL);
+};
+
+export function addPackage(obj) {
+    const ADDPKG_URL = `${PKG_URL}/addPackage`;
+    return axios.post(ADDPKG_URL, obj);
+};
+
+export function updatePackage(obj, pkgId) {
+    const UPDATEPKG__URL = `${PKG_URL}/editPackage/${pkgId}`;
+    return axios.put(UPDATEPKG__URL, obj);
+};
+
+export function deletePackage(pkgId) {
+    const DELETEPKG__URL = `${PKG_URL}/deletePackage/${pkgId}`;
+    return axios.delete(DELETEPKG__URL);
+};
