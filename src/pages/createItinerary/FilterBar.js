@@ -96,14 +96,14 @@ const FilterBar = ({
     const rate = Number(customerInput.trekRate) || 0;
     let totalCost = rate * pax;
     // Determine number of cars required
-    let numCars = Math.ceil(pax / 6);
+    let numCars = Math.ceil(pax / 8);
     let transportCost = 0;
 
     if (customerInput.transportUpDown) {
       transportCost += 12000 * numCars;
     } else {
-      if (customerInput.transportUp) transportCost += 6000 * numCars;
-      if (customerInput.transportDown) transportCost += 6000 * numCars;
+      if (customerInput.transportUp) transportCost += 5000 * numCars;
+      if (customerInput.transportDown) transportCost += 7000 * numCars;
     }
 
     // Add porter costs
@@ -119,7 +119,6 @@ const FilterBar = ({
   };
 
   const calculateSandakphuLandRoverCost = () => {
-
     const pax = Number(customerInput.pax) || 0;
     let rate = 0;
     let extraCharge = 0;
@@ -147,21 +146,26 @@ const FilterBar = ({
         extraCharge = 0;
     }
 
-    console.log("* Math.ceil(pax / 6)", Math.ceil(pax / 6));
+    let totalCost = 0;
 
-    // Calculate base cost
-    let totalCost = (rate * Math.ceil(pax / 6)) + extraCharge;
 
+    // Adjust calculation based on pax count
+    if (pax > 0 && pax <= 6) {
+      let perhead = (rate / pax) + extraCharge;
+      totalCost = perhead * pax;
+    } else {
+      totalCost = (rate * Math.ceil(pax / 6)) + (extraCharge * pax );
+    }
 
     // Determine number of cars required
-    let numCars = Math.ceil(pax / 6);
+    let numCars = Math.ceil(pax / 8);
     let transportCost = 0;
 
     if (customerInput.transportUpDown) {
-      transportCost += 12000 * numCars;
+      transportCost += 9000 * numCars;
     } else {
-      if (customerInput.transportUp) transportCost += 6000 * numCars;
-      if (customerInput.transportDown) transportCost += 6000 * numCars;
+      if (customerInput.transportUp) transportCost += 4500 * numCars;
+      if (customerInput.transportDown) transportCost += 4500 * numCars;
     }
 
     // Add porter costs
@@ -175,7 +179,6 @@ const FilterBar = ({
     totalCost *= 1.2;
 
     setTotalCost(totalCost);
-    // setTotalQuotetionCost(totalCost);
   };
 
 
@@ -507,7 +510,7 @@ const FilterBar = ({
                   onChange={handleCustomerInputChange}
                 />
               }
-              label="Transport (Up & Down) - ₹12,000 per car"
+              label="Transport (Up & Down)"
             />
             <FormControlLabel
               control={
@@ -517,7 +520,7 @@ const FilterBar = ({
                   onChange={handleCustomerInputChange}
                 />
               }
-              label="Transport (Up) - ₹6,000 per car"
+              label="Transport (siliguri-dhotry)"
             />
             <FormControlLabel
               control={
@@ -527,7 +530,7 @@ const FilterBar = ({
                   onChange={handleCustomerInputChange}
                 />
               }
-              label="Transport (Down) - ₹6,000 per car"
+              label="Transport (srikhola-siliguri)"
             />
             <FormControlLabel
               control={
@@ -537,7 +540,7 @@ const FilterBar = ({
                   onChange={handleCustomerInputChange}
                 />
               }
-              label="Porter (Sandakphu) - ₹4,000"
+              label="Porter (Sandakphu)"
             />
             <FormControlLabel
               control={
@@ -547,7 +550,7 @@ const FilterBar = ({
                   onChange={handleCustomerInputChange}
                 />
               }
-              label="Porter (Sandakphu-Phalut) - ₹4,000"
+              label="Porter (Sandakphu-Phalut)"
             />
           </Box>
           <Typography>Total Cost: {totalCost.toFixed(2)}</Typography>
@@ -611,7 +614,7 @@ const FilterBar = ({
                   onChange={handleCustomerInputChange}
                 />
               }
-              label="Transport (Up & Down) - ₹12,000 per car"
+              label="Transport (Up & Down)"
             />
             <FormControlLabel
               control={
@@ -621,7 +624,7 @@ const FilterBar = ({
                   onChange={handleCustomerInputChange}
                 />
               }
-              label="Transport (Up) - ₹6,000 per car"
+              label="Transport (Up)"
             />
             <FormControlLabel
               control={
@@ -631,11 +634,13 @@ const FilterBar = ({
                   onChange={handleCustomerInputChange}
                 />
               }
-              label="Transport (Down) - ₹6,000 per car"
+              label="Transport (Down)"
             />
 
           </Box>
-          <Typography>Total Cost: {totalCost.toFixed(2)}</Typography>
+          <Typography>
+                Total Cost: {totalCost.toFixed(2)} ({(totalCost / customerInput.pax).toFixed(2)}/per person)
+              </Typography>
 
           <Box sx={{ display: 'flex', gap: 2, marginBottom: 6 }}>
             <FormControl size="small" fullWidth>
