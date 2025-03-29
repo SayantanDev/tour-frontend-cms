@@ -32,7 +32,7 @@ const usePermissions = () => {
       if (!roleData) return false;
 
       if (roleData.permissions === "all") return true;
-
+      
       const modulePermissions = roleData.permissions.find((mod) => mod.module === moduleName);
       if (!modulePermissions) return false;
 
