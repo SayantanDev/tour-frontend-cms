@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Container, Typography, Button, IconButton, Tooltip, Box } from "@mui/material";
+import { Container, Typography, Button, IconButton, Tooltip, Box, Chip, MenuItem, Menu } from "@mui/material";
 import UpcomingIcon from "@mui/icons-material/Upcoming";
 import HikingIcon from "@mui/icons-material/Hiking";
 import DateRangeIcon from "@mui/icons-material/DateRange";
@@ -9,7 +9,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DataTable from "../../components/dataTable";
-import { getAllQueries } from "../../api/queriesAPI";
+import { getAllQueries, updateQueries } from "../../api/queriesAPI";
 import usePermissions from "../../hooks/UsePermissions";
 import NotAuthorized from "../NotAuthorized";
 import CreateUpdateDialog from "./CreateUpdateDialog";
@@ -27,23 +27,70 @@ const Query = () => {
     const [loading, setLoading] = useState(true);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedData, setSelectedData] = useState(null);
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [selectedRow, setSelectedRow] = useState(null);
 
     useEffect(() => {
         if (!canView) return; // Stop fetching if the user cannot view
-        const fetchQuery = async () => {
-            try {
-                const response = await getAllQueries();
-                const sortedData = response.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-                setQuery(sortedData);
-                setFilteredQuery(sortedData);
-            } catch (error) {
-                console.error("Error fetching query:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+
         fetchQuery();
     }, [canView]);
+    const getStatusColor = (status) => {
+        switch (status) {
+            case "Confirm":
+                return "success"; // Green
+            case "Cancel":
+                return "error"; // Red
+            case "FollowUp":
+                return "warning"; // Orange
+            case "Postponed":
+                return "info"; // Blue
+            default:
+                return "default"; // Gray
+        }
+    };
+    const fetchQuery = async () => {
+        try {
+            const response = await getAllQueries();
+            const sortedData = response.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            setQuery(sortedData);
+            setFilteredQuery(sortedData);
+        } catch (error) {
+            console.error("Error fetching query:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleClick = (event, rowId) => {
+        setAnchorEl(event.currentTarget);
+        setSelectedRow(rowId);
+    };
+
+    const handleClosee = () => {
+        setAnchorEl(null);
+        setSelectedRow(null);
+    };
+
+    const handleStatusUpdate = async (newStatus) => {
+        console.log(`Updating status for row ${selectedRow} to ${newStatus}`);
+        const value = {
+            lead_stage: newStatus
+
+        }
+        try {
+            const res = await updateQueries(selectedRow, value);
+            fetchQuery();
+            handleClosee();
+
+        } catch (error) {
+            console.log(error);
+
+
+        }
+        // Implement API call or state update logic here
+
+    };
 
     const handleView = (id) => {
         console.log("Viewing query:", id);
@@ -52,10 +99,10 @@ const Query = () => {
     const handleOpen = (data = null) => {
         setSelectedData(data);
         setDialogOpen(true);
-      };
+    };
     const handleClose = () => {
         setDialogOpen(false);
-      };
+    };
     const handleEdit = (id) => {
         if (!canEdit) return;
         console.log("Editing query:", id);
@@ -77,7 +124,30 @@ const Query = () => {
         { field: "contact", headerName: "Contact", width: 110 },
         { field: "bookingDate", headerName: "Booking Date", width: 130 },
         { field: "tourDate", headerName: "Tour Date", width: 130 },
-        { field: "bookingStatus", headerName: "Status", width: 120 },
+        {
+            field: "bookingStatus",
+            headerName: "Status",
+            width: 120,
+            renderCell: (params) => {
+                return (
+                    <>
+                        <Chip
+                            label={params.row.bookingStatus}
+                            onClick={(event) => handleClick(event, params.row.id)}
+                            color={getStatusColor(params.row.bookingStatus)} // Dynamic color
+                            sx={{ cursor: "pointer", fontWeight: "bold" }}
+                        />
+                        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClosee}>
+                            <MenuItem onClick={() => handleStatusUpdate("Confirm")}>Confirm</MenuItem>
+                            <MenuItem onClick={() => handleStatusUpdate("Cancel")}>Cancel</MenuItem>
+                            <MenuItem onClick={() => handleStatusUpdate("FollowUp")}>Follow Up</MenuItem>
+                            <MenuItem onClick={() => handleStatusUpdate("Postponed")}>Postponed</MenuItem>
+                        </Menu>
+                    </>
+                );
+            }
+
+        },
         { field: "cost", headerName: "Cost", width: 120 },
         { field: "advancePayment", headerName: "Advance Payment", width: 150 },
         {
@@ -159,11 +229,11 @@ const Query = () => {
             <Box sx={{ height: 500, width: "100%", backgroundColor: "white", boxShadow: 3, borderRadius: 2, overflow: "hidden" }}>
                 <DataTable rows={rows} columns={columns} loading={loading} />
             </Box>
-            <CreateUpdateDialog 
-            open={dialogOpen} 
-            onClose={handleClose} 
-            // onSubmit={handleSubmit} 
-            initialValues={selectedData} 
+            <CreateUpdateDialog
+                open={dialogOpen}
+                onClose={handleClose}
+                // onSubmit={handleSubmit} 
+                initialValues={selectedData}
             />
         </Container>
     );
