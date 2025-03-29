@@ -4,26 +4,32 @@ export const CONFIG_STR = {
         {
           label: 'Dashboard',
           link: '/dashboard',
+          module: "dashboard"
         },
         {
           label: 'Inquiry',
           link: '/inquiry',
+          module: "inquiry"
         },
         {
           label: 'Queries',
           link: '/query',
+          module: "queries"
         },
         {
           label: 'Packages',
           link: '/packages',
+          module: "package"
         },
         {
           label: 'Extra Costs',
           link: '/costTable',
+          module: "costTable"
         },
         {
           label: 'Users',
           link: '/users',
+          module: "user"
         },
         {
           label: 'Logout',

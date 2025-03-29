@@ -1,22 +1,35 @@
 import React, { useEffect, useState } from "react";
-import { Container, Typography, Button, IconButton, Tooltip, Box } from '@mui/material';
-import UpcomingIcon from '@mui/icons-material/Upcoming';
-import HikingIcon from '@mui/icons-material/Hiking';
-import DateRangeIcon from '@mui/icons-material/DateRange';
-import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import DataTable from '../../components/dataTable';
+import { Container, Typography, Button, IconButton, Tooltip, Box } from "@mui/material";
+import UpcomingIcon from "@mui/icons-material/Upcoming";
+import HikingIcon from "@mui/icons-material/Hiking";
+import DateRangeIcon from "@mui/icons-material/DateRange";
+import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import DataTable from "../../components/dataTable";
 import { getAllQueries } from "../../api/queriesAPI";
+import usePermissions from "../../hooks/UsePermissions";
+import NotAuthorized from "../NotAuthorized";
+import CreateUpdateDialog from "./CreateUpdateDialog";
 
 const Query = () => {
+    const checkPermission = usePermissions();
+
+    const canView = checkPermission("queries", "view");
+    const canCreate = checkPermission("queries", "create");
+    const canEdit = checkPermission("queries", "alter");
+    const canDelete = checkPermission("queries", "delete");
+
     const [query, setQuery] = useState([]);
     const [filteredQuery, setFilteredQuery] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [selectedData, setSelectedData] = useState(null);
 
     useEffect(() => {
+        if (!canView) return; // Stop fetching if the user cannot view
         const fetchQuery = async () => {
             try {
                 const response = await getAllQueries();
@@ -30,55 +43,71 @@ const Query = () => {
             }
         };
         fetchQuery();
-    }, []);
+    }, [canView]);
 
     const handleView = (id) => {
         console.log("Viewing query:", id);
         // Implement navigation or modal logic
     };
-
+    const handleOpen = (data = null) => {
+        setSelectedData(data);
+        setDialogOpen(true);
+      };
+    const handleClose = () => {
+        setDialogOpen(false);
+      };
     const handleEdit = (id) => {
+        if (!canEdit) return;
         console.log("Editing query:", id);
         // Implement edit functionality
     };
 
     const handleDelete = (id) => {
+        if (!canDelete) return;
         console.log("Deleting query:", id);
         // Implement delete functionality (show confirmation dialog)
     };
 
+    if (!canView) {
+        return <NotAuthorized />;
+    }
+
     const columns = [
-        { field: 'name', headerName: 'Name', width: 200 },
-        { field: 'contact', headerName: 'Contact', width: 110 },
-        { field: 'bookingDate', headerName: 'Booking Date', width: 130 },
-        { field: 'tourDate', headerName: 'Tour Date', width: 130 },
-        { field: 'bookingStatus', headerName: 'Status', width: 120 },
-        { field: 'cost', headerName: 'Cost', width: 120 },
-        { field: 'advancePayment', headerName: 'Advance Payment', width: 150 },
-        { 
-            field: 'action', 
-            headerName: 'Action', 
-            width: 180, 
+        { field: "name", headerName: "Name", width: 200 },
+        { field: "contact", headerName: "Contact", width: 110 },
+        { field: "bookingDate", headerName: "Booking Date", width: 130 },
+        { field: "tourDate", headerName: "Tour Date", width: 130 },
+        { field: "bookingStatus", headerName: "Status", width: 120 },
+        { field: "cost", headerName: "Cost", width: 120 },
+        { field: "advancePayment", headerName: "Advance Payment", width: 150 },
+        {
+            field: "action",
+            headerName: "Action",
+            width: canEdit || canDelete ? 180 : 100,
             renderCell: (params) => (
-                <Box sx={{ display: 'flex', gap: 1 }}>
+                <Box sx={{ display: "flex", gap: 1 }}>
                     <Tooltip title="View">
                         <IconButton color="primary" size="small" onClick={() => handleView(params.row.id)}>
                             <VisibilityIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title="Edit">
-                        <IconButton color="warning" size="small" onClick={() => handleEdit(params.row.id)}>
-                            <EditIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                        <IconButton color="error" size="small" onClick={() => handleDelete(params.row.id)}>
-                            <DeleteIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
+                    {canEdit && (
+                        <Tooltip title="Edit">
+                            <IconButton color="warning" size="small" onClick={() => handleEdit(params.row.id)}>
+                                <EditIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                    )}
+                    {canDelete && (
+                        <Tooltip title="Delete">
+                            <IconButton color="error" size="small" onClick={() => handleDelete(params.row.id)}>
+                                <DeleteIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                    )}
                 </Box>
-            )
-        }
+            ),
+        },
     ];
 
     const rows = filteredQuery.map((item) => ({
@@ -99,7 +128,7 @@ const Query = () => {
             </Typography>
 
             {/* Filter Buttons */}
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
                 <Button variant="contained" size="small" color="warning" startIcon={<UpcomingIcon />}>
                     Upcoming
                 </Button>
@@ -117,10 +146,25 @@ const Query = () => {
                 </Button>
             </Box>
 
+            {/* Create Button */}
+            {canCreate && (
+                <Box sx={{ mb: 2 }}>
+                    <Button variant="contained" color="primary" onClick={() => handleOpen()}>
+                        Create Query
+                    </Button>
+                </Box>
+            )}
+
             {/* Data Table */}
-            <Box sx={{ height: 500, width: '100%', backgroundColor: 'white', boxShadow: 3, borderRadius: 2, overflow: 'hidden' }}>
+            <Box sx={{ height: 500, width: "100%", backgroundColor: "white", boxShadow: 3, borderRadius: 2, overflow: "hidden" }}>
                 <DataTable rows={rows} columns={columns} loading={loading} />
             </Box>
+            <CreateUpdateDialog 
+            open={dialogOpen} 
+            onClose={handleClose} 
+            // onSubmit={handleSubmit} 
+            initialValues={selectedData} 
+            />
         </Container>
     );
 };
