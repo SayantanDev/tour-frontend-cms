@@ -15,7 +15,7 @@ const Login = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setLoginData({ ...loginData, [name]: value });
-        console.log('login1', loginData)
+        // console.log('login1', loginData)
     }
     const handleSubmit = (event) => {
         event.preventDefault();

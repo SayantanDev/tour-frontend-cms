@@ -22,7 +22,7 @@ const userPermission = [
 ];
 
 const usePermissions = () => {
-  const userRole = "FrontDesk"; // Replace with: useSelector((state) => state.user.role);
+  const userRole = "Admin"; // Replace with: useSelector((state) => state.user.role);
 
   return useCallback(
     (moduleName, permissionType) => {
