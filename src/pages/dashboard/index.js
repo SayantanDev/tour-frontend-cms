@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect,useState } from 'react';
+import io from "socket.io-client"
 import {
     AppBar,
     Toolbar,
@@ -52,6 +53,33 @@ const payments = [
 ];
 
 const Dashboard = () => {
+    const socketUrl ="http://localhost:8000"
+    const [inquiries, setInquiries] = useState([]);
+    console.log("inquiries", inquiries);
+    
+    // const [chat, setChat] = useState([]);
+    useEffect(() => {
+        const socket = io(socketUrl);
+
+        socket.on('connect', () => {
+            console.log("Connected to socket server");
+        });
+        // socket.emit("chatMessage", "hii");
+        // socket.on("chatMessage", (msg) => {
+        //     setChat((prev) => [...prev, msg]);
+        //   });
+
+        socket.on('inquiry', (inquiry) => {
+            console.log("Received inquiry:", inquiry);
+            setInquiries((prev) => [inquiry, ...prev]);
+        });
+
+        return () => {
+            socket.off("chatMessage");
+            socket.disconnect();
+        };
+    }, []);
+
     return (
         <Box>
             <AppBar position="static">
