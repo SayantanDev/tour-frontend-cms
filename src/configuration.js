@@ -4,36 +4,44 @@ export const CONFIG_STR = {
         {
           label: 'Dashboard',
           link: '/dashboard',
-          module: "dashboard"
+          module: "dashboard",
+          icon: "InsertChartOutlined" 
         },
         {
           label: 'Inquiry',
           link: '/inquiry',
-          module: "inquiry"
+          module: "inquiry",
+          icon: "AttachEmailOutlined" 
+          
         },
         {
           label: 'Queries',
           link: '/query',
-          module: "queries"
+          module: "queries",
+          icon: "AddToHomeScreenOutlined" 
         },
         {
           label: 'Packages',
           link: '/packages',
-          module: "package"
+          module: "package",
+          icon: "CasesOutlined" 
         },
         {
           label: 'Extra Costs',
           link: '/costTable',
-          module: "costTable"
+          module: "costTable",
+          icon: "AddTaskOutlined" 
         },
         {
           label: 'Users',
           link: '/users',
-          module: "user"
+          module: "user",
+          icon: "PermIdentityOutlined" 
         },
         {
           label: 'Logout',
           link: '/logout',
+          icon: "LogoutOutlined" 
         },
     ],
     sandakphuPackages: [

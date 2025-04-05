@@ -1,5 +1,4 @@
 import React, { useEffect,useState } from 'react';
-import io from "socket.io-client"
 import {
     AppBar,
     Toolbar,
@@ -14,6 +13,7 @@ import {
     ListItemText,
     Divider,
 } from '@mui/material';
+import TotalInquiry from '../../components/dashbord/totalInquiry';
 
 // Sample data
 const tours = [
@@ -53,128 +53,12 @@ const payments = [
 ];
 
 const Dashboard = () => {
-    const socketUrl ="http://localhost:8000"
-    const [inquiries, setInquiries] = useState([]);
-    console.log("inquiries", inquiries);
     
-    // const [chat, setChat] = useState([]);
-    useEffect(() => {
-        const socket = io(socketUrl);
-
-        socket.on('connect', () => {
-            console.log("Connected to socket server");
-        });
-        // socket.emit("chatMessage", "hii");
-        // socket.on("chatMessage", (msg) => {
-        //     setChat((prev) => [...prev, msg]);
-        //   });
-
-        socket.on('inquiry', (inquiry) => {
-            console.log("Received inquiry:", inquiry);
-            setInquiries((prev) => [inquiry, ...prev]);
-        });
-
-        return () => {
-            socket.off("chatMessage");
-            socket.disconnect();
-        };
-    }, []);
 
     return (
-        <Box>
-            <AppBar position="static">
-                <Toolbar>
-                    <Typography variant="h6">Tour Operation Dashboard</Typography>
-                </Toolbar>
-            </AppBar>
-
-            <Box sx={{ padding: 2 }}>
-                <Grid container spacing={2}>
-                    {/* Tour Cards */}
-                    <Grid item xs={12}>
-                        <Typography variant="h4" gutterBottom>
-                            Available Tours
-                        </Typography>
-                    </Grid>
-                    {tours.map((tour, index) => (
-                        <Grid item xs={12} sm={6} md={4} key={index}>
-                            <Card>
-                                <CardMedia
-                                    component="img"
-                                    height="140"
-                                    image={tour.imageUrl}
-                                    alt={tour.title}
-                                />
-                                <CardContent>
-                                    <Typography variant="h5" component="div">
-                                        {tour.title}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        {tour.description}
-                                    </Typography>
-                                    <Typography variant="h6">{tour.price}</Typography>
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                    ))}
-
-                    {/* User Data Section */}
-                    <Grid item xs={12}>
-                        <Typography variant="h4" gutterBottom>
-                            User Data
-                        </Typography>
-                        <List>
-                            {users.map((user, index) => (
-                                <ListItem key={index}>
-                                    <ListItemText
-                                        primary={user.name}
-                                        secondary={`${user.email} | ${user.phone}`}
-                                    />
-                                </ListItem>
-                            ))}
-                        </List>
-                    </Grid>
-
-                    <Divider sx={{ width: '100%', margin: '20px 0' }} />
-
-                    {/* Transaction Data Section */}
-                    <Grid item xs={12}>
-                        <Typography variant="h4" gutterBottom>
-                            Transaction Data
-                        </Typography>
-                        <List>
-                            {transactions.map((transaction, index) => (
-                                <ListItem key={index}>
-                                    <ListItemText
-                                        primary={`Transaction ID: ${transaction.id}`}
-                                        secondary={`:User  ${transaction.user} | Amount: ${transaction.amount} | Date: ${transaction.date}`}
-                                    />
-                                </ListItem>
-                            ))}
-                        </List>
-                    </Grid>
-
-                    <Divider sx={{ width: '100%', margin: '20px 0' }} />
-
-                    {/* Payment Data Section */}
- <Grid item xs={12}>
-                        <Typography variant="h4" gutterBottom>
-                            Payment Data
-                        </Typography>
-                        <List>
-                            {payments.map((payment, index) => (
-                                <ListItem key={index}>
-                                    <ListItemText
-                                        primary={`Payment ID: ${payment.id}`}
-                                        secondary={`Transaction ID: ${payment.transactionId} | Status: ${payment.status}`}
-                                    />
-                                </ListItem>
-                            ))}
-                        </List>
-                    </Grid>
-                </Grid>
-            </Box>
-        </Box>
+        <>
+            <TotalInquiry/>
+        </>
     );
 };
 
