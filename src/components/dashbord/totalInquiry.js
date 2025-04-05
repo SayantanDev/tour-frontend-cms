@@ -1,21 +1,21 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { getAllInquiries } from '../../api/inquiryAPI';
-import { Card, CardContent, Typography, Box } from '@mui/material';
+import {
+ Card, CardContent, Typography, Box,
+} from '@mui/material';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 
-function TotalInquiry() {
- // const [inquiries, setInquiries] = useState([]);
- const [loading, setLoading] = useState(true);
+const TotalInquiry = () => {
  const [filteredInquiries, setFilteredInquiries] = useState([]);
- // console.log("filteredInquiries is :",filteredInquiries);
-
+ const [loading, setLoading] = useState(true);
 
  useEffect(() => {
   const fetchInquiries = async () => {
    try {
-    const response = await getAllInquiries(); // Replace with actual API endpoint
-    const sortedData = response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    // setInquiries(sortedData);
+    const response = await getAllInquiries();
+    const sortedData = response.data.sort(
+     (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    );
     setFilteredInquiries(sortedData);
    } catch (error) {
     console.error("Error fetching inquiries:", error);
@@ -25,13 +25,14 @@ function TotalInquiry() {
   };
   fetchInquiries();
  }, []);
+
  return (
   <Card
    sx={{
     width: '10vw',
-    minWidth: 120,
-    height: 100,
-    borderRadius: '12px',
+    minWidth: 140,
+    height: 120,
+    borderRadius: 2,
     boxShadow: 3,
     backgroundColor: '#fff',
     display: 'flex',
@@ -46,10 +47,15 @@ function TotalInquiry() {
       height: '100%',
       width: '100%',
       textAlign: 'center',
-      
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 0.5,
      }}
     >
-     <Typography variant="body1" color="text.secondary">
+     <NotificationsActiveIcon color="primary" />
+     <Typography variant="body2" color="text.secondary">
       Total Inquiries
      </Typography>
      <Typography variant="h6" fontWeight="bold" color="primary">
@@ -58,8 +64,7 @@ function TotalInquiry() {
     </Box>
    </CardContent>
   </Card>
+ );
+};
 
- )
-}
-
-export default TotalInquiry
+export default TotalInquiry;
