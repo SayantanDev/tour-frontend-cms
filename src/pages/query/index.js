@@ -58,11 +58,13 @@ const Query = () => {
             case "Confirm":
                 return "success"; // Green
             case "Cancel":
-                return "error"; // Red
+                return "default"; // Red
             case "FollowUp":
-                return "warning"; // Orange
+                return "warning"; // Orange  Higher Priority
             case "Postponed":
                 return "info"; // Blue
+            case "Higher Priority":
+                return "error";
             default:
                 return "default"; // Gray
         }
@@ -179,17 +181,23 @@ const Query = () => {
         { field: "tourDate", headerName: "Tour Date", width: 130 },
         {
             field: "bookingStatus",
-            headerName: "Status",
+            headerName: "Lead Stage",
             width: 120,
             renderCell: (params) => {
                 return (
                     <>
-                        <Chip
-                            label={params.row.bookingStatus}
-                            onClick={(event) => handleClick(event, params.row.id)}
-                            color={getStatusColor(params.row.bookingStatus)} // Dynamic color
-                            sx={{ cursor: "pointer", fontWeight: "bold" }}
-                        />
+                        <Tooltip title={`${params.row.bookingStatus}`}>
+                            <Chip
+                                label={params.row.bookingStatus}
+                                onClick={(event) => handleClick(event, params.row.id)}
+                                color={getStatusColor(params.row.bookingStatus)} // Dynamic color
+                                sx={{
+                                    cursor: "pointer",
+                                    fontWeight: "bold",
+                                }}
+                            />
+                        </Tooltip>
+
                         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClosee}>
                             <MenuItem onClick={() => handleStatusUpdate("Confirm")}>Confirm</MenuItem>
                             <MenuItem onClick={() => handleStatusUpdate("Cancel")}>Cancel</MenuItem>
@@ -223,6 +231,7 @@ const Query = () => {
                             </IconButton>
                         </Tooltip>
                     )}
+                    
                     {canDelete && (
                         <Tooltip title="Delete">
                             <IconButton color="error" size="small" onClick={() => handleDelete(params.row.id)}>
@@ -381,7 +390,7 @@ const Query = () => {
 
                         {/* Payment & Other Details */}
                         <Typography variant="subtitle1" fontWeight="bold" color="secondary" sx={{ mt: 2 }}>
-                            Booking & Payment 
+                            Booking & Payment
                         </Typography>
                         <Divider sx={{ mb: 2 }} />
                         <Grid container spacing={2}>
