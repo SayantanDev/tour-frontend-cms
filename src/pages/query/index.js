@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Container, Typography, Button, IconButton, Tooltip, Box, Chip, MenuItem, Menu, Modal, Grid, Paper, Divider } from "@mui/material";
+import { Container, Typography, Button, IconButton, Tooltip, Box, Chip, MenuItem, Menu, Modal, Grid, Paper, Divider, TextField } from "@mui/material";
 import UpcomingIcon from "@mui/icons-material/Upcoming";
 import HikingIcon from "@mui/icons-material/Hiking";
 import DateRangeIcon from "@mui/icons-material/DateRange";
@@ -42,6 +42,11 @@ const Query = () => {
     const [anchorEl, setAnchorEl] = useState(null);
     const [selectedRow, setSelectedRow] = useState(null);
     const [view, SetView] = useState(false)
+    const [searchQuery, setSearchQuery] = useState("")
+    const [dateQuery, setDateQuery] = useState("");
+    const [statusQuery, setStatusQuery] = useState("");
+    const [locationQuery, setLocationQuery] = useState("")
+
 
     useEffect(() => {
         if (!canView) return; // Stop fetching if the user cannot view
@@ -137,6 +142,35 @@ const Query = () => {
     if (!canView) {
         return <NotAuthorized />;
     }
+    const formatDate = (date) => {
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`; // Matches input[type="date"]
+    };
+
+    const NewFilteredQuery = filteredQuery.filter((item) => {
+        const searchLower = searchQuery.toLowerCase();
+        const name = item.guest_info?.guest_name?.toLowerCase() || "";
+        const phone = item.guest_info?.guest_phone?.toLowerCase() || "";
+
+        const bookingDate = formatDate(item.created_at); // formatted as yyyy-mm-dd
+        const tourDate = formatDate(item.travel_date);
+
+        const matchesSearch =
+            name.includes(searchLower) || phone.includes(searchLower);
+
+        const matchesDate =
+            !dateQuery || bookingDate === dateQuery || tourDate === dateQuery;
+        const matchesStatus = !statusQuery || item.lead_stage === statusQuery;
+
+        const matchLocation = !locationQuery || item.destination === locationQuery;
+
+        return matchesSearch && matchesDate && matchesStatus && matchLocation;
+    });
+
+
 
     const columns = [
         { field: "name", headerName: "Name", width: 200 },
@@ -161,6 +195,8 @@ const Query = () => {
                             <MenuItem onClick={() => handleStatusUpdate("Cancel")}>Cancel</MenuItem>
                             <MenuItem onClick={() => handleStatusUpdate("FollowUp")}>Follow Up</MenuItem>
                             <MenuItem onClick={() => handleStatusUpdate("Postponed")}>Postponed</MenuItem>
+                            <MenuItem onClick={() => handleStatusUpdate("Higher Priority")}>Higher Priority</MenuItem>
+
                         </Menu>
                     </>
                 );
@@ -199,7 +235,7 @@ const Query = () => {
         },
     ];
 
-    const rows = filteredQuery.map((item) => ({
+    const rows = NewFilteredQuery.map((item) => ({
         id: item._id,
         name: item.guest_info?.guest_name || "N/A",
         contact: item.guest_info?.guest_phone || "N/A",
@@ -210,8 +246,8 @@ const Query = () => {
         carname: item.car_details?.car_name || "N/A",
         carcount: item.car_details?.car_count || "N/A",
         source: item.lead_source,
-        bookingDate: new Date(item.created_at).toLocaleDateString(),
-        tourDate: new Date(item.travel_date).toLocaleDateString(),
+        bookingDate: formatDate(item.created_at),
+        tourDate: formatDate(item.travel_date),
         bookingStatus: item.lead_stage || "Pending",
         cost: item.cost || "N/A",
         advancePayment: item.advancePayment ? `₹${item.advancePayment}` : "₹0",
@@ -227,21 +263,57 @@ const Query = () => {
 
                 {/* Filter Buttons */}
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
-                    <Button variant="contained" size="small" color="warning" startIcon={<UpcomingIcon />}>
-                        Upcoming
-                    </Button>
-                    <Button variant="contained" size="small" color="primary" startIcon={<HikingIcon />}>
-                        Current
-                    </Button>
-                    <Button variant="contained" size="small" color="success" startIcon={<ShoppingCartIcon />}>
-                        Advance Paid
-                    </Button>
-                    <Button variant="contained" size="small" color="success" startIcon={<CurrencyRupeeIcon />}>
-                        Paid
-                    </Button>
-                    <Button variant="contained" size="small" color="secondary" startIcon={<DateRangeIcon />}>
-                        Old
-                    </Button>
+                    <TextField
+                        label="Search by name or phoneNo..."
+                        variant="outlined"
+                        size="small"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        sx={{ width: "300px" }}
+                    />
+                    <TextField
+                        type="date"
+                        label="Search by Date"
+                        InputLabelProps={{ shrink: true }}
+                        size="small"
+                        value={dateQuery}
+                        onChange={(e) => setDateQuery(e.target.value)}
+                    />
+                    <TextField
+                        select
+                        label="Search by Status"
+                        size="small"
+                        value={statusQuery}
+                        onChange={(e) => setStatusQuery(e.target.value)}
+                        sx={{ width: 200 }}
+                    >
+                        <MenuItem value="">All</MenuItem>
+                        <MenuItem value="Confirm">Confirm</MenuItem>
+                        <MenuItem value="Cancel">Cancel</MenuItem>
+                        <MenuItem value="FollowUp">Follow Up</MenuItem>
+                        <MenuItem value="Postponed">Postponed</MenuItem>
+                        <MenuItem value="new">New</MenuItem>
+                        <MenuItem value="Higher Priority">Higher Priority</MenuItem>
+
+
+                    </TextField>
+
+                    <TextField
+                        select
+                        label="Search by location"
+                        size="small"
+                        value={locationQuery}
+                        onChange={(e) => setLocationQuery(e.target.value)}
+                        sx={{ width: 200 }}
+                    >
+
+
+                        <MenuItem value="">All</MenuItem>
+                        <MenuItem value="Darjeeling">Darjeeling</MenuItem>
+                        <MenuItem value="Sikkim">Sikkim</MenuItem>
+                        <MenuItem value="North Sikkim">North Sikkim</MenuItem>
+                        <MenuItem value="Sandakphu">Sandakphu</MenuItem>
+                    </TextField>
                 </Box>
 
                 {/* Data Table */}
@@ -268,6 +340,7 @@ const Query = () => {
                         borderRadius: 2,
                         p: 3,
                     }}
+
                 >
                     <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
                         <Typography variant="h5" gutterBottom textAlign="center" fontWeight="bold" color="primary">
@@ -308,7 +381,7 @@ const Query = () => {
 
                         {/* Payment & Other Details */}
                         <Typography variant="subtitle1" fontWeight="bold" color="secondary" sx={{ mt: 2 }}>
-                            Booking & Payment
+                            Booking & Payment 
                         </Typography>
                         <Divider sx={{ mb: 2 }} />
                         <Grid container spacing={2}>

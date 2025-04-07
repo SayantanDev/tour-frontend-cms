@@ -40,11 +40,13 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
         travel_date: customerInput.startDate || "",
         duration: customerInput.days || "",
         cost: totalQuotetionCost || 0,
-        destination: selectedCard.destination,
+        destination: selectedCard.location,
         lead_stage: "new",
         lead_source: "website",
         verified: true,
     };
+    console.log("selectedCard.destination :",selectedCard.location);
+    
 
     const handleNext = async () => {
         try {

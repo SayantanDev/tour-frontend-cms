@@ -1,7 +1,8 @@
 import axios from './interceptor';
 
-// export const PKG_URL = `${process.env.REACT_APP_BASE_URL}/packages`;
-const PKG_URL = 'https://tour-backend-live.onrender.com/api/v1/packages';
+export const PKG_URL = `${process.env.REACT_APP_BASE_URL}/packages`;
+// const PKG_URL = 'https://tour-backend-live.onrender.com/api/v1/packages';
+
 
 export function getAllPackages() {
     const GETPKG_URL = `${PKG_URL}/getAll`;
