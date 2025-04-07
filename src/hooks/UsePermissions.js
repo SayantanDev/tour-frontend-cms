@@ -26,13 +26,13 @@ const usePermissions = () => {
 
   return useCallback(
     (moduleName, permissionType) => {
-      console.log("moduleName:", moduleName, "permissionType:", permissionType);
+      // console.log("moduleName:", moduleName, "permissionType:", permissionType);
       
       const roleData = userPermission.find((role) => role.role === userRole);
       if (!roleData) return false;
 
       if (roleData.permissions === "all") return true;
-
+      
       const modulePermissions = roleData.permissions.find((mod) => mod.module === moduleName);
       if (!modulePermissions) return false;
 
