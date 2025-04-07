@@ -21,8 +21,8 @@ const Dashboard = () => {
                     px: 2
                 }}
             >
-                <TotalInquiry />
                 <TotalQuiry />
+                <TotalInquiry />
             </Box>
         </>
     );

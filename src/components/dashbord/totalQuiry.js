@@ -9,33 +9,33 @@ import CancelIcon from '@mui/icons-material/Cancel';
 
 
 function TotalQuiry() {
- // const [query, setQuery] = useState([]);
- const [filteredQuery, setFilteredQuery] = useState([]);
- const [loading, setLoading] = useState(true);
+  // const [query, setQuery] = useState([]);
+  const [filteredQuery, setFilteredQuery] = useState([]);
+  const [loading, setLoading] = useState(true);
 
- // console.log("filteredQuery isss:", filteredQuery);
+  console.log("filteredQuery isss:", filteredQuery);
 
 
 
- useEffect(() => {
-  const fetchQuery = async () => {
-   try {
-    const response = await getAllQueries();
-    const sortedData = response.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    // setQuery(sortedData);
-    setFilteredQuery(sortedData);
-   } catch (error) {
-    console.error("Error fetching query:", error);
-   } finally {
-    setLoading(false);
-   }
-  };
-  fetchQuery();
- }, []);
- const confirm = filteredQuery.filter(q => q.lead_stage === "confirmed");
+  useEffect(() => {
+    const fetchQuery = async () => {
+      try {
+        const response = await getAllQueries();
+        const sortedData = response.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        // setQuery(sortedData);
+        setFilteredQuery(sortedData);
+      } catch (error) {
+        console.error("Error fetching query:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchQuery();
+  }, []);
+  const confirm = filteredQuery.filter(q => q.lead_stage === "Confirm");
   const New = filteredQuery.filter(q => q.lead_stage === "New");
-  const postpond = filteredQuery.filter(q => q.lead_stage === "postpond");
-  const cancle = filteredQuery.filter(q => q.lead_stage === "cancled");
+  const postpond = filteredQuery.filter(q => q.lead_stage === "Postponed");
+  const cancle = filteredQuery.filter(q => q.lead_stage === "Cancel");
 
   const renderCard = (label, count, icon, color) => (
     <Card
@@ -66,8 +66,8 @@ function TotalQuiry() {
     </Card>
   );
 
- return (
-   <Paper elevation={3} sx={{ p: 3, borderRadius: 4, backgroundColor: '#f9f9f9',width:"58vw" }} >
+  return (
+    <>
       <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
         Quiries Summary
       </Typography>
@@ -78,9 +78,9 @@ function TotalQuiry() {
         <Grid item>{renderCard('Postpond', postpond.length, <PauseCircleIcon color="warning" />, 'warning.main')}</Grid>
         <Grid item>{renderCard('Cancelled', cancle.length, <CancelIcon color="error" />, 'error.main')}</Grid>
       </Grid>
-    </Paper>
-  
- )
+    </>
+
+  )
 }
 
 export default TotalQuiry

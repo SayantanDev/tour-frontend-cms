@@ -9,6 +9,7 @@ import {
  Box,
  Link,
 } from '@mui/material';
+
 import NotificationImportantIcon from '@mui/icons-material/NotificationImportant';
 import io from "socket.io-client"
 import moment from "moment/moment";
@@ -62,10 +63,37 @@ function Notification() {
  const id = open ? 'simple-popover' : undefined;
  return (
   <Typography>
-   <Button aria-describedby={id} variant="contained" onClick={handleClick}>
-    <NotificationImportantIcon />
-    {notifications.length}
+
+
+   <Button
+    aria-describedby={id}
+    sx={{ color: "white", position: "relative", p: 0 }}
+    onClick={handleClick}
+   >
+    <Box sx={{ position: "relative" }}>
+     <NotificationImportantIcon fontSize="large" />
+     <Typography
+      sx={{
+       position: "absolute",
+       top: -5,
+       right: -5,
+       background: "red",
+       color: "white",
+       borderRadius: "50%",
+       width: "20px",
+       height: "20px",
+       display: "flex",
+       alignItems: "center",
+       justifyContent: "center",
+       fontSize: "12px",
+       fontWeight: "bold",
+      }}
+     >
+      {notifications.length}
+     </Typography>
+    </Box>
    </Button>
+
    <Popover
     id={id}
     open={open}

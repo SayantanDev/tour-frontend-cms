@@ -39,9 +39,7 @@ const Top = ({ toggleDrawer }) => {
                     sx={{
                         display: "flex", justifyContent: "space-between", alignItems: "center", gap: "20px"
                     }}>
-                        <Notification/>
-
-
+                    <Notification />
                     <AccountCircleIcon />
                 </IconButton>
             </Toolbar>

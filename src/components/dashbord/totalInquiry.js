@@ -27,32 +27,25 @@ const TotalInquiry = () => {
  }, []);
 
  return (
+  <>
+  <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>Inquiries Summary</Typography>
   <Card
    sx={{
-    width: '10vw',
-    minWidth: 140,
-    height: 120,
-    borderRadius: 2,
-    boxShadow: 3,
-    backgroundColor: '#fff',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    p: 2,
-   }}
+        width: '10vw',
+        minWidth: 120,
+        height: 100,
+        borderRadius: '12px',
+        boxShadow: 3,
+        backgroundColor: '#fff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        p: 2,
+      }}
   >
    <CardContent sx={{ p: 0, width: '100%', height: '100%' }}>
     <Box
-     sx={{
-      height: '100%',
-      width: '100%',
-      textAlign: 'center',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center',
-      gap: 0.5,
-     }}
+    sx={{ height: '100%', width: '100%', textAlign: 'center' }}
     >
      <NotificationsActiveIcon color="primary" />
      <Typography variant="body2" color="text.secondary">
@@ -64,6 +57,7 @@ const TotalInquiry = () => {
     </Box>
    </CardContent>
   </Card>
+  </>
  );
 };
 
