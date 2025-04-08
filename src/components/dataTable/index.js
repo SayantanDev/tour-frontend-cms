@@ -1,44 +1,49 @@
 import React from 'react';
 import { DataGrid } from '@mui/x-data-grid';
+import { updateQueries } from '../../api/queriesAPI';
 
 const DataTable = ({ rows, columns,setEditableRowId }) => {
   const handleRowEdit = async (updatedRow) => {
     console.log("Updated row:", updatedRow);
-
-    let editObj={}
-    if (updatedRow.name) {
-      editObj={"guest_info.guest_name":updatedRow.name}
-      
+    const id = updatedRow.id;
+  
+    let editObj = {};
+  
+    // Prepare update object with only changed fields
+    if (updatedRow.name !== undefined) {
+      editObj["guest_info.guest_name"] = updatedRow.name;
     }
-    else if(updatedRow.contact){
-      editObj={"guest_info.guest_phone":updatedRow.contact}
+    if (updatedRow.contact !== undefined) {
+      editObj["guest_info.guest_phone"] = updatedRow.contact;
     }
-    else if(updatedRow.travel_date){
-      editObj={"travel_date":updatedRow.travel_date}
+    if (updatedRow.bookingDate !== undefined) {
+      editObj["booking_date"] = updatedRow.bookingDate;
     }
-    else if(updatedRow.cost){
-      editObj={"cost":updatedRow.cost}
-      
+    if (updatedRow.tourDate !== undefined) {
+      editObj["travel_date"] = updatedRow.tourDate;
     }
-    
-  console.log("Updated name:", editObj);
-
-
-   
-    // return updatedRow; // important to return the updated row
+    if (updatedRow.cost !== undefined) {
+      editObj["cost"] = updatedRow.cost;
+    }
+  
+    try {
+      const res = await updateQueries(id, editObj);
+  
+      if (res.success === true) {
+        console.log("Data updated successfully", res);
+        // Optional: show toast or refresh
+      }
+    } catch (error) {
+      console.log("Error updating data:", error);
+    }
+  
+    console.log("Sent update object:", editObj);
+    return updatedRow; // This is important for DataGrid to finalize the edit
   };
+  
   return (
     <div style={{ height: 550, width: "100%", overflow: "auto" }}>
-      {/* <DataGrid
-        rows={rows}
-        columns={columns}
-        pageSize={5}
-        rowsPerPageOptions={[5, 10, 15]}
-        processRowUpdate={handleRowEdit}
-        experimentalFeatures={{ newEditingApi: true }}
-        pagination
-        autoHeight={false} // Prevents automatic resizing
-      /> */}
+     
       <DataGrid
         rows={rows}
         columns={columns}
@@ -47,8 +52,6 @@ const DataTable = ({ rows, columns,setEditableRowId }) => {
         processRowUpdate={(newRow) => {
           setEditableRowId(null); // Stop editing after update
           handleRowEdit(newRow)
-          // console.log("Updated row:", newRow);
-          // Optionally call an API here
           return newRow;
         }}
         experimentalFeatures={{ newEditingApi: true }}
