@@ -17,8 +17,8 @@ export async function getAllQueries() {
 }
 
 export async function updateQueries(id,value) {
-    const UPDATEUSER_URL = `${QRY_URL}/update-status-queries/${id}`;
-    const result = await axios.put(UPDATEUSER_URL,value );
+    const UPDATEUSER_URL = `${QRY_URL}/update-single-field/${id}`;
+    const result = await axios.patch(UPDATEUSER_URL,value );
     return result.data;
     
 }

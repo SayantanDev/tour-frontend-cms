@@ -14,6 +14,7 @@ import usePermissions from "../../hooks/UsePermissions";
 import NotAuthorized from "../NotAuthorized";
 import moment from "moment";
 import CreateUpdateDialog from "./CreateUpdateDialog";
+import { DataGrid } from "@mui/x-data-grid";
 
 const style = {
     position: 'absolute',
@@ -46,6 +47,7 @@ const Query = () => {
     const [dateQuery, setDateQuery] = useState("");
     const [statusQuery, setStatusQuery] = useState("");
     const [locationQuery, setLocationQuery] = useState("")
+    const [editableRowId, setEditableRowId] = useState(null)
 
 
     useEffect(() => {
@@ -131,7 +133,9 @@ const Query = () => {
     };
     const handleEdit = (id) => {
         if (!canEdit) return;
-        console.log("Editing query:", id);
+
+        setEditableRowId(id)
+        // console.log("Editing query:", id);
         // Implement edit functionality
     };
 
@@ -175,44 +179,68 @@ const Query = () => {
 
 
     const columns = [
-        { field: "name", headerName: "Name", width: 200 },
-        { field: "contact", headerName: "Contact", width: 110 },
-        { field: "bookingDate", headerName: "Booking Date", width: 130 },
-        { field: "tourDate", headerName: "Tour Date", width: 130 },
+        {
+            field: "name",
+            headerName: "Name",
+            width: 200,
+            editable: (params) => params.id === editableRowId,
+        },
+        {
+            field: "contact",
+            headerName: "Contact",
+            width: 110,
+            editable: (params) => params.id === editableRowId,
+        },
+        {
+            field: "bookingDate",
+            headerName: "Booking Date",
+            width: 130,
+            editable: (params) => params.id === editableRowId,
+        },
+        {
+            field: "tourDate",
+            headerName: "Tour Date",
+            width: 130,
+            editable: (params) => params.id === editableRowId,
+        },
         {
             field: "bookingStatus",
             headerName: "Lead Stage",
             width: 120,
-            renderCell: (params) => {
-                return (
-                    <>
-                        <Tooltip title={`${params.row.bookingStatus}`}>
-                            <Chip
-                                label={params.row.bookingStatus}
-                                onClick={(event) => handleClick(event, params.row.id)}
-                                color={getStatusColor(params.row.bookingStatus)} // Dynamic color
-                                sx={{
-                                    cursor: "pointer",
-                                    fontWeight: "bold",
-                                }}
-                            />
-                        </Tooltip>
-
-                        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClosee}>
-                            <MenuItem onClick={() => handleStatusUpdate("Confirm")}>Confirm</MenuItem>
-                            <MenuItem onClick={() => handleStatusUpdate("Cancel")}>Cancel</MenuItem>
-                            <MenuItem onClick={() => handleStatusUpdate("FollowUp")}>Follow Up</MenuItem>
-                            <MenuItem onClick={() => handleStatusUpdate("Postponed")}>Postponed</MenuItem>
-                            <MenuItem onClick={() => handleStatusUpdate("Higher Priority")}>Higher Priority</MenuItem>
-
-                        </Menu>
-                    </>
-                );
-            }
-
+            
+            renderCell: (params) => (
+                <>
+                    <Tooltip title={`${params.row.bookingStatus}`}>
+                        <Chip
+                            label={params.row.bookingStatus}
+                            onClick={(event) => handleClick(event, params.row.id)}
+                            color={getStatusColor(params.row.bookingStatus)}
+                            sx={{ cursor: "pointer", fontWeight: "bold" }}
+                        />
+                    </Tooltip>
+                    <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClosee}>
+                        <MenuItem onClick={() => handleStatusUpdate("Confirm")}>Confirm</MenuItem>
+                        <MenuItem onClick={() => handleStatusUpdate("Cancel")}>Cancel</MenuItem>
+                        <MenuItem onClick={() => handleStatusUpdate("FollowUp")}>Follow Up</MenuItem>
+                        <MenuItem onClick={() => handleStatusUpdate("Postponed")}>Postponed</MenuItem>
+                        <MenuItem onClick={() => handleStatusUpdate("Higher Priority")}>Higher Priority</MenuItem>
+                    </Menu>
+                </>
+            ),
         },
-        { field: "cost", headerName: "Cost", width: 120 },
-        { field: "advancePayment", headerName: "Advance Payment", width: 150 },
+        {
+            field: "cost",
+            headerName: "Cost",
+            width: 120,
+            editable: (params) => params.id === editableRowId
+        },
+       
+        {
+            field: "advancePayment",
+            headerName: "Advance Payment",
+            width: 150,
+            editable: (params) => params.id === editableRowId
+        },
         {
             field: "action",
             headerName: "Action",
@@ -231,7 +259,6 @@ const Query = () => {
                             </IconButton>
                         </Tooltip>
                     )}
-                    
                     {canDelete && (
                         <Tooltip title="Delete">
                             <IconButton color="error" size="small" onClick={() => handleDelete(params.row.id)}>
@@ -244,13 +271,14 @@ const Query = () => {
         },
     ];
 
+
     const rows = NewFilteredQuery.map((item) => ({
         id: item._id,
         name: item.guest_info?.guest_name || "N/A",
         contact: item.guest_info?.guest_phone || "N/A",
         email: item.guest_info?.guest_email || "N/A",
         pax: item.pax || "N/A",
-        rooms: item.stay_info?.stay_info,
+        rooms: item.stay_info?.rooms,
         hotel: item.stay_info?.hotel || "N/A",
         carname: item.car_details?.car_name || "N/A",
         carcount: item.car_details?.car_count || "N/A",
@@ -262,6 +290,7 @@ const Query = () => {
         advancePayment: item.advancePayment ? `₹${item.advancePayment}` : "₹0",
 
     }));
+
 
     return (
         <>
@@ -327,7 +356,8 @@ const Query = () => {
 
                 {/* Data Table */}
                 <Box sx={{ height: 500, width: "100%", backgroundColor: "white", boxShadow: 3, borderRadius: 2, overflow: "hidden" }}>
-                    <DataTable rows={rows} columns={columns} loading={loading} />
+                    <DataTable rows={rows} columns={columns} loading={loading} setEditableRowId={setEditableRowId} />
+
                 </Box>
                 <CreateUpdateDialog
                     open={dialogOpen}

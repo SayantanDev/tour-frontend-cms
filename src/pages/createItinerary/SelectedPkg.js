@@ -55,6 +55,8 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
 
             if (response.success) {
                 alert("Queries created successfully");
+                console.log("Queries created successfully",response);
+                
 
                 // Now generate the document
                 const doc = new Document({
