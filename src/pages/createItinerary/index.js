@@ -9,7 +9,7 @@ import { useSelector } from "react-redux";
 const CreateItinerary = () => {
     const { fetchSelectedInquiry: inquiryData } = useSelector((state) => state.inquiries);
     // console.log("fetchSelectedInquiry : ", inquiryData);
-
+    
     const [filterObject, setFilterObject] = useState({
         location: '',
         duration: '',
@@ -18,6 +18,8 @@ const CreateItinerary = () => {
         sandakphuRover: '',
         rangeValue: [0, 20000]
     });
+
+    
     const [customerInput, setCustomerInput] = useState({
         name: inquiryData.guest_name || '',
         phone: inquiryData.guest_phone || '',
@@ -228,9 +230,12 @@ const CreateItinerary = () => {
 
     const handleCardClick = (title, locn, sndLoc) => {
         const selectCard = initalData.filter(loc => (loc.title === title && loc.location === locn && loc.locSecond === sndLoc));
-        setSelectedCard(selectCard[0]);
+        setSelectedCard(selectCard[0] ? selectCard[0] : {});
         setCardClicked(!cardClicked);
+        // console.log("selectCard[0] ",selectCard[0]);
+        
     };
+
 
     const handleBack = () => {
         setCardClicked(!cardClicked);
@@ -388,6 +393,8 @@ const CreateItinerary = () => {
                 {!cardClicked && <FilteredObject
                     filteredData={filteredData}
                     handleCardClick={handleCardClick}
+                    // handleDropdownChange={handleDropdownChange}
+                    filteredLocation={filterObject.location}
                 />}
                 {cardClicked && <SelectedPkg
                     selectedCard={selectedCard}

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Button, Box, Typography, Paper, Tabs, Tab } from '@mui/material';
+import React from 'react';
+import { Button, Box, Typography, Paper } from '@mui/material';
 import ArrowBack from '@mui/icons-material/ArrowBack';
 import {
     Document,
@@ -16,20 +16,10 @@ import { saveAs } from 'file-saver';
 import { createQueries } from '../../api/queriesAPI';
 import parse from 'html-react-parser';
 import { TravelExplore } from '@mui/icons-material';
-import BasicInfo from '../../components/ItineraryTabs/BasicInfo';
-import ShortItinerary from '../../components/ItineraryTabs/ShortItinerary';
-import Reach from '../../components/ItineraryTabs/Reach';
 
 const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCost }) => {
-
-    const [tab, setTab] =useState(0);
-    // console.log("selected customerInput is ", customerInput);
-    
-
-    const handleChange = (event, newValue) => {
-      setTab(newValue);
-    };
-
+    console.log("selectedCard:", selectedCard);
+    console.log("customerInput:", customerInput);
 
     const queriesValueObj = {
         guest_info: {
@@ -55,8 +45,8 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
         lead_source: "website",
         verified: true,
     };
-    console.log("selectedCard.destination :", selectedCard.location);
-
+    console.log("selectedCard.destination :",selectedCard.location);
+    
 
     const handleNext = async () => {
         try {
@@ -65,8 +55,8 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
 
             if (response.success) {
                 alert("Queries created successfully");
-                console.log("Queries created successfully", response);
-
+                console.log("Queries created successfully",response);
+                
 
                 // Now generate the document
                 const doc = new Document({
@@ -103,7 +93,7 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
                                     ],
                                     spacing: { after: 200 },
                                 }),
-
+                
                                 new Paragraph({
                                     tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
                                     children: [
@@ -112,7 +102,7 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
                                         new TextRun(`Name: ${customerInput.name}`),
                                     ],
                                 }),
-
+                
                                 new Paragraph({
                                     tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
                                     children: [
@@ -121,7 +111,7 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
                                         new TextRun(`Phone: ${customerInput.phone}`),
                                     ],
                                 }),
-
+                
                                 new Paragraph({
                                     tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
                                     children: [
@@ -131,38 +121,38 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
                                     ],
                                     spacing: { after: 200 },
                                 }),
-
+                
                                 new Paragraph(`Location: ${selectedCard.location}`),
                                 new Paragraph(`Car Name: ${customerInput.car}`),
                                 new Paragraph(`Total Car: ${customerInput.carCount}`),
                                 new Paragraph(`Type: ${customerInput.carCount}`),
                                 new Paragraph(`Journey Date: ${new Date(customerInput.startDate).toLocaleDateString()}`),
-
+                
                                 ...(customerInput.days >= 1
                                     ? [new Paragraph(`Duration: ${customerInput.days - 1}N / ${customerInput.days}D`)]
                                     : []
                                 ),
-
+                
                                 new Paragraph({
                                     text: `Cost: Rs. ${totalQuotetionCost}`,
                                     bold: true,
                                     spacing: { after: 200, before: 200 },
                                 }),
-
+                
                                 new Paragraph({
                                     text: "Itinerary",
                                     bold: true,
                                     spacing: { after: 200 },
                                 }),
                                 ...selectedCard.itinerary.map(item => new Paragraph(`${item.tagName}: ${item.tagValue}`)),
-
+                
                                 new Paragraph({
                                     text: "Inclusion",
                                     bold: true,
                                     spacing: { before: 200 },
                                 }),
                                 ...selectedCard.inclusions?.map(item => new Paragraph(`${item}`)),
-
+                
                                 new Paragraph({
                                     text: "Exclusion",
                                     bold: true,
@@ -173,7 +163,7 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
                         },
                     ],
                 });
-
+                
 
                 const blob = await Packer.toBlob(doc);
                 saveAs(blob, "generated-document.docx");
@@ -215,16 +205,85 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
                     Generate
                 </Button>
             </Box>
-            {/* further contant */}
-            <Tabs value={tab} onChange={handleChange} centered>
-                <Tab label="Basic Info" />
-                <Tab label="Short Itinerary" />
-                <Tab label="How to reach" />
-            </Tabs>
-            {tab==0 && <BasicInfo customerInput={customerInput} totalQuotetionCost={totalQuotetionCost} />}
-            {tab==1 && <ShortItinerary customerInput={customerInput}/>}
-            {tab==2 && <Reach/>}
-            
+            <Paper elevation={3} sx={{ padding: 5, width: '100%' }}>
+                <Typography variant="h3" gutterBottom align="center">
+                    <b>{selectedCard.title}</b> Detailed Plan
+                </Typography>
+
+                <Typography variant="h5" gutterBottom>Guest Details:</Typography>
+                <Typography variant="body1" sx={{ pl: 3, pb: 2 }}>
+                    <b>Name:</b> {customerInput.name} <br />
+                    <b>Phone:</b> {customerInput.phone} <br />
+                    <b>Email:</b> {customerInput.email}
+                </Typography>
+
+                <Typography variant="h5" gutterBottom>Trip Details:</Typography>
+                <Typography variant="body1" sx={{ pl: 3, pb: 2 }}>
+                    <b>Location:</b> {selectedCard.location} <br />
+                    <b>Hotel:</b> {customerInput.hotel} <br />
+                    <b>Rooms:</b> {customerInput.rooms} <br />
+                    <b>Number of Person:</b> {customerInput.pax} <br />
+                    <b>Car Name:</b> {customerInput.car} <br />
+                    <b>Total Car:</b> {customerInput.carCount <= 1 ? 1 : customerInput.carCount} <br />
+                    <b>Date of journey:</b> {new Date(customerInput.startDate).toLocaleDateString()} <br />
+                    {customerInput.days >= 1 && (
+                        <>
+                            <b>Duration:</b> {customerInput.days - 1}N / {customerInput.days}D <br />
+                        </>
+                    )}
+                </Typography>
+                <Typography variant="h5" gutterBottom>Cost: Rs. {totalQuotetionCost}</Typography>
+
+
+                <Typography variant="h5" gutterBottom>Short Itinerary:</Typography>
+                <Typography variant="body1" sx={{ pl: 3, pb: 2 }}>
+                    {selectedCard.itinerary.map((item, index) => (
+                        <div key={index}>
+                            <b>{item.tagName}:</b> {item.tagValue}
+                        </div>
+                    ))}
+                </Typography>
+
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-around', width: '100%' }}>
+                    <Box>
+                        <Typography variant="h5" gutterBottom>Inclusion</Typography>
+                        <Typography variant="body1" sx={{ pl: 1, pb: 2 }}>
+                            {selectedCard.inclusions?.map((item, index) => (
+                                <div key={index}>{item}</div>
+                            ))}
+                        </Typography>
+                    </Box>
+                    <Box>
+                        <Typography variant="h5" gutterBottom>Exclusion</Typography>
+                        <Typography variant="body1" sx={{ pl: 1, pb: 2 }}>
+                            {selectedCard.exclusions?.map((item, index) => (
+                                <div key={index}>{item}</div>
+                            ))}
+                        </Typography>
+                    </Box>
+                </Box>
+
+                {/* <Typography variant="h5" gutterBottom>Overview :</Typography>
+                <Typography variant="body1">
+                    {Array.isArray(selectedCard.overview) ? (
+                        selectedCard.overview.map((elem, index) => (
+                            <div key={index}>
+                                <b>{elem.tagName}:</b> {elem.tagValue}
+                            </div>
+                        ))
+                    ) : (
+                        parse(selectedCard.overview.para)
+                    )}
+                </Typography> */}
+
+                {/* <Typography variant="h6" gutterBottom>Details Itinerary:</Typography> */}
+                {/* <Typography variant="body1">
+                    {selectedCard.itinerary.map((elem, index) => (
+                        <div key={index}><b>{elem.tagName}:</b> {elem.tagValue}</div>
+                    ))}
+                </Typography> */}
+            </Paper>
         </Box>
     );
 };
