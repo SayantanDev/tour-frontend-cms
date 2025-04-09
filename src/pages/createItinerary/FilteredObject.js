@@ -6,6 +6,7 @@ import {
   Typography,
   Container,
   Box,
+  Grid2,
 } from "@mui/material";
 
 const FilteredObject = ({ filteredData, handleCardClick }) => {
@@ -73,6 +74,9 @@ const FilteredObject = ({ filteredData, handleCardClick }) => {
           </Grid>
         ))}
       </Grid>
+      <Grid2>
+        {/* coutom component */}
+      </Grid2>
     </Container>
   );
 };
