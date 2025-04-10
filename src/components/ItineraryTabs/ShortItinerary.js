@@ -59,7 +59,7 @@ const ShortItinerary = ({ customerInput, selectedCard }) => {
 
   // 7. Delete a day and update day labels
   const handleDeleteDay = (index) => {
-    setItinerary((prev) =>
+    setItinerary((prev) => 
       prev
         .filter((_, i) => i !== index)
         .map((item, i) => ({
@@ -79,7 +79,7 @@ const ShortItinerary = ({ customerInput, selectedCard }) => {
         <Box key={idx} sx={{ mb: 2 }}>
           <Grid container alignItems="center" spacing={2}>
             <Grid item xs={12} sm={2}>
-              <Typography variant="subtitle1">{item.tagName}</Typography>
+              <Typography  variant="subtitle1">{item.tagName}</Typography>
             </Grid>
 
             <Grid item xs={12} sm={8}>

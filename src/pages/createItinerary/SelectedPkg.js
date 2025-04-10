@@ -223,7 +223,7 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
             </Tabs>
             {tab==0 && <BasicInfo customerInput={customerInput} totalQuotetionCost={totalQuotetionCost} />}
             {tab==1 && <ShortItinerary customerInput={customerInput} selectedCard={selectedCard} />}
-            {tab==2 && <Reach/>}
+            {tab==2 && <Reach selectedCard={selectedCard} />}
             
         </Box>
     );
