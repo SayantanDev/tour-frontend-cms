@@ -23,7 +23,7 @@ import Reach from '../../components/ItineraryTabs/Reach';
 const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCost }) => {
 
     const [tab, setTab] =useState(0);
-    // console.log("selected customerInput is ", customerInput);
+    console.log("selected selectedCard is ", selectedCard);
     
 
     const handleChange = (event, newValue) => {
@@ -222,7 +222,7 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
                 <Tab label="How to reach" />
             </Tabs>
             {tab==0 && <BasicInfo customerInput={customerInput} totalQuotetionCost={totalQuotetionCost} />}
-            {tab==1 && <ShortItinerary customerInput={customerInput}/>}
+            {tab==1 && <ShortItinerary customerInput={customerInput} selectedCard={selectedCard} />}
             {tab==2 && <Reach/>}
             
         </Box>

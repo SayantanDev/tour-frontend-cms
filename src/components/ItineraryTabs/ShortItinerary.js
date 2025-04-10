@@ -6,29 +6,41 @@ import {
   Typography,
   IconButton,
   Button,
-  Paper,
 } from "@mui/material";
 import { Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
 
-const ShortItinerary = ({ customerInput }) => {
-  // 1. Grab the initial number of days
+const ShortItinerary = ({ customerInput, selectedCard }) => {
+  // 1. Get total number of days from props
   const totalDays = customerInput.days ?? 1;
 
-  // 2. Build an initial array: [{tagValue:""}, ...] length = totalDays
-  const makeEmptyItinerary = (days) =>
-    Array.from({ length: days }, (_,i) => ({tagName: `Day ${i + 1}`, tagValue: "" })); //like for each 
+  // 2. Function to create initial itinerary with optional values
+  const makeEmptyItinerary = (days, existingValues = []) =>
+    Array.from({ length: days }, (_, i) => ({
+      tagName: `Day ${i + 1}`,
+      tagValue: existingValues[i] ?? "",
+    }));
 
-  // 3. State holds the array of day‑plans
-  const [itinerary, setItinerary] = useState(makeEmptyItinerary(totalDays));
-  console.log("itinerary is is :",itinerary);
-  
+  // 3. Initial state with memoized values from selectedCard
+  const [itinerary, setItinerary] = useState(() => {
+    const initialTValue = selectedCard?.itinerary?.map((day) => day.tagValue) || [];
+    return makeEmptyItinerary(totalDays, initialTValue);
+  });
 
-  // 4. If the prop changes, reset the state
+  // 4. Effect to update state safely when totalDays or selectedCard changes
   useEffect(() => {
-    setItinerary(makeEmptyItinerary(totalDays));
-  }, [totalDays]);
+    const newTValue = selectedCard?.itinerary?.map((day) => day.tagValue) || [];
+    const newItinerary = makeEmptyItinerary(totalDays, newTValue);
 
-  // 5. Handlers
+    // Only update if values are actually different
+    setItinerary((prev) => {
+      const isSame =
+        prev.length === newItinerary.length &&
+        prev.every((item, idx) => item.tagValue === newItinerary[idx].tagValue);
+      return isSame ? prev : newItinerary;
+    });
+  }, [totalDays, selectedCard]);
+
+  // 5. Handle input change
   const handlePlanChange = (index, value) => {
     setItinerary((prev) => {
       const next = [...prev];
@@ -37,29 +49,39 @@ const ShortItinerary = ({ customerInput }) => {
     });
   };
 
+  // 6. Add a new day
   const handleAddDay = () => {
-    setItinerary((prev) => [...prev, { tagValue: "" }]);
+    setItinerary((prev) => [
+      ...prev,
+      { tagName: `Day ${prev.length + 1}`, tagValue: "" },
+    ]);
   };
 
+  // 7. Delete a day and update day labels
   const handleDeleteDay = (index) => {
-    setItinerary((prev) => prev.filter((_, i) => i !== index));
+    setItinerary((prev) =>
+      prev
+        .filter((_, i) => i !== index)
+        .map((item, i) => ({
+          ...item,
+          tagName: `Day ${i + 1}`,
+        }))
+    );
   };
 
   return (
-    <Box>
+    <Box sx={{ width: "50vw" }}>
       <Typography variant="h6" gutterBottom>
         Short Itinerary
       </Typography>
 
       {itinerary.map((item, idx) => (
-        <Paper key={idx} elevation={1} sx={{ p: 2, mb: 2 }}>
+        <Box key={idx} sx={{ mb: 2 }}>
           <Grid container alignItems="center" spacing={2}>
-            {/* Day label */}
             <Grid item xs={12} sm={2}>
-              <Typography variant="subtitle1">Day {idx + 1}</Typography>
+              <Typography variant="subtitle1">{item.tagName}</Typography>
             </Grid>
 
-            {/* Plan input */}
             <Grid item xs={12} sm={8}>
               <TextField
                 fullWidth
@@ -69,7 +91,6 @@ const ShortItinerary = ({ customerInput }) => {
               />
             </Grid>
 
-            {/* Delete button */}
             <Grid item xs={12} sm={2}>
               <IconButton
                 aria-label="delete day"
@@ -80,7 +101,7 @@ const ShortItinerary = ({ customerInput }) => {
               </IconButton>
             </Grid>
           </Grid>
-        </Paper>
+        </Box>
       ))}
 
       <Button
