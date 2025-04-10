@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Box, Typography, Paper, Tabs, Tab } from '@mui/material';
+import { Button, Box, Tabs, Tab } from '@mui/material';
 import ArrowBack from '@mui/icons-material/ArrowBack';
 import {
     Document,
@@ -14,8 +14,8 @@ import {
 
 import { saveAs } from 'file-saver';
 import { createQueries } from '../../api/queriesAPI';
-import parse from 'html-react-parser';
-import { TravelExplore } from '@mui/icons-material';
+// import parse from 'html-react-parser';
+// import { TravelExplore } from '@mui/icons-material';
 import BasicInfo from '../../components/ItineraryTabs/BasicInfo';
 import ShortItinerary from '../../components/ItineraryTabs/ShortItinerary';
 import Reach from '../../components/ItineraryTabs/Reach';
@@ -221,9 +221,9 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
                 <Tab label="Short Itinerary" />
                 <Tab label="How to reach" />
             </Tabs>
-            {tab==0 && <BasicInfo customerInput={customerInput} totalQuotetionCost={totalQuotetionCost} />}
-            {tab==1 && <ShortItinerary customerInput={customerInput} selectedCard={selectedCard} />}
-            {tab==2 && <Reach selectedCard={selectedCard} />}
+            {tab===0 && <BasicInfo customerInput={customerInput} totalQuotetionCost={totalQuotetionCost} />}
+            {tab===1 && <ShortItinerary customerInput={customerInput} selectedCard={selectedCard} />}
+            {tab===2 && <Reach selectedCard={selectedCard} />}
             
         </Box>
     );
