@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Container, Typography, Button, IconButton, Tooltip, Box, Chip, MenuItem, Menu, Modal, Grid, Paper, Divider, TextField } from "@mui/material";
-import UpcomingIcon from "@mui/icons-material/Upcoming";
-import HikingIcon from "@mui/icons-material/Hiking";
-import DateRangeIcon from "@mui/icons-material/DateRange";
-import CurrencyRupeeIcon from "@mui/icons-material/CurrencyRupee";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -12,9 +8,11 @@ import DataTable from "../../components/dataTable";
 import { getAllQueries, updateQueries } from "../../api/queriesAPI";
 import usePermissions from "../../hooks/UsePermissions";
 import NotAuthorized from "../NotAuthorized";
-import moment from "moment";
+import KeyboardArrowRightOutlinedIcon from '@mui/icons-material/KeyboardArrowRightOutlined';
 import CreateUpdateDialog from "./CreateUpdateDialog";
-import { DataGrid } from "@mui/x-data-grid";
+import { useDispatch } from "react-redux";
+import { setSelectedquerie } from "../../reduxcomponents/slices/queriesSlice";
+import { useNavigate } from "react-router-dom";
 
 const style = {
     position: 'absolute',
@@ -27,9 +25,10 @@ const style = {
     boxShadow: 24,
     p: 4,
 };
+
 const Query = () => {
     const checkPermission = usePermissions();
-
+    const dispatch = useDispatch();
     const canView = checkPermission("queries", "view");
     const canCreate = checkPermission("queries", "create");
     const canEdit = checkPermission("queries", "alter");
@@ -49,7 +48,8 @@ const Query = () => {
     const [locationQuery, setLocationQuery] = useState("")
     const [editableRowId, setEditableRowId] = useState(null)
 
-
+    console.log("querie", query);
+    const navigate = useNavigate();
     useEffect(() => {
         if (!canView) return; // Stop fetching if the user cannot view
 
@@ -91,6 +91,7 @@ const Query = () => {
         setSelectedRow(rowId);
     };
 
+
     const handleClosee = () => {
         setAnchorEl(null);
         setSelectedRow(null);
@@ -119,11 +120,15 @@ const Query = () => {
     const handleView = (id, value) => {
         // console.log("Viewing query:", id);
         console.log("selected row:", value);
+
         setSelectedData(value);
-
         SetView(true)
-
     };
+    const handleEditOpen = (id, value) => {
+        dispatch(setSelectedquerie(value))
+        navigate("/query/view")
+
+    }
     const handleOpen = (data = null) => {
         setSelectedData(data);
         setDialogOpen(true);
@@ -133,16 +138,27 @@ const Query = () => {
     };
     const handleEdit = (id) => {
         if (!canEdit) return;
-
         setEditableRowId(id)
-        // console.log("Editing query:", id);
-        // Implement edit functionality
+
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (!canDelete) return;
         console.log("Deleting query:", id);
-        // Implement delete functionality (show confirmation dialog)
+        // try {
+        //     const res = await deleteQueries(id); //delete api function name
+        //     if (res.success===true) {
+        //         console.log("selected row delete successfully");
+
+        //         fetchQuery();
+
+        //     }
+
+        // } catch (error) {
+        //     console.log(error);
+
+        // }
+
     };
 
     if (!canView) {
@@ -207,7 +223,7 @@ const Query = () => {
             field: "bookingStatus",
             headerName: "Lead Stage",
             width: 120,
-            
+
             renderCell: (params) => (
                 <>
                     <Tooltip title={`${params.row.bookingStatus}`}>
@@ -234,7 +250,6 @@ const Query = () => {
             width: 120,
             editable: (params) => params.id === editableRowId
         },
-       
         {
             field: "advancePayment",
             headerName: "Advance Payment",
@@ -252,10 +267,17 @@ const Query = () => {
                             <VisibilityIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
-                    {canEdit && (
+                    {/* {canEdit && (
                         <Tooltip title="Edit">
                             <IconButton color="warning" size="small" onClick={() => handleEdit(params.row.id)}>
                                 <EditIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                    )} */}
+                    {canEdit && (
+                        <Tooltip title="open">
+                            <IconButton color="warning" size="small" onClick={() => handleEditOpen(params.row.id, params.row)}>
+                                <KeyboardArrowRightOutlinedIcon fontSize="small" />
                             </IconButton>
                         </Tooltip>
                     )}
@@ -266,6 +288,7 @@ const Query = () => {
                             </IconButton>
                         </Tooltip>
                     )}
+
                 </Box>
             ),
         },

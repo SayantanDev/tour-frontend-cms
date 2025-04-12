@@ -22,7 +22,7 @@ function Notification() {
 
  const dispatch = useDispatch();
  const notifications = useSelector((state) => state.notification.list);
- console.log("notyfi is is :", notifications);
+ // console.log("notyfi is is :", notifications);
 
 
  useEffect(() => {

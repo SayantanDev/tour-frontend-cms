@@ -5,7 +5,6 @@ import RootLayout from "./components/layout/RootLayout";
 import Login from "./pages/login";
 import Logout from "./pages/logout";
 import ProtectedRoute from "./components/ProtectedRoute";
-import WhatsAppSender from "./components/WhatsAppSender";
 import AllPackages from "./pages/allPackages";
 import Users from "./pages/users";
 import Dashboard from "./pages/dashboard";
@@ -17,7 +16,7 @@ import withAuthRedirect from "./components/withAuthRedirect";
 import View from "./components/packages/View";
 import Edit from "./components/packages/Edit";
 import NotAuthorized from "./pages/NotAuthorized";
-
+import SingleQueriesView from "./pages/query/SingleQueriesView";
 const RootLayoutWithRedirect = withAuthRedirect(RootLayout);
 
 const Router = () => {
@@ -38,10 +37,10 @@ const Router = () => {
           <Route path="/createItinerary" element={<ProtectedRoute Element={CreateItinerary} module="itinerary" />} />
           <Route path="/packages" element={<ProtectedRoute Element={AllPackages} module="packages" />} />
           <Route path="/packages/view/:id" element={<ProtectedRoute Element={View} module="packages" />} />
+          <Route path="/query/view" element={<ProtectedRoute Element={SingleQueriesView} />} />
           <Route path="/packages/edit" element={<ProtectedRoute Element={Edit} module="packages" />} />
           <Route path="/costTable" element={<ProtectedRoute Element={AdditionalCost} module="costs" />} />
           <Route path="/users" element={<ProtectedRoute Element={Users} module="user" />} />
-
           {/* Access Denied Page */}
           <Route path="/not-authorized" element={<NotAuthorized />} />
         </Route>

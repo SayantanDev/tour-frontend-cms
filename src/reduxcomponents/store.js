@@ -6,7 +6,7 @@ import rootReducer from "./slices/rootReducer";
 const persistConfig = {
     key: 'root',
     storage,
-    safelist: ['loggedinUser', 'sideOpen', 'configLabels', 'tokens', 'inquiries','package,notification'],
+    safelist: ['loggedinUser', 'sideOpen', 'configLabels', 'tokens', 'inquiries','package,notification',"queries"],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -21,6 +21,7 @@ const store = configureStore({
                 ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
                 // Ignore these paths in the state
                 ignoredPaths: ['register'], // Adjust based on your state structure
+                
             },
         }),
 });
