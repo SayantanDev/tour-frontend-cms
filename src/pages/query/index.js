@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Container, Typography, Button, IconButton, Tooltip, Box, Chip, MenuItem, Menu, Modal, Grid, Paper, Divider, TextField } from "@mui/material";
+import { Container, Typography, Button, IconButton, Tooltip, Box, Chip, MenuItem, Menu, Modal, Grid, Paper, Divider, TextField, Grid2 } from "@mui/material";
 
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
@@ -378,10 +378,10 @@ const Query = () => {
                 </Box>
 
                 {/* Data Table */}
-                <Box sx={{ height: 500, width: "100%", backgroundColor: "white", boxShadow: 3, borderRadius: 2, overflow: "hidden" }}>
+                <Grid2 sx={{ height: 500, backgroundColor: "white", boxShadow: 3, borderRadius: 2, overflow: "hidden" }}>
                     <DataTable rows={rows} columns={columns} loading={loading} setEditableRowId={setEditableRowId} />
 
-                </Box>
+                </Grid2>
                 <CreateUpdateDialog
                     open={dialogOpen}
                     onClose={handleClose}

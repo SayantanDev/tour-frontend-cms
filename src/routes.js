@@ -37,7 +37,7 @@ const Router = () => {
           <Route path="/createItinerary" element={<ProtectedRoute Element={CreateItinerary} module="itinerary" />} />
           <Route path="/packages" element={<ProtectedRoute Element={AllPackages} module="packages" />} />
           <Route path="/packages/view/:id" element={<ProtectedRoute Element={View} module="packages" />} />
-          <Route path="/query/view" element={<ProtectedRoute Element={SingleQueriesView} />} />
+          <Route path="/query/view" element={<ProtectedRoute Element={SingleQueriesView}  />} />
           <Route path="/packages/edit" element={<ProtectedRoute Element={Edit} module="packages" />} />
           <Route path="/costTable" element={<ProtectedRoute Element={AdditionalCost} module="costs" />} />
           <Route path="/users" element={<ProtectedRoute Element={Users} module="user" />} />

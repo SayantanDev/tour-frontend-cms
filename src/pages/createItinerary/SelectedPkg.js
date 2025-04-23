@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Box, Tabs, Tab } from '@mui/material';
 import ArrowBack from '@mui/icons-material/ArrowBack';
 import {
@@ -19,15 +19,15 @@ import { createQueries } from '../../api/queriesAPI';
 import BasicInfo from '../../components/ItineraryTabs/BasicInfo';
 import ShortItinerary from '../../components/ItineraryTabs/ShortItinerary';
 import Reach from '../../components/ItineraryTabs/Reach';
-
+import { useDispatch, useSelector } from "react-redux";
 const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCost }) => {
+    const { fetchNewPackageInfo: pakageData } = useSelector((state) => state.package);
+    const [tab, setTab] = useState(0);
+    console.log("fetchNewPackageInfo :", pakageData);
 
-    const [tab, setTab] =useState(0);
-    console.log("selected selectedCard is ", selectedCard);
-    
 
     const handleChange = (event, newValue) => {
-      setTab(newValue);
+        setTab(newValue);
     };
 
 
@@ -55,131 +55,152 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
         lead_source: "website",
         verified: true,
     };
-    console.log("selectedCard.destination :", selectedCard.location);
+
+    const createPackageObj = {
+        location: pakageData?.location,
+        type: pakageData?.type,
+        url: `${pakageData?.location.toLowerCase()}-tour-${customerInput.days - 1}n-${customerInput.days}d`,
+        label: `${pakageData?.location} Tour ${customerInput.days - 1}N ${customerInput.days}D`,
+        duration: customerInput.days,
+    };
+    // useEffect(() => {
+    //     console.log("queriesValueObj :", queriesValueObj);
+
+    // },[selectedCard,createPackageObj]);
 
 
     const handleNext = async () => {
         try {
             // Make API call first
-            const response = await createQueries(queriesValueObj);
+            // const response = await createQueries(queriesValueObj);
 
-            if (response.success) {
-                alert("Queries created successfully");
-                console.log("Queries created successfully", response);
+            console.log("selectedCard :", selectedCard);
 
-
-                // Now generate the document
-                const doc = new Document({
-                    sections: [
-                        {
-                            properties: {},
-                            headers: {
-                                default: new Header({
-                                    children: [
-                                        new Paragraph({
-                                            alignment: AlignmentType.CENTER,
-                                            children: [
-                                                new TextRun({
-                                                    text: `${selectedCard.title} Detailed Plan`,
-                                                    bold: true,
-                                                    size: 36,
-                                                }),
-                                            ],
-                                            spacing: { after: 300 },
-                                        }),
-                                    ],
-                                }),
-                            },
-                            children: [
-                                // Guest Details & Trip Details Side by Side (Without Table)
-                                new Paragraph({
-                                    tabStops: [
-                                        { type: TabStopType.RIGHT, position: TabStopPosition.MAX },
-                                    ],
-                                    children: [
-                                        new TextRun({ text: "Trip Details:", bold: true }),
-                                        new TextRun("\t"), // Moves text to the right
-                                        new TextRun({ text: "Guest Details:", bold: true }),
-                                    ],
-                                    spacing: { after: 200 },
-                                }),
-
-                                new Paragraph({
-                                    tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
-                                    children: [
-                                        new TextRun(`Hotel: ${customerInput.hotel}`),
-                                        new TextRun("\t"),
-                                        new TextRun(`Name: ${customerInput.name}`),
-                                    ],
-                                }),
-
-                                new Paragraph({
-                                    tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
-                                    children: [
-                                        new TextRun(`Rooms: ${customerInput.rooms}`),
-                                        new TextRun("\t"),
-                                        new TextRun(`Phone: ${customerInput.phone}`),
-                                    ],
-                                }),
-
-                                new Paragraph({
-                                    tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
-                                    children: [
-                                        new TextRun(`Persons: ${customerInput.pax}`),
-                                        new TextRun("\t"),
-                                        new TextRun(`Email: ${customerInput.email}`),
-                                    ],
-                                    spacing: { after: 200 },
-                                }),
-
-                                new Paragraph(`Location: ${selectedCard.location}`),
-                                new Paragraph(`Car Name: ${customerInput.car}`),
-                                new Paragraph(`Total Car: ${customerInput.carCount}`),
-                                new Paragraph(`Type: ${customerInput.carCount}`),
-                                new Paragraph(`Journey Date: ${new Date(customerInput.startDate).toLocaleDateString()}`),
-
-                                ...(customerInput.days >= 1
-                                    ? [new Paragraph(`Duration: ${customerInput.days - 1}N / ${customerInput.days}D`)]
-                                    : []
-                                ),
-
-                                new Paragraph({
-                                    text: `Cost: Rs. ${totalQuotetionCost}`,
-                                    bold: true,
-                                    spacing: { after: 200, before: 200 },
-                                }),
-
-                                new Paragraph({
-                                    text: "Itinerary",
-                                    bold: true,
-                                    spacing: { after: 200 },
-                                }),
-                                ...selectedCard.itinerary.map(item => new Paragraph(`${item.tagName}: ${item.tagValue}`)),
-
-                                new Paragraph({
-                                    text: "Inclusion",
-                                    bold: true,
-                                    spacing: { before: 200 },
-                                }),
-                                ...selectedCard.inclusions?.map(item => new Paragraph(`${item}`)),
-
-                                new Paragraph({
-                                    text: "Exclusion",
-                                    bold: true,
-                                    spacing: { before: 200 },
-                                }),
-                                ...selectedCard.exclusions?.map(item => new Paragraph(`${item}`)),
-                            ],
-                        },
-                    ],
-                });
-
-
-                const blob = await Packer.toBlob(doc);
-                saveAs(blob, "generated-document.docx");
-
-                console.log("Document generated successfully!");
+            if (selectedCard && Object.keys(selectedCard).length === 0) {
+                // console.log("selectedCard is an empty object");
+                // console.log("queriesValueObj :", createPackageObj);
+                const packageObject = {...pakageData,...createPackageObj}
+                console.log("packageObject :", packageObject);
             }
+
+
+            // if (response.success) {
+            //     alert("Queries created successfully");
+            //     console.log("Queries created successfully", response);
+
+
+            //     // Now generate the document
+            //     const doc = new Document({
+            //         sections: [
+            //             {
+            //                 properties: {},
+            //                 headers: {
+            //                     default: new Header({
+            //                         children: [
+            //                             new Paragraph({
+            //                                 alignment: AlignmentType.CENTER,
+            //                                 children: [
+            //                                     new TextRun({
+            //                                         text: `${selectedCard.title} Detailed Plan`,
+            //                                         bold: true,
+            //                                         size: 36,
+            //                                     }),
+            //                                 ],
+            //                                 spacing: { after: 300 },
+            //                             }),
+            //                         ],
+            //                     }),
+            //                 },
+            //                 children: [
+            //                     // Guest Details & Trip Details Side by Side (Without Table)
+            //                     new Paragraph({
+            //                         tabStops: [
+            //                             { type: TabStopType.RIGHT, position: TabStopPosition.MAX },
+            //                         ],
+            //                         children: [
+            //                             new TextRun({ text: "Trip Details:", bold: true }),
+            //                             new TextRun("\t"), // Moves text to the right
+            //                             new TextRun({ text: "Guest Details:", bold: true }),
+            //                         ],
+            //                         spacing: { after: 200 },
+            //                     }),
+
+            //                     new Paragraph({
+            //                         tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
+            //                         children: [
+            //                             new TextRun(`Hotel: ${customerInput.hotel}`),
+            //                             new TextRun("\t"),
+            //                             new TextRun(`Name: ${customerInput.name}`),
+            //                         ],
+            //                     }),
+
+            //                     new Paragraph({
+            //                         tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
+            //                         children: [
+            //                             new TextRun(`Rooms: ${customerInput.rooms}`),
+            //                             new TextRun("\t"),
+            //                             new TextRun(`Phone: ${customerInput.phone}`),
+            //                         ],
+            //                     }),
+
+            //                     new Paragraph({
+            //                         tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
+            //                         children: [
+            //                             new TextRun(`Persons: ${customerInput.pax}`),
+            //                             new TextRun("\t"),
+            //                             new TextRun(`Email: ${customerInput.email}`),
+            //                         ],
+            //                         spacing: { after: 200 },
+            //                     }),
+
+            //                     new Paragraph(`Location: ${selectedCard.location}`),
+            //                     new Paragraph(`Car Name: ${customerInput.car}`),
+            //                     new Paragraph(`Total Car: ${customerInput.carCount}`),
+            //                     new Paragraph(`Type: ${customerInput.carCount}`),
+            //                     new Paragraph(`Journey Date: ${new Date(customerInput.startDate).toLocaleDateString()}`),
+
+            //                     ...(customerInput.days >= 1
+            //                         ? [new Paragraph(`Duration: ${customerInput.days - 1}N / ${customerInput.days}D`)]
+            //                         : []
+            //                     ),
+
+            //                     new Paragraph({
+            //                         text: `Cost: Rs. ${totalQuotetionCost}`,
+            //                         bold: true,
+            //                         spacing: { after: 200, before: 200 },
+            //                     }),
+
+            //                     new Paragraph({
+            //                         text: "Itinerary",
+            //                         bold: true,
+            //                         spacing: { after: 200 },
+            //                     }),
+            //                     ...selectedCard.itinerary.map(item => new Paragraph(`${item.tagName}: ${item.tagValue}`)),
+
+            //                     new Paragraph({
+            //                         text: "Inclusion",
+            //                         bold: true,
+            //                         spacing: { before: 200 },
+            //                     }),
+            //                     ...selectedCard.inclusions?.map(item => new Paragraph(`${item}`)),
+
+            //                     new Paragraph({
+            //                         text: "Exclusion",
+            //                         bold: true,
+            //                         spacing: { before: 200 },
+            //                     }),
+            //                     ...selectedCard.exclusions?.map(item => new Paragraph(`${item}`)),
+            //                 ],
+            //             },
+            //         ],
+            //     });
+
+
+            //     const blob = await Packer.toBlob(doc);
+            //     saveAs(blob, "generated-document.docx");
+
+            //     console.log("Document generated successfully!");
+            // }
         } catch (error) {
             console.error("Error generating document or API call:", error);
         }
@@ -221,10 +242,10 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
                 <Tab label="Short Itinerary" />
                 <Tab label="How to reach" />
             </Tabs>
-            {tab===0 && <BasicInfo customerInput={customerInput} totalQuotetionCost={totalQuotetionCost} />}
-            {tab===1 && <ShortItinerary customerInput={customerInput} selectedCard={selectedCard} />}
-            {tab===2 && <Reach selectedCard={selectedCard} />}
-            
+            {tab === 0 && <BasicInfo customerInput={customerInput} totalQuotetionCost={totalQuotetionCost} />}
+            {tab === 1 && <ShortItinerary customerInput={customerInput} selectedCard={selectedCard} />}
+            {tab === 2 && <Reach selectedCard={selectedCard} />}
+
         </Box>
     );
 };

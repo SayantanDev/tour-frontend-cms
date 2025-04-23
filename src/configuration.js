@@ -1854,4 +1854,21 @@ export const CONFIG_STR = {
             role: 'all'
         },
     ],
+    commonReach: {
+        "inclusions": [
+            "All accommodations.",
+            "All meals from day 1 Lunch to Day 6 Breakfast.",
+            "Experienced Guide and other support staff.",
+            "All equipment like, tents, sleeping bags etc.",
+            "All trek permits."
+        ],
+        "exclusions": [
+            "Transport to and from the station/airport.",
+            "Food during transit.",
+            "Any personal expenses.",
+            "Camera Charges.",
+            "Singalila National Park Entry Fees.",
+            "Anything not mentioned in inclusions."
+        ]
+    },
 };

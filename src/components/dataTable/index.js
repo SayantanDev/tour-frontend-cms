@@ -42,7 +42,7 @@ const DataTable = ({ rows, columns,setEditableRowId }) => {
   };
   
   return (
-    <div style={{ height: 550, width: "100%", overflow: "auto" }}>
+    // <div >
      
       <DataGrid
         rows={rows}
@@ -57,7 +57,7 @@ const DataTable = ({ rows, columns,setEditableRowId }) => {
         experimentalFeatures={{ newEditingApi: true }}
         editMode="row"
       />
-    </div>
+    // </div>
   );
 };
 

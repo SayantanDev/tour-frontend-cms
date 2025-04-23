@@ -13,17 +13,19 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Grid2,
 } from '@mui/material';
+// import Grid2 from '@mui/material/Unstable_Grid2';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useSelector } from 'react-redux';
 
 const itineraryDataInitial = [
-  { day: 'Day 1', date: '05-Apr-25', place: 'Reach Dhotrey' },
-  { day: 'Day 2', date: '06-Apr-25', place: 'Dhotrey to Tumling' },
-  { day: 'Day 3', date: '07-Apr-25', place: 'Tumling to Kalipokhari' },
-  { day: 'Day 4', date: '08-Apr-25', place: 'Kalipokhari to Sandakphu' },
-  { day: 'Day 5', date: '09-Apr-25', place: 'Sandakphu to Srikhola' },
-  { day: 'Day 6', date: '10-Apr-25', place: 'Onward journey from Srikhola' },
+  { day: '1', date: '05-Apr-25', hotel: 'demo hotel', payment: 4000, confirmation: 'dome', place: 'Reach Dhotrey' },
+  { day: '2', date: '06-Apr-25', hotel: 'demo hotel', payment: 4000, confirmation: 'dome', place: 'Dhotrey to Tumling' },
+  { day: '3', date: '07-Apr-25', hotel: 'demo hotel', payment: 4000, confirmation: 'dome', place: 'Tumling to Kalipokhari' },
+  { day: '4', date: '08-Apr-25', hotel: 'demo hotel', payment: 4000, confirmation: 'dome', place: 'Kalipokhari to Sandakphu' },
+  { day: '5', date: '09-Apr-25', hotel: 'demo hotel', payment: 4000, confirmation: 'dome', place: 'Sandakphu to Srikhola' },
+  { day: '6', date: '10-Apr-25', hotel: 'demo hotel', payment: 4000, confirmation: 'dome', place: 'Onward journey from Srikhola' },
 ];
 
 function SingleQueriesView() {
@@ -44,13 +46,39 @@ function SingleQueriesView() {
     setItineraryData(newData);
   };
 
+  const columnLabels = [
+    'Day',
+    'Date',
+    'Place',
+    'Hotel',
+    'Payment',
+    'Confirmation',
+    'Check-In / Check-Out',
+    'Meal Plan',
+    'Vehicle',
+    'Notes',
+  ];
+
+  const fieldKeys = [
+    'day',
+    'date',
+    'place',
+    'hotel',
+    'payment',
+    'confirmation',
+    'checkInOut',
+    'mealPlan',
+    'vehicle',
+    'notes',
+  ];
+
   return (
-    <Box sx={{ maxWidth: '1100px', mx: 'auto', my: 5, px: 2 }}>
+    <Grid2 container>
       <Typography variant="h5" gutterBottom textAlign="center" fontWeight="bold" color="primary">
         Query Details
       </Typography>
 
-      <Grid container spacing={4} sx={{ mt: 3 }}>
+      <Grid2 container spacing={4} sx={{ mt: 3 }}>
         {/* Guest & Stay Information */}
         <Grid item xs={12} md={6}>
           <Paper elevation={3} sx={{ p: 3, borderRadius: 3 }}>
@@ -122,7 +150,7 @@ function SingleQueriesView() {
             )}
           </Paper>
         </Grid>
-      </Grid>
+      </Grid2>
 
       {/* Short Itinerary */}
       <Box sx={{ mt: 6 }}>
@@ -134,20 +162,30 @@ function SingleQueriesView() {
           <Table>
             <TableHead sx={{ backgroundColor: '#e8f5e9' }}>
               <TableRow>
-                {['Day', 'Date', 'Place', 'Hotel', 'Payment', 'Confirmation', 'Check-In / Check-Out', 'Meal Plan', 'Vehicle', 'Notes'].map((col) => (
-                  <TableCell key={col}>
-                    <strong>{col}</strong>  
+                {columnLabels.map((col) => (
+                  <TableCell
+                    key={col}
+                    sx={col === 'Place' ? { width: '250px' } : { width: 'auto'}}
+                  >
+                    <strong>{col}</strong>
                   </TableCell>
                 ))}
               </TableRow>
             </TableHead>
-            <TableBody> 
+            <TableBody>
               {itineraryData.map((row, index) => (
-                <TableRow key={index} sx={{ backgroundColor: index % 2 === 0 ? '#f1f8e9' : '#ffffff' }}>
-                  {['day', 'date', 'place', 'hotel', 'payment', 'confirmation', 'checkInOut', 'mealPlan', 'vehicle', 'notes'].map((field) => (
-                    <TableCell key={field}>
+                <TableRow
+                  key={index}
+                  sx={{ backgroundColor: index % 2 === 0 ? '#f1f8e9' : '#ffffff' }}
+                >
+                  {fieldKeys.map((field) => (
+                    <TableCell
+                      key={field}
+                      sx={field === 'place' ? { width: '250px' } : {}}
+                    >
                       <TextField
                         variant="standard"
+                        fullWidth
                         value={row[field] || ''}
                         onChange={(e) => handleItineraryChange(index, field, e.target.value)}
                       />
@@ -159,7 +197,7 @@ function SingleQueriesView() {
           </Table>
         </TableContainer>
       </Box>
-    </Box>
+    </Grid2>
   );
 }
 

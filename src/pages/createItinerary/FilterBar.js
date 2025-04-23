@@ -11,6 +11,8 @@ import {
   //RadioGroup,FormControlLabel,Radio,Checkbox,TextField,
 } from '@mui/material';
 import { CONFIG_STR } from "../../configuration";
+import { useDispatch } from 'react-redux';
+import { setNewPackageInfo } from '../../reduxcomponents/slices/packagesSlice';
 
 const FilterBar = ({
   CONFIG_STR,
@@ -26,7 +28,7 @@ const FilterBar = ({
   totalQuotetionCost,
   setTotalQuotetionCost
 }) => {
-
+  const dispatch = useDispatch();
   const handleReset = () => {
     setFilterObject({
       location: '',
@@ -63,6 +65,10 @@ const FilterBar = ({
       }
     } else {
       calculateTotalCost();
+    }
+    if (customerInput.days > 0) {
+  dispatch(setNewPackageInfo({ duration: Number(customerInput.days) }));
+      
     }
   }, [filterObject, customerInput]); // ✅ Added filterObject to dependency array
 
@@ -151,10 +157,11 @@ const FilterBar = ({
 
     // Adjust calculation based on pax count
     if (pax > 0 && pax <= 6) {
-      let perhead = (rate / pax) + extraCharge;
+      let perhead = pax > 0 ? (rate / pax) + extraCharge : 0;
+
       totalCost = perhead * pax;
     } else {
-      totalCost = (rate * Math.ceil(pax / 6)) + (extraCharge * pax );
+      totalCost = (rate * Math.ceil(pax / 6)) + (extraCharge * pax);
     }
 
     // Determine number of cars required
@@ -452,7 +459,7 @@ const FilterBar = ({
               <Box sx={{ display: 'flex', gap: 2 }}>
                 <FormControl size="small" fullWidth>
                   <InputLabel>Choose Season Rate</InputLabel>
-                  <Select onChange={handleSeasonRateChange}>
+                  <Select  onChange={handleSeasonRateChange}>
                     <MenuItem value="rack">Rack Rate ({totalCost.toFixed(2)})</MenuItem>
                     <MenuItem value="final">Final Rate ({(totalCost * 0.9).toFixed(2)})</MenuItem>
                     <MenuItem value="peak">Peak Rate ({(totalCost * 1.5).toFixed(2)})</MenuItem>
@@ -639,8 +646,8 @@ const FilterBar = ({
 
           </Box>
           <Typography>
-                Total Cost: {totalCost.toFixed(2)} ({(totalCost / customerInput.pax).toFixed(2)}/per person)
-              </Typography>
+            Total Cost: {totalCost.toFixed(2)} ({(totalCost / customerInput.pax).toFixed(2)}/per person)
+          </Typography>
 
           <Box sx={{ display: 'flex', gap: 2, marginBottom: 6 }}>
             <FormControl size="small" fullWidth>

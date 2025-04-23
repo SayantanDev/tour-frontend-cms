@@ -8,8 +8,13 @@ import {
   Button,
 } from "@mui/material";
 import { Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
+import { useDispatch } from "react-redux";
+import { setNewPackageInfo } from "../../reduxcomponents/slices/packagesSlice";
+
 
 const ShortItinerary = ({ customerInput, selectedCard }) => {
+  const dispatch = useDispatch();
+
   // 1. Get total number of days from props
   const totalDays = customerInput.days ?? 1;
 
@@ -31,7 +36,6 @@ const ShortItinerary = ({ customerInput, selectedCard }) => {
     const newTValue = selectedCard?.itinerary?.map((day) => day.tagValue) || [];
     const newItinerary = makeEmptyItinerary(totalDays, newTValue);
 
-    // Only update if values are actually different
     setItinerary((prev) => {
       const isSame =
         prev.length === newItinerary.length &&
@@ -59,7 +63,7 @@ const ShortItinerary = ({ customerInput, selectedCard }) => {
 
   // 7. Delete a day and update day labels
   const handleDeleteDay = (index) => {
-    setItinerary((prev) => 
+    setItinerary((prev) =>
       prev
         .filter((_, i) => i !== index)
         .map((item, i) => ({
@@ -67,6 +71,16 @@ const ShortItinerary = ({ customerInput, selectedCard }) => {
           tagName: `Day ${i + 1}`,
         }))
     );
+  };
+
+  // 8. Dispatch to Redux only when all fields are filled
+  const handleSaveItinerary = () => {
+    const allFilled = itinerary.every((item) => item.tagValue.trim() !== "");
+    if (allFilled) {
+      dispatch(setNewPackageInfo({ shortItinerary: itinerary }));
+    } else {
+      alert("Please fill in all day plans before saving.");
+    }
   };
 
   return (
@@ -79,7 +93,7 @@ const ShortItinerary = ({ customerInput, selectedCard }) => {
         <Box key={idx} sx={{ mb: 2 }}>
           <Grid container alignItems="center" spacing={2}>
             <Grid item xs={12} sm={2}>
-              <Typography  variant="subtitle1">{item.tagName}</Typography>
+              <Typography variant="subtitle1">{item.tagName}</Typography>
             </Grid>
 
             <Grid item xs={12} sm={8}>
@@ -104,14 +118,23 @@ const ShortItinerary = ({ customerInput, selectedCard }) => {
         </Box>
       ))}
 
-      <Button
-        variant="contained"
-        startIcon={<AddIcon />}
-        onClick={handleAddDay}
-        sx={{ mt: 1 }}
-      >
-        Add Day
-      </Button>
+      <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={handleAddDay}
+        >
+          Add Day
+        </Button>
+
+        <Button
+          variant="outlined"
+          onClick={handleSaveItinerary}
+          color="success"
+        >
+          Save Itinerary
+        </Button>
+      </Box>
     </Box>
   );
 };

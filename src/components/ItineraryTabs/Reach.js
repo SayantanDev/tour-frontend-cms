@@ -15,97 +15,123 @@ import {
   Add as AddIcon,
   ExpandMore as ExpandMoreIcon,
 } from "@mui/icons-material";
+import { useDispatch } from "react-redux";
+import { setNewPackageInfo } from "../../reduxcomponents/slices/packagesSlice";
+import { CONFIG_STR } from "../../configuration";
 
 function Reach({ selectedCard }) {
+  const dispatch = useDispatch();
+  const exclusionOptions = CONFIG_STR.commonReach.exclusions;
+  const inclusionOptions = CONFIG_STR.commonReach.inclusions;
+
+  console.log("selectedCard >< ", exclusionOptions);
+
+
   const [exclusions, setExclusions] = useState([]);
   const [inclusions, setInclusions] = useState([]);
 
-  useEffect(() => {
-    if (selectedCard?.exclusions?.length > 0) {
-      const formatted = selectedCard.exclusions.map((item) => ({
-        tagValue: item,
-      }));
-      setExclusions(formatted);
-    } else {
-      setExclusions([{ tagValue: "" }]);
-    }
 
-    if (selectedCard?.inclusions?.length > 0) {
-      const formatted = selectedCard.inclusions.map((item) => ({
-        tagValue: item,
-      }));
-      setInclusions(formatted);
-    } else {
-      setInclusions([{ tagValue: "" }]);
-    }
-  }, [selectedCard]);
+
+  // Sync initial data from selectedCard
+  useEffect(() => {
+    const formattedExclusions = selectedCard?.exclusions?.length
+      ? selectedCard.exclusions.map((item) => ({ tagValue: item }))
+      : exclusionOptions.map((item) => ({ tagValue: item }));
+
+    const formattedInclusions = selectedCard?.inclusions?.length
+      ? selectedCard.inclusions.map((item) => ({ tagValue: item }))
+      : inclusionOptions.map((item) => ({ tagValue: item }));
+
+    setExclusions(formattedExclusions);
+    setInclusions(formattedInclusions);
+
+    // Initial dispatch
+    dispatch(setNewPackageInfo({
+      details: {
+        cost: {
+          exclusions: formattedExclusions.map((item) => item.tagValue),
+          inclusions: formattedInclusions.map((item) => item.tagValue),
+        },
+      },
+    }));
+  }, [exclusionOptions,inclusionOptions,selectedCard, dispatch]);
+
+  // Update dispatch whenever exclusions or inclusions change
+  const updateRedux = (updatedExclusions, updatedInclusions) => {
+    dispatch(setNewPackageInfo({
+      details: {
+        cost: {
+          exclusions: updatedExclusions.map((item) => item.tagValue),
+          inclusions: updatedInclusions.map((item) => item.tagValue),
+        },
+      },
+    }));
+  };
 
   const handleExclusionChange = (index, value) => {
-    setExclusions((prev) => {
-      const next = [...prev];
-      next[index].tagValue = value;
-      return next;
-    });
+    const updated = [...exclusions];
+    updated[index].tagValue = value;
+    setExclusions(updated);
+    updateRedux(updated, inclusions);
   };
 
   const handleInclusionChange = (index, value) => {
-    setInclusions((prev) => {
-      const next = [...prev];
-      next[index].tagValue = value;
-      return next;
-    });
+    const updated = [...inclusions];
+    updated[index].tagValue = value;
+    setInclusions(updated);
+    updateRedux(exclusions, updated);
   };
 
   const handleAddExclusion = () => {
-    setExclusions((prev) => [...prev, { tagValue: "" }]);
+    const updated = [...exclusions, { tagValue: "" }];
+    setExclusions(updated);
+    updateRedux(updated, inclusions);
   };
 
   const handleAddInclusion = () => {
-    setInclusions((prev) => [...prev, { tagValue: "" }]);
+    const updated = [...inclusions, { tagValue: "" }];
+    setInclusions(updated);
+    updateRedux(exclusions, updated);
   };
 
   const handleDeleteExclusion = (index) => {
-    setExclusions((prev) => prev.filter((_, i) => i !== index));
+    const updated = exclusions.filter((_, i) => i !== index);
+    setExclusions(updated);
+    updateRedux(updated, inclusions);
   };
 
   const handleDeleteInclusion = (index) => {
-    setInclusions((prev) => prev.filter((_, i) => i !== index));
+    const updated = inclusions.filter((_, i) => i !== index);
+    setInclusions(updated);
+    updateRedux(exclusions, updated);
   };
 
   return (
     <Box>
       {/* Exclusions Accordion */}
       <Accordion>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="exclusions-content"
-          id="exclusions-header"
-        >
-          <Typography component="span">Exclusions</Typography>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} id="exclusions-header">
+          <Typography component="span">1. Exclusions List</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Box sx={{ width: "50vw" }}>
-            <Typography variant="h6" gutterBottom>
-              Exclusions List
-            </Typography>
-
+            {/* <Typography variant="body2" sx={{ mb: 3 }}>
+              If you need suggestions or want to view previous exclusions, click the link.
+            </Typography> */}
             {exclusions.map((item, idx) => (
               <Box key={idx} sx={{ mb: 2 }}>
                 <Grid container alignItems="center" spacing={2}>
-                  <Grid item xs={12} sm={8} sx={{display:"flex",alignItems:"center",justifyContent:"center",gap:"10px"}}>
+                  <Grid item xs={12} sm={8} sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <Typography>{idx + 1}.</Typography>
                     <TextField
                       fullWidth
                       label={`Exclusion ${idx + 1}`}
                       value={item.tagValue}
-                      onChange={(e) =>
-                        handleExclusionChange(idx, e.target.value)
-                      }
+                      onChange={(e) => handleExclusionChange(idx, e.target.value)}
                     />
                   </Grid>
                   <Grid item xs={12} sm={2}>
                     <IconButton
-                      aria-label="delete"
                       onClick={() => handleDeleteExclusion(idx)}
                       disabled={exclusions.length === 1}
                     >
@@ -115,7 +141,6 @@ function Reach({ selectedCard }) {
                 </Grid>
               </Box>
             ))}
-
             <Button
               variant="contained"
               startIcon={<AddIcon />}
@@ -127,38 +152,28 @@ function Reach({ selectedCard }) {
           </Box>
         </AccordionDetails>
       </Accordion>
+
       {/* Inclusions Accordion */}
       <Accordion>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="inclusions-content"
-          id="inclusions-header"
-        >
-          <Typography component="span">Inclusions</Typography>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} id="inclusions-header">
+          <Typography component="span">2. Inclusions List</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Box sx={{ width: "50vw" }}>
-            <Typography variant="h6" gutterBottom>
-              Inclusions List
-            </Typography>
-
             {inclusions.map((item, idx) => (
               <Box key={idx} sx={{ mb: 2 }}>
                 <Grid container alignItems="center" spacing={2}>
-                  <Grid item xs={12} sm={8} sx={{display:"flex",alignItems:"center",justifyContent:"center",gap:"10px"}}>
-                  <Typography>{idx + 1}.</Typography>
+                  <Grid item xs={12} sm={8} sx={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <Typography>{idx + 1}.</Typography>
                     <TextField
                       fullWidth
                       label={`Inclusion ${idx + 1}`}
                       value={item.tagValue}
-                      onChange={(e) =>
-                        handleInclusionChange(idx, e.target.value)
-                      }
+                      onChange={(e) => handleInclusionChange(idx, e.target.value)}
                     />
                   </Grid>
                   <Grid item xs={12} sm={2}>
                     <IconButton
-                      aria-label="delete"
                       onClick={() => handleDeleteInclusion(idx)}
                       disabled={inclusions.length === 1}
                     >
@@ -168,7 +183,6 @@ function Reach({ selectedCard }) {
                 </Grid>
               </Box>
             ))}
-
             <Button
               variant="contained"
               startIcon={<AddIcon />}

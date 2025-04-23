@@ -10,7 +10,7 @@ import PackageDialog from './PackageDialog';
 import { getAllPackages, getSinglePackages } from '../../api/packageAPI';
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { setSelectedPackage } from "../../reduxcomponents/slices/editPackage";
+import { setSelectedPackage } from "../../reduxcomponents/slices/packagesSlice";
 
 const AllPackages = () => {
     const [currentTab, setCurrentTab] = useState('sandakphu');
@@ -119,7 +119,7 @@ const AllPackages = () => {
 
         } catch (error) {
             console.log("error is :", error);
-            
+
 
         }
 

@@ -2,7 +2,7 @@ import loginReducer from "./loginSlice";
 import tokenReducer from "./tokenSlice";
 import inquiryReducer from "./inquirySlice";
 import queriesReducer from "./queriesSlice"
-import editPackage from "./editPackage"
+import editPackage from "./packagesSlice"
 import notify from "./notificationSlice"
 import { combineReducers } from "redux";
 
@@ -11,8 +11,8 @@ const rootReducer = combineReducers({
 	tokens: tokenReducer,
 	inquiries: inquiryReducer,
 	package: editPackage,
-	notification: notify,	
-	queries:queriesReducer
+	notification: notify,
+	queries: queriesReducer
 })
 
 export default rootReducer;
