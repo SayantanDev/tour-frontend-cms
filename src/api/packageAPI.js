@@ -19,6 +19,11 @@ export function addPackage(obj) {
     return axios.post(ADDPKG_URL, obj);
 };
 
+export function createPackage(obj){
+    const ADDPKG_URL = `${PKG_URL}/createPackage`;
+    return axios.post(ADDPKG_URL, obj);
+}
+
 export function updatePackage(obj, pkgId) {
     const UPDATEPKG__URL = `${PKG_URL}/editPackage/${pkgId}`;
     return axios.put(UPDATEPKG__URL, obj);

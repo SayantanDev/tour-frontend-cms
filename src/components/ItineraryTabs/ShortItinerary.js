@@ -77,7 +77,7 @@ const ShortItinerary = ({ customerInput, selectedCard }) => {
   const handleSaveItinerary = () => {
     const allFilled = itinerary.every((item) => item.tagValue.trim() !== "");
     if (allFilled) {
-      dispatch(setNewPackageInfo({ shortItinerary: itinerary }));
+      dispatch(setNewPackageInfo({ details:{shortItinerary: itinerary }}));
     } else {
       alert("Please fill in all day plans before saving.");
     }

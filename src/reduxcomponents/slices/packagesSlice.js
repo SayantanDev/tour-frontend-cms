@@ -17,9 +17,12 @@ const Packages = createSlice({
                 ...state.fetchNewPackageInfo,
                 ...action.payload,
             };
-        }      
+        },
+        removePackageInfo: (state, action) => {
+            delete state.fetchNewPackageInfo[action.payload];
+        }
     }
 });
 
-export const { setSelectedPackage, setNewPackageInfo } = Packages.actions;
+export const { setSelectedPackage, setNewPackageInfo, removePackageInfo } = Packages.actions;
 export default Packages.reducer;
