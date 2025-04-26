@@ -262,11 +262,11 @@ const CreateItinerary = () => {
                         setCardClicked={setCardClicked}
                         handleBack={handleBack}
                         customerInput={customerInput}
+                        setCustomerInput={setCustomerInput}
                         totalQuotetionCost={totalQuotetionCost}
                     />
                 )}
             </Box>
-
             <Snackbar open={openSnackbar} autoHideDuration={4000} onClose={handleCloseSnackbar}>
                 <Alert severity="error" onClose={handleCloseSnackbar}>
                     {errorMsg}

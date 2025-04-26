@@ -12,29 +12,31 @@ import { useDispatch } from "react-redux";
 import { setNewPackageInfo } from "../../reduxcomponents/slices/packagesSlice";
 
 
-const ShortItinerary = ({ customerInput, selectedCard }) => {
+const ShortItinerary = ({ customerInput,setCustomerInput, selectedCard }) => {
   const dispatch = useDispatch();
 
   // 1. Get total number of days from props
-  const totalDays = customerInput.days ?? 1;
+  // const totalDays = customerInput.days ?? 1;
 
-  // 2. Function to create initial itinerary with optional values
+  // 1. Determine total days based on selectedCard itinerary first
+  const totalDays = selectedCard?.itinerary?.length || customerInput.days || 1;
+  const [dayCount, setDayCount] = useState(totalDays);
+
+  console.log("total itinerary count : ", dayCount);
+
+  // 2. Create itinerary, prioritizing selectedCard values
   const makeEmptyItinerary = (days, existingValues = []) =>
     Array.from({ length: days }, (_, i) => ({
       tagName: `Day ${i + 1}`,
       tagValue: existingValues[i] ?? "",
     }));
 
-  // 3. Initial state with memoized values from selectedCard
-  const [itinerary, setItinerary] = useState(() => {
-    const initialTValue = selectedCard?.itinerary?.map((day) => day.tagValue) || [];
-    return makeEmptyItinerary(totalDays, initialTValue);
-  });
+  // 3. Initialize itinerary state
+  const [itinerary, setItinerary] = useState([]);
 
-  // 4. Effect to update state safely when totalDays or selectedCard changes
   useEffect(() => {
-    const newTValue = selectedCard?.itinerary?.map((day) => day.tagValue) || [];
-    const newItinerary = makeEmptyItinerary(totalDays, newTValue);
+    const existingValues = selectedCard?.itinerary?.map((day) => day.tagValue) || [];
+    const newItinerary = makeEmptyItinerary(totalDays, existingValues);
 
     setItinerary((prev) => {
       const isSame =
@@ -42,7 +44,9 @@ const ShortItinerary = ({ customerInput, selectedCard }) => {
         prev.every((item, idx) => item.tagValue === newItinerary[idx].tagValue);
       return isSame ? prev : newItinerary;
     });
+
   }, [totalDays, selectedCard]);
+
 
   // 5. Handle input change
   const handlePlanChange = (index, value) => {
@@ -55,29 +59,29 @@ const ShortItinerary = ({ customerInput, selectedCard }) => {
 
   // 6. Add a new day
   const handleAddDay = () => {
-    setItinerary((prev) => [
-      ...prev,
-      { tagName: `Day ${prev.length + 1}`, tagValue: "" },
-    ]);
+    setItinerary((prev) => {
+      const updated = [...prev, { tagName: `Day ${prev.length + 1}`, tagValue: "" }];
+      setCustomerInput?.({ ...customerInput, days: updated.length }); //Update days
+      return updated;
+    });
   };
-
+  
   // 7. Delete a day and update day labels
   const handleDeleteDay = (index) => {
-    setItinerary((prev) =>
-      prev
+    setItinerary((prev) => {
+      const updated = prev
         .filter((_, i) => i !== index)
-        .map((item, i) => ({
-          ...item,
-          tagName: `Day ${i + 1}`,
-        }))
-    );
+        .map((item, i) => ({ ...item, tagName: `Day ${i + 1}` }));
+      setCustomerInput?.({ ...customerInput, days: updated.length }); // Update days
+      return updated;
+    });
   };
-
+  
   // 8. Dispatch to Redux only when all fields are filled
   const handleSaveItinerary = () => {
     const allFilled = itinerary.every((item) => item.tagValue.trim() !== "");
     if (allFilled) {
-      dispatch(setNewPackageInfo({ details:{shortItinerary: itinerary }}));
+      dispatch(setNewPackageInfo({ details: { shortItinerary: itinerary } }));
     } else {
       alert("Please fill in all day plans before saving.");
     }

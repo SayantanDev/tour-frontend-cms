@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Box, Tabs, Tab, Snackbar, Alert } from '@mui/material';
+import React, { useState } from 'react';
+import { Button, Box, Tabs, Tab} from '@mui/material';
 import ArrowBack from '@mui/icons-material/ArrowBack';
 import {
     Document,
@@ -23,7 +23,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { createPackage } from '../../api/packageAPI';
 import useSnackbar from '../../hooks/useSnackbar';
 import { removePackageInfo } from '../../reduxcomponents/slices/packagesSlice';
-const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCost }) => {
+const SelectedPkg = ({ selectedCard, handleBack, customerInput,setCustomerInput, totalQuotetionCost }) => {
     const dispatch = useDispatch();
     const { showSnackbar, SnackbarComponent } = useSnackbar();
     const { fetchNewPackageInfo: pakageData } = useSelector((state) => state.package);
@@ -186,7 +186,7 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
                         },
                     ],
                 });
-                
+
                 const blob = await Packer.toBlob(doc);
                 saveAs(blob, "generated-document.docx");
                 dispatch(removePackageInfo());
@@ -237,7 +237,11 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
                     <Tab label="How to reach" />
                 </Tabs>
                 {tab === 0 && <BasicInfo customerInput={customerInput} totalQuotetionCost={totalQuotetionCost} />}
-                {tab === 1 && <ShortItinerary customerInput={customerInput} selectedCard={selectedCard} />}
+                {tab === 1 && <ShortItinerary 
+                customerInput={customerInput} 
+                selectedCard={selectedCard}
+                setCustomerInput={setCustomerInput}
+                />}
                 {tab === 2 && <Reach selectedCard={selectedCard} />}
 
             </Box>

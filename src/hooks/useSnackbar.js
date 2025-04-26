@@ -1,5 +1,5 @@
 // hooks/useSnackbar.js
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Snackbar, Alert } from '@mui/material';
 

@@ -1,104 +1,78 @@
 import React from "react";
 import {
- Card,
- CardHeader,
- CardContent,
- Typography,
- Grid,
- Container,
- Box,
+  Card,
+  CardHeader,
+  CardContent,
+  Typography,
+  Grid,
+  Container,
+  Box,
+  Divider,
 } from "@mui/material";
 
+const InfoBlock = ({ label, value }) => (
+  <Grid item xs={12} sm={6}>
+    <Typography variant="caption" color="text.secondary" fontWeight="bold" gutterBottom>
+      {label}
+    </Typography>
+    <Typography
+      variant="body1"
+    //   color="text.primary"
+      sx={{
+        // backgroundColor: "#f9f9f9",
+        padding: "8px 12px",
+        // borderRadius: 1,
+        boxShadow: "inset 0 0 2px rgba(0,0,0,0.1)",
+      }}
+    >
+      {value || "-"}
+    </Typography>
+  </Grid>
+);
+
 const BasicInfo = ({ customerInput, totalQuotetionCost }) => {
- console.log("totalQuotetionCost input is :", customerInput);
+  const {
+    name,
+    email,
+    phone,
+    hotel,
+    days,
+    car,
+    carCount,
+    pax,
+  } = customerInput || {};
 
- const {
-  name,
-  email,
-  phone,
-  hotel,
-  days,
-  car,
-  carCount,
-  pax
-
- } = customerInput || {};
-
- return (
-  <Container maxWidth="sm" sx={{ mt: 4 }}>
-   <Card elevation={3}>
-    <CardHeader
-     title="Basic Information"
-     sx={{ backgroundColor: "primary.main", color: "white" }}
-    />
-    <CardContent>
-     <Grid container spacing={2}>
-      <Grid item xs={12} sm={6}>
-       <Typography variant="subtitle2" color="text.secondary">
-        Guest Name
-       </Typography>
-       <Typography variant="body1">{name || "-"}</Typography>
-      </Grid>
-
-      <Grid item xs={12} sm={6}>
-       <Typography variant="subtitle2" color="text.secondary">
-        Email
-       </Typography>
-       <Typography variant="body1">{email || "-"}</Typography>
-      </Grid>
-
-      <Grid item xs={12} sm={6}>
-       <Typography variant="subtitle2" color="text.secondary">
-        Contact Number
-       </Typography>
-       <Typography variant="body1">{phone || "-"}</Typography>
-      </Grid>
-      <Grid item xs={12} sm={6}>
-       <Typography variant="subtitle2" color="text.secondary">
-        Number of Person
-       </Typography>
-       <Typography variant="body1">{pax || "-"}</Typography>
-      </Grid>
-
-      <Grid item xs={12} sm={6}>
-       <Typography variant="subtitle2" color="text.secondary">
-        Car Count
-       </Typography>
-       <Typography variant="body1">{carCount || "-"}</Typography>
-      </Grid>
-
-      <Grid item xs={12} sm={6}>
-       <Typography variant="subtitle2" color="text.secondary">
-        Hotel
-       </Typography>
-       <Typography variant="body1">{hotel || "-"}</Typography>
-      </Grid>
-
-      <Grid item xs={12} sm={6}>
-       <Typography variant="subtitle2" color="text.secondary">
-        Number of Days
-       </Typography>
-       <Typography variant="body1">{days || "-"}</Typography>
-      </Grid>
-
-      <Grid item xs={12}  sm={6}>
-       <Typography variant="subtitle2" color="text.secondary">
-        Car Details
-       </Typography>
-       <Typography variant="body1">{car || "-"}</Typography>
-      </Grid>
-
-      <Grid item xs={12} sm={6}>
-       <Typography variant="subtitle2" color="text.secondary">
-        Total Quotation Cost
-       </Typography>
-       <Typography variant="body1">{totalQuotetionCost || "-"}</Typography>
-      </Grid>
-     </Grid>
-    </CardContent>
-   </Card>
-  </Container>
- );
+  return (
+    <Container maxWidth="md" sx={{ mt: 6 }}>
+      <Card elevation={4} >
+        <CardHeader
+          title="Basic Information"
+          sx={{
+            // backgroundColor: "primary.main",
+            color: "Black",
+            textAlign: "center",
+            borderBottom: "1px solid rgba(0, 0, 0, 0.12)",
+            py: 2,
+            // borderTopLeftRadius: 12,
+            // borderTopRightRadius: 12,
+          }}
+        />
+        <CardContent sx={{ px: 4, py: 3 }}>
+          <Grid container spacing={3}>
+            <InfoBlock label="Guest Name" value={name} />
+            <InfoBlock label="Email" value={email} />
+            <InfoBlock label="Contact Number" value={phone} />
+            <InfoBlock label="Number of Person" value={pax} />
+            <InfoBlock label="Car Count" value={carCount} />
+            <InfoBlock label="Hotel" value={hotel} />
+            <InfoBlock label="Number of Days" value={days} />
+            <InfoBlock label="Car Details" value={car} />
+            <InfoBlock label="Total Quotation Cost" value={totalQuotetionCost} />
+          </Grid>
+        </CardContent>
+      </Card>
+    </Container>
+  );
 };
 
 export default BasicInfo;
