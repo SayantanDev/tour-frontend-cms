@@ -77,13 +77,17 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput,setCustomerInput,
     const handleNext = async () => {
         try {
             if (selectedCard && Object.keys(selectedCard).length === 0) {
+                console.log("AAAAAAAAAAAAAAAA");
+                
                 const packageObject = { ...pakageData, ...createPackageObj };
-                const resCreatePakg = await createPackage(packageObject);
-                if (resCreatePakg.success) {
-                    showSnackbar('You created a new package', 'success');
-                } else {
-                    showSnackbar('Something went wrong', 'error');
-                }
+                console.log("packageObject :", packageObject);
+                
+                // const resCreatePakg = await createPackage(packageObject);
+                // if (resCreatePakg.success) {
+                //     showSnackbar('You created a new package', 'success');
+                // } else {
+                //     showSnackbar('Something went wrong', 'error');
+                // }
             }
     
             const response = await createQueries(queriesValueObj);
@@ -92,9 +96,9 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput,setCustomerInput,
                 showSnackbar('Queries created successfully', 'success');
     
                 // Fallback for optional arrays
-                const itineraryList = selectedCard?.itinerary || pakageData?.details?.ShortItinerary;
-                const inclusionList = selectedCard?.inclusions || pakageData?.details?.cost?.inclusions;
-                const exclusionList = selectedCard?.exclusions || pakageData?.details?.cost?.exclusions;
+                const itineraryList = selectedCard?.itinerary || [];
+                const inclusionList = selectedCard?.inclusions || [];
+                const exclusionList = selectedCard?.exclusions || [];
     
                 const doc = new Document({
                     sections: [

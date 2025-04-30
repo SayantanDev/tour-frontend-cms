@@ -24,7 +24,7 @@ function Reach({ selectedCard }) {
   const exclusionOptions = CONFIG_STR.commonReach.exclusions;
   const inclusionOptions = CONFIG_STR.commonReach.inclusions;
 
-  console.log("selectedCard >< ", exclusionOptions);
+  // console.log("selectedCard >< ", exclusionOptions);
 
 
   const [exclusions, setExclusions] = useState([]);

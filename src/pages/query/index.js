@@ -75,23 +75,30 @@ const Query = () => {
 
   const handleSaveEdit = async (id) => {
     try {
-      const updatedData = {
-        guest_info: {
-          guest_name: editedRowData.guest_name,
-          guest_phone: editedRowData.guest_phone,
-        },
-        cost: editedRowData.cost,
-        advance: editedRowData.advance,
-        lead_stage: editedRowData.lead_stage,
-      };
-
-      const response = await updateQueries(id, updatedData);
-      console.log("Updated query:", response);
-
+      const updatedFields = {};
+  
+      if (editedRowData.guest_name !== undefined) {
+        updatedFields["guest_info.guest_name"] = editedRowData.guest_name;
+      }
+      if (editedRowData.guest_phone !== undefined) {
+        updatedFields["guest_info.guest_phone"] = editedRowData.guest_phone;
+      }
+      if (editedRowData.cost !== undefined) {
+        updatedFields.cost = editedRowData.cost;
+      }
+      if (editedRowData.advance !== undefined) {
+        updatedFields.advance = editedRowData.advance;
+      }
+      if (editedRowData.lead_stage !== undefined) {
+        updatedFields.lead_stage = editedRowData.lead_stage;
+      }
+  
+      const response = await updateQueries(id, updatedFields);
+  
       if (response.success) {
         showSnackbar(response.message, "success");
       }
-
+  
       fetchQuery();
       setEditingRowId(null);
       setEditedRowData({});
@@ -99,7 +106,7 @@ const Query = () => {
       console.error("Update failed:", error);
     }
   };
-
+  
   const filteredRows = filteredQuery.filter((item) => {
     const searchLower = searchQuery.toLowerCase();
     const name = item.guest_info?.guest_name?.toLowerCase() || "";
@@ -224,12 +231,14 @@ const Query = () => {
                           <Typography color="success"> Edit</Typography>
                         </IconButton>
                       </Tooltip>
+                      {row.advance > 0 &&
                       <Tooltip title="open">
                         <IconButton color="warning" size="small" onClick={() => handleEditOpen(row.id, row)}>
                           {/* <KeyboardArrowRightOutlinedIcon fontSize="small" /> */}
                           <Typography color="primary">Manage</Typography>
                         </IconButton>
                       </Tooltip>
+                      }
                     </>
                   )}
                 </TableCell>
