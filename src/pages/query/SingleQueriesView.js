@@ -52,7 +52,23 @@ const initialItineraryData = [
 
 function SingleQueriesView() {
   const { fetchSelectedquerie } = useSelector((state) => state.queries);
-  const [itineraryData, setItineraryData] = useState(initialItineraryData);
+  // const [itineraryData, setItineraryData] = useState(initialItineraryData);
+  const [itineraryData, setItineraryData] = useState(
+    fetchSelectedquerie?.followup_details?.map((item, index) => ({
+      day: (index + 1).toString(),
+      date: item.journey_date || '',
+      place: item.destination || '',
+      hotelName: item.hotel_name || '',
+      hotelAmount: item.hotel_amount || '',
+      hotelConfirmation: item.hotel_confirmation || '',
+      checkinDate: item.checkin_date || '',
+      checkoutDate: item.checkout_date || '',
+      mealPlan: item.meal_plan || '',
+      vehicleName: item.vehicle_name || '',
+      vehiclePayment: item.vehicle_payment || '',
+      vehicleStatus: item.vehicle_status || '',
+    })) || []
+  );  
   const [editIndex, setEditIndex] = useState(null);
   const [editRow, setEditRow] = useState({});
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -60,24 +76,24 @@ function SingleQueriesView() {
   const [bookingDrawer, setBookingDrawer] = useState(false);
 
   const [guestInfo, setGuestInfo] = useState({
-    name: fetchSelectedquerie?.guest_info?.guest_name || '',
-    contact: fetchSelectedquerie?.guest_info?.guest_phone || '',
-    email: fetchSelectedquerie?.guest_info?.guest_email || '',
-    pax: fetchSelectedquerie?.pax || '',
-    hotel: fetchSelectedquerie?.stay_info?.hotel || '',
-    rooms: fetchSelectedquerie?.stay_info?.rooms || '',
-    carname: fetchSelectedquerie?.car_details?.car_name || '',
-    carcount: fetchSelectedquerie?.car_details?.car_count || '',
-    source: fetchSelectedquerie?.lead_source || '',
-    bookingDate: fetchSelectedquerie?.created_at?.slice(0, 10) || '',
-    tourDate: fetchSelectedquerie?.travel_date?.slice(0, 10) || '',
-    bookingStatus: fetchSelectedquerie?.lead_stage || '',
-    cost: fetchSelectedquerie?.cost || '',
-    advancePayment: fetchSelectedquerie?.advance || '',
+    name: fetchSelectedquerie?.guest_details?.guest_info?.guest_name || '',
+    contact: fetchSelectedquerie?.guest_details?.guest_info?.guest_phone || '',
+    email: fetchSelectedquerie?.guest_details?.guest_info?.guest_email || '',
+    pax: fetchSelectedquerie?.guest_details?.pax || '',
+    hotel: fetchSelectedquerie?.guest_details?.stay_info?.hotel || '',
+    rooms: fetchSelectedquerie?.guest_details?.stay_info?.rooms || '',
+    carname: fetchSelectedquerie?.guest_details?.car_details?.car_name || '',
+    carcount: fetchSelectedquerie?.guest_details?.car_details?.car_count || '',
+    source: fetchSelectedquerie?.guest_details?.lead_source || '',
+    bookingDate: fetchSelectedquerie?.createdAt?.slice(0, 10) || '',
+    tourDate: fetchSelectedquerie?.guest_details?.travel_date?.slice(0, 10) || '',
+    bookingStatus: fetchSelectedquerie?.guest_details?.lead_stage || '',
+    cost: fetchSelectedquerie?.guest_details?.cost || '',
+    advancePayment: fetchSelectedquerie?.guest_details?.advance || '',
     duePayment:
-      typeof fetchSelectedquerie?.cost === 'number' &&
-        typeof fetchSelectedquerie?.advance === 'number'
-        ? fetchSelectedquerie.cost - fetchSelectedquerie.advance
+      typeof fetchSelectedquerie?.guest_details?.cost === 'number' &&
+        typeof fetchSelectedquerie?.guest_details?.advance === 'number'
+        ? fetchSelectedquerie.guest_details?.cost - fetchSelectedquerie.guest_details?.advance
         : '',
   });
 
@@ -101,6 +117,46 @@ function SingleQueriesView() {
     setItineraryData(newData);
     setDrawerOpen(false);
   };
+
+  const saveGuestInfo = () => {
+    const original = {
+      name: fetchSelectedquerie?.guest_info?.guest_name || '',
+      contact: fetchSelectedquerie?.guest_info?.guest_phone || '',
+      email: fetchSelectedquerie?.guest_info?.guest_email || '',
+      pax: fetchSelectedquerie?.pax || '',
+      hotel: fetchSelectedquerie?.stay_info?.hotel || '',
+      rooms: fetchSelectedquerie?.stay_info?.rooms || '',
+      carname: fetchSelectedquerie?.car_details?.car_name || '',
+      carcount: fetchSelectedquerie?.car_details?.car_count || '',
+      source: fetchSelectedquerie?.lead_source || '',
+      bookingDate: fetchSelectedquerie?.created_at?.slice(0, 10) || '',
+      tourDate: fetchSelectedquerie?.travel_date?.slice(0, 10) || '',
+      bookingStatus: fetchSelectedquerie?.lead_stage || '',
+      cost: fetchSelectedquerie?.cost || '',
+      advancePayment: fetchSelectedquerie?.advance || '',
+      duePayment:
+        typeof fetchSelectedquerie?.cost === 'number' &&
+        typeof fetchSelectedquerie?.advance === 'number'
+          ? fetchSelectedquerie.cost - fetchSelectedquerie.advance
+          : '',
+    };
+  
+    const changedFields = {};
+  
+    for (const key in guestInfo) {
+      if (guestInfo[key] !== original[key]) {
+        changedFields[key] = guestInfo[key];
+      }
+    }
+  
+    console.log("Changed Fields Only:", changedFields);
+  
+    // Optional: Send only `changedFields` to API
+    // axios.post('/api/update-guest-info', changedFields)
+  
+    setGuestDrawer(false);
+  };
+  
 
   const guestFields = [
     { label: 'Name', field: 'name' },
@@ -272,7 +328,7 @@ function SingleQueriesView() {
             ))}
           </Grid>
           <Box textAlign="right" mt={3}>
-            <Button variant="contained" onClick={() => setGuestDrawer(false)}>Save</Button>
+            <Button variant="contained" onClick={saveGuestInfo}>Save</Button>
           </Box>
         </Box>
       </Drawer>

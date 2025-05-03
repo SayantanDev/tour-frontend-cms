@@ -9,7 +9,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import DeleteIcon from "@mui/icons-material/Delete";
 // import EditSquareIcon from '@mui/icons-material/EditSquare';
 import UpgradeIcon from '@mui/icons-material/Upgrade';
-import { getAllQueries, updateQueries } from "../../api/queriesAPI";
+import { fetchOperationByQueries, getAllQueries, updateQueries } from "../../api/queriesAPI";
 import usePermissions from "../../hooks/UsePermissions";
 import { useDispatch } from "react-redux";
 import { setSelectedquerie } from "../../reduxcomponents/slices/queriesSlice";
@@ -131,9 +131,14 @@ const Query = () => {
       default: return "default";
     }
   };
-  const handleEditOpen = (id, value) => {
-    dispatch(setSelectedquerie(value))
-    navigate("/query/view")
+  const handleEditOpen = async(id, value) => {
+    console.log("id : ", id);
+    
+    const res = await fetchOperationByQueries(id);
+    console.log("fetchOperationByQueries : ", res.data);
+    
+    dispatch(setSelectedquerie(res.data));
+    navigate("/query/view");
 
   }
   return (
@@ -233,7 +238,7 @@ const Query = () => {
                       </Tooltip>
                       {row.advance > 0 &&
                       <Tooltip title="open">
-                        <IconButton color="warning" size="small" onClick={() => handleEditOpen(row.id, row)}>
+                        <IconButton color="warning" size="small" onClick={() => handleEditOpen(row._id, row)}>
                           {/* <KeyboardArrowRightOutlinedIcon fontSize="small" /> */}
                           <Typography color="primary">Manage</Typography>
                         </IconButton>

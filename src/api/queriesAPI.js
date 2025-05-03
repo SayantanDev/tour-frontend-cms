@@ -23,3 +23,9 @@ export async function updateQueries(id,value) {
     
 }
 
+export async function fetchOperationByQueries(id){
+    const GETUSER_URL = `${QRY_URL}/fetch-operation/${id}`;
+    const result = await axios.get(GETUSER_URL);
+    return result.data;
+}
+

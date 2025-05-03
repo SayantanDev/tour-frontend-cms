@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Box, Tabs, Tab} from '@mui/material';
+import { Button, Box, Tabs, Tab } from '@mui/material';
 import ArrowBack from '@mui/icons-material/ArrowBack';
 import {
     Document,
@@ -23,12 +23,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { createPackage } from '../../api/packageAPI';
 import useSnackbar from '../../hooks/useSnackbar';
 import { removePackageInfo } from '../../reduxcomponents/slices/packagesSlice';
-const SelectedPkg = ({ selectedCard, handleBack, customerInput,setCustomerInput, totalQuotetionCost }) => {
+const SelectedPkg = ({ selectedCard, handleBack, customerInput, setCustomerInput, totalQuotetionCost }) => {
     const dispatch = useDispatch();
     const { showSnackbar, SnackbarComponent } = useSnackbar();
     const { fetchNewPackageInfo: pakageData } = useSelector((state) => state.package);
     const [tab, setTab] = useState(0);
-    console.log("fetchNewPackageInfo :", pakageData);
+    const [newPackageId, setNewPackageId] = useState(selectedCard.id);
+    // console.log("fetchNewPackageInfo :", pakageData);
 
 
     const handleChange = (event, newValue) => {
@@ -36,30 +37,30 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput,setCustomerInput,
     };
 
 
-    const queriesValueObj = {
-        guest_info: {
-            guest_name: customerInput.name || "",
-            guest_email: customerInput.email || "",
-            guest_phone: customerInput.phone || "",
-        },
-        pax: customerInput.pax || "",
-        stay_info: {
-            rooms: customerInput.rooms || "",
-            hotel: customerInput.hotel || "",
-        },
-        car_details: {
-            car_name: customerInput.car || "",
-            car_count: customerInput.carCount || "",
-        },
-        package_id: selectedCard.id,
-        travel_date: customerInput.startDate || "",
-        duration: customerInput.days || "",
-        cost: totalQuotetionCost || 0,
-        destination: selectedCard.location,
-        lead_stage: "new",
-        lead_source: "website",
-        verified: true,
-    };
+    // const queriesValueObjAA = {
+    //     guest_info: {
+    //         guest_name: customerInput.name || "",
+    //         guest_email: customerInput.email || "",
+    //         guest_phone: customerInput.phone || "",
+    //     },
+    //     pax: customerInput.pax || "",
+    //     stay_info: {
+    //         rooms: customerInput.rooms || "",
+    //         hotel: customerInput.hotel || "",
+    //     },
+    //     car_details: {
+    //         car_name: customerInput.car || "",
+    //         car_count: customerInput.carCount || "",
+    //     },
+    //     package_id: newPackageId,
+    //     travel_date: customerInput.startDate || "",
+    //     duration: customerInput.days || "",
+    //     cost: totalQuotetionCost || 0,
+    //     destination: selectedCard.location,
+    //     lead_stage: "new",
+    //     lead_source: "website",
+    //     verified: true,
+    // };
 
     const createPackageObj = {
         location: pakageData?.location,
@@ -76,30 +77,61 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput,setCustomerInput,
 
     const handleNext = async () => {
         try {
+
+            let finalPackageId = selectedCard?.id;
+
+            // If selectedCard is empty, create a new package
             if (selectedCard && Object.keys(selectedCard).length === 0) {
-                console.log("AAAAAAAAAAAAAAAA");
-                
                 const packageObject = { ...pakageData, ...createPackageObj };
-                console.log("packageObject :", packageObject);
-                
-                // const resCreatePakg = await createPackage(packageObject);
-                // if (resCreatePakg.success) {
-                //     showSnackbar('You created a new package', 'success');
-                // } else {
-                //     showSnackbar('Something went wrong', 'error');
-                // }
+                const resCreatePakg = await createPackage(packageObject);
+
+                if (resCreatePakg.status == 201) {
+
+                    finalPackageId = resCreatePakg.data.data._id;
+                    setNewPackageId(finalPackageId);
+                    showSnackbar('You created a new package', 'success');
+                } else {
+                    showSnackbar('Something went wrong', 'error');
+                    return; // Exit early if package creation failed
+                }
             }
-    
+
+            // ✅ Now build queriesValueObj with the correct package_id
+            const queriesValueObj = {
+                guest_info: {
+                    guest_name: customerInput.name || "",
+                    guest_email: customerInput.email || "",
+                    guest_phone: customerInput.phone || "",
+                },
+                pax: customerInput.pax || "",
+                stay_info: {
+                    rooms: customerInput.rooms || "",
+                    hotel: customerInput.hotel || "",
+                },
+                car_details: {
+                    car_name: customerInput.car || "",
+                    car_count: customerInput.carCount || "",
+                },
+                package_id: finalPackageId,
+                travel_date: customerInput.startDate || "",
+                duration: customerInput.days || "",
+                cost: totalQuotetionCost || 0,
+                destination: selectedCard?.location || pakageData?.location || "-",
+                lead_stage: "new",
+                lead_source: "website",
+                verified: true,
+            };
+
             const response = await createQueries(queriesValueObj);
-    
+
             if (response.success) {
                 showSnackbar('Queries created successfully', 'success');
-    
+
                 // Fallback for optional arrays
                 const itineraryList = selectedCard?.itinerary || [];
                 const inclusionList = selectedCard?.inclusions || [];
                 const exclusionList = selectedCard?.exclusions || [];
-    
+
                 const doc = new Document({
                     sections: [
                         {
@@ -156,22 +188,22 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput,setCustomerInput,
                                     ],
                                     spacing: { after: 200 },
                                 }),
-    
+
                                 new Paragraph(`Location: ${selectedCard.location || "-"}`),
                                 new Paragraph(`Car Name: ${customerInput.car || "-"}`),
                                 new Paragraph(`Total Car: ${customerInput.carCount || "-"}`),
                                 new Paragraph(`Journey Date: ${new Date(customerInput.startDate).toLocaleDateString()}`),
-    
+
                                 ...(customerInput.days >= 1
                                     ? [new Paragraph(`Duration: ${customerInput.days - 1}N / ${customerInput.days}D`)]
                                     : []),
-    
+
                                 new Paragraph({
                                     text: `Cost: Rs. ${totalQuotetionCost}`,
                                     bold: true,
                                     spacing: { after: 200, before: 200 },
                                 }),
-    
+
                                 new Paragraph({
                                     text: "Itinerary",
                                     bold: true,
@@ -180,10 +212,10 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput,setCustomerInput,
                                 ...itineraryList.map(item =>
                                     new Paragraph(`${item.tagName || "-"}: ${item.tagValue || "-"}`)
                                 ),
-    
+
                                 new Paragraph({ text: "Inclusion", bold: true, spacing: { before: 200 } }),
                                 ...inclusionList.map(item => new Paragraph(item || "-")),
-    
+
                                 new Paragraph({ text: "Exclusion", bold: true, spacing: { before: 200 } }),
                                 ...exclusionList.map(item => new Paragraph(item || "-")),
                             ],
@@ -201,7 +233,7 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput,setCustomerInput,
             showSnackbar("Error generating document", "error");
         }
     };
-    
+
 
     return (
         <>
@@ -241,10 +273,10 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput,setCustomerInput,
                     <Tab label="How to reach" />
                 </Tabs>
                 {tab === 0 && <BasicInfo customerInput={customerInput} totalQuotetionCost={totalQuotetionCost} />}
-                {tab === 1 && <ShortItinerary 
-                customerInput={customerInput} 
-                selectedCard={selectedCard}
-                setCustomerInput={setCustomerInput}
+                {tab === 1 && <ShortItinerary
+                    customerInput={customerInput}
+                    selectedCard={selectedCard}
+                    setCustomerInput={setCustomerInput}
                 />}
                 {tab === 2 && <Reach selectedCard={selectedCard} />}
 
