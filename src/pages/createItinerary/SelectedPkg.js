@@ -85,7 +85,7 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, setCustomerInput
                 const packageObject = { ...pakageData, ...createPackageObj };
                 const resCreatePakg = await createPackage(packageObject);
 
-                if (resCreatePakg.status == 201) {
+                if (resCreatePakg.status === 201) {
 
                     finalPackageId = resCreatePakg.data.data._id;
                     setNewPackageId(finalPackageId);
@@ -123,6 +123,9 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, setCustomerInput
             };
 
             const response = await createQueries(queriesValueObj);
+
+            // showSnackbar('Queries created successfully', 'success');
+            
 
             if (response.success) {
                 showSnackbar('Queries created successfully', 'success');
@@ -227,6 +230,9 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, setCustomerInput
                 saveAs(blob, "generated-document.docx");
                 dispatch(removePackageInfo());
                 // console.log("Document generated successfully!");
+            }else{
+            showSnackbar(`${response.message}`, "error");
+
             }
         } catch (error) {
             console.error("Error generating document or API call:", error);

@@ -27,6 +27,18 @@ export const CONFIG_STR = {
           icon: "CasesOutlined" 
         },
         {
+          label: 'Hotels',
+          link: '/hotels',
+          module: "hotel",
+          icon: "CasesOutlined" 
+        },
+        {
+          label: 'Vehicles',
+          link: '/Vehicles',
+          module: "Vehicles",
+          icon: "CasesOutlined" 
+        },
+        {
           label: 'Extra Costs',
           link: '/costTable',
           module: "costTable",

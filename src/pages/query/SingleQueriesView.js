@@ -19,40 +19,15 @@ import {
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useSelector } from 'react-redux';
 
-const initialItineraryData = [
-  {
-    day: '1',
-    date: '2025-04-05',
-    place: 'Dhotrey',
-    hotelName: 'Demo Hotel',
-    hotelAmount: 4000,
-    hotelConfirmation: 'Confirmed',
-    checkinDate: '2025-04-05',
-    checkoutDate: '2025-04-06',
-    mealPlan: 'MAP',
-    vehicleName: 'SUV',
-    vehiclePayment: 3000,
-    vehicleStatus: 'Confirmed',
-  },
-  {
-    day: '2',
-    date: '2025-04-06',
-    place: 'Dhotrey to Tumling',
-    hotelName: 'Demo Hotel',
-    hotelAmount: 4000,
-    hotelConfirmation: 'Pending',
-    checkinDate: '2025-04-06',
-    checkoutDate: '2025-04-07',
-    mealPlan: 'AP',
-    vehicleName: 'SUV',
-    vehiclePayment: 3000,
-    vehicleStatus: 'Confirmed',
-  },
-];
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return isNaN(date) ? dateString : date.toLocaleDateString();
+};
 
 function SingleQueriesView() {
   const { fetchSelectedquerie } = useSelector((state) => state.queries);
-  // const [itineraryData, setItineraryData] = useState(initialItineraryData);
+
   const [itineraryData, setItineraryData] = useState(
     fetchSelectedquerie?.followup_details?.map((item, index) => ({
       day: (index + 1).toString(),
@@ -68,7 +43,8 @@ function SingleQueriesView() {
       vehiclePayment: item.vehicle_payment || '',
       vehicleStatus: item.vehicle_status || '',
     })) || []
-  );  
+  );
+
   const [editIndex, setEditIndex] = useState(null);
   const [editRow, setEditRow] = useState({});
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -92,7 +68,7 @@ function SingleQueriesView() {
     advancePayment: fetchSelectedquerie?.guest_details?.advance || '',
     duePayment:
       typeof fetchSelectedquerie?.guest_details?.cost === 'number' &&
-        typeof fetchSelectedquerie?.guest_details?.advance === 'number'
+      typeof fetchSelectedquerie?.guest_details?.advance === 'number'
         ? fetchSelectedquerie.guest_details?.cost - fetchSelectedquerie.guest_details?.advance
         : '',
   });
@@ -119,44 +95,8 @@ function SingleQueriesView() {
   };
 
   const saveGuestInfo = () => {
-    const original = {
-      name: fetchSelectedquerie?.guest_info?.guest_name || '',
-      contact: fetchSelectedquerie?.guest_info?.guest_phone || '',
-      email: fetchSelectedquerie?.guest_info?.guest_email || '',
-      pax: fetchSelectedquerie?.pax || '',
-      hotel: fetchSelectedquerie?.stay_info?.hotel || '',
-      rooms: fetchSelectedquerie?.stay_info?.rooms || '',
-      carname: fetchSelectedquerie?.car_details?.car_name || '',
-      carcount: fetchSelectedquerie?.car_details?.car_count || '',
-      source: fetchSelectedquerie?.lead_source || '',
-      bookingDate: fetchSelectedquerie?.created_at?.slice(0, 10) || '',
-      tourDate: fetchSelectedquerie?.travel_date?.slice(0, 10) || '',
-      bookingStatus: fetchSelectedquerie?.lead_stage || '',
-      cost: fetchSelectedquerie?.cost || '',
-      advancePayment: fetchSelectedquerie?.advance || '',
-      duePayment:
-        typeof fetchSelectedquerie?.cost === 'number' &&
-        typeof fetchSelectedquerie?.advance === 'number'
-          ? fetchSelectedquerie.cost - fetchSelectedquerie.advance
-          : '',
-    };
-  
-    const changedFields = {};
-  
-    for (const key in guestInfo) {
-      if (guestInfo[key] !== original[key]) {
-        changedFields[key] = guestInfo[key];
-      }
-    }
-  
-    console.log("Changed Fields Only:", changedFields);
-  
-    // Optional: Send only `changedFields` to API
-    // axios.post('/api/update-guest-info', changedFields)
-  
     setGuestDrawer(false);
   };
-  
 
   const guestFields = [
     { label: 'Name', field: 'name' },
@@ -196,7 +136,7 @@ function SingleQueriesView() {
 
   return (
     <Box p={2}>
-      {/* Guest & Booking Details Section - Tables */}
+      {/* Guest & Booking Details */}
       <Paper elevation={4} sx={{ p: 3, m: 2, border: '2px solid #1976d2', borderRadius: 3 }}>
         <Typography variant="h5" align="center" fontWeight="bold" color="primary" gutterBottom>
           Guest & Booking Details
@@ -241,7 +181,11 @@ function SingleQueriesView() {
                     {bookingFields.map((item) => (
                       <TableRow key={item.field}>
                         <TableCell sx={{ fontWeight: 'bold' }}>{item.label}</TableCell>
-                        <TableCell>{guestInfo[item.field] || 'N/A'}</TableCell>
+                        <TableCell>
+                          {['bookingDate', 'tourDate'].includes(item.field)
+                            ? formatDate(guestInfo[item.field])
+                            : guestInfo[item.field] || 'N/A'}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -252,11 +196,10 @@ function SingleQueriesView() {
         </Grid>
       </Paper>
 
-      {/* Itinerary section */}
+      {/* Itinerary Table */}
       <Typography variant="h5" align="center" fontWeight="bold" color="primary" gutterBottom mt={5}>
         Short Itinerary
       </Typography>
-
       <TableContainer component={Paper}>
         <Table>
           <TableHead sx={{ backgroundColor: '#e8f5e9' }}>
@@ -271,7 +214,11 @@ function SingleQueriesView() {
             {itineraryData.map((row, index) => (
               <TableRow key={index}>
                 {columns.map((col) => (
-                  <TableCell key={col.field}>{row[col.field]}</TableCell>
+                  <TableCell key={col.field}>
+                    {['date', 'checkinDate', 'checkoutDate'].includes(col.field)
+                      ? formatDate(row[col.field])
+                      : row[col.field]}
+                  </TableCell>
                 ))}
                 <TableCell>
                   <IconButton onClick={() => openEditDrawer(row, index)}>
@@ -284,8 +231,7 @@ function SingleQueriesView() {
         </Table>
       </TableContainer>
 
-      {/* Drawers for editing */}
-      {/* Itinerary Edit Drawer */}
+      {/* Edit Itinerary Drawer */}
       <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
         <Box sx={{ width: 400, p: 3 }}>
           <Typography variant="h6" fontWeight="bold" gutterBottom>Edit Itinerary</Typography>
@@ -295,10 +241,14 @@ function SingleQueriesView() {
               <Grid item xs={12} key={col.field}>
                 <TextField
                   fullWidth
+                  type={['date', 'checkinDate', 'checkoutDate'].includes(col.field) ? 'date' : 'text'}
                   label={col.label}
                   name={col.field}
-                  value={editRow[col.field] || ''}
+                  value={['date', 'checkinDate', 'checkoutDate'].includes(col.field)
+                    ? editRow[col.field]?.slice(0, 10) || ''
+                    : editRow[col.field] || ''}
                   onChange={handleEditChange}
+                  InputLabelProps={{ shrink: true }}
                 />
               </Grid>
             ))}
@@ -309,7 +259,7 @@ function SingleQueriesView() {
         </Box>
       </Drawer>
 
-      {/* Guest Info Edit Drawer */}
+      {/* Edit Guest Drawer */}
       <Drawer anchor="right" open={guestDrawer} onClose={() => setGuestDrawer(false)}>
         <Box sx={{ width: 400, p: 3 }}>
           <Typography variant="h6" fontWeight="bold" gutterBottom>Edit Guest & Stay Information</Typography>
@@ -333,7 +283,7 @@ function SingleQueriesView() {
         </Box>
       </Drawer>
 
-      {/* Booking Info Edit Drawer */}
+      {/* Edit Booking Drawer */}
       <Drawer anchor="right" open={bookingDrawer} onClose={() => setBookingDrawer(false)}>
         <Box sx={{ width: 400, p: 3 }}>
           <Typography variant="h6" fontWeight="bold" gutterBottom>Edit Booking & Payment</Typography>
@@ -343,10 +293,14 @@ function SingleQueriesView() {
               <Grid item xs={12} key={item.field}>
                 <TextField
                   fullWidth
+                  type={['bookingDate', 'tourDate'].includes(item.field) ? 'date' : 'text'}
                   label={item.label}
                   name={item.field}
-                  value={guestInfo[item.field] || ''}
+                  value={['bookingDate', 'tourDate'].includes(item.field)
+                    ? guestInfo[item.field]?.slice(0, 10) || ''
+                    : guestInfo[item.field] || ''}
                   onChange={handleGuestChange}
+                  InputLabelProps={{ shrink: true }}
                 />
               </Grid>
             ))}
@@ -358,6 +312,6 @@ function SingleQueriesView() {
       </Drawer>
     </Box>
   );
-}
+};
 
 export default SingleQueriesView;

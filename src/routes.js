@@ -6,6 +6,8 @@ import Login from "./pages/login";
 import Logout from "./pages/logout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AllPackages from "./pages/allPackages";
+import Hotels from "./pages/hotels";
+import Vehicles from "./pages/vehicle";
 import Users from "./pages/users";
 import Dashboard from "./pages/dashboard";
 import Query from "./pages/query";
@@ -36,6 +38,8 @@ const Router = () => {
           <Route path="/inquiry" element={<ProtectedRoute Element={Itinerary} module="inquiry" />} />
           <Route path="/createItinerary" element={<ProtectedRoute Element={CreateItinerary} module="itinerary" />} />
           <Route path="/packages" element={<ProtectedRoute Element={AllPackages} module="packages" />} />
+          <Route path="/hotels" element={<ProtectedRoute Element={Hotels} module="hotels" />} />
+          <Route path="/Vehicles" element={<ProtectedRoute Element={Vehicles} module="Vehicles" />} />
           <Route path="/packages/view/:id" element={<ProtectedRoute Element={View} module="packages" />} />
           <Route path="/query/view" element={<ProtectedRoute Element={SingleQueriesView}  />} />
           <Route path="/packages/edit" element={<ProtectedRoute Element={Edit} module="packages" />} />
