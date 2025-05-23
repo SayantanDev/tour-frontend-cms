@@ -76,12 +76,13 @@ const Query = () => {
   const handleSaveEdit = async (id) => {
     try {
       const updatedFields = {};
-  
+
       if (editedRowData.guest_name !== undefined) {
-        updatedFields["guest_info.guest_name"] = editedRowData.guest_name;
+        updatedFields.guest_name = editedRowData.guest_name;
       }
       if (editedRowData.guest_phone !== undefined) {
-        updatedFields["guest_info.guest_phone"] = editedRowData.guest_phone;
+        // updatedFields["guest_info.guest_phone"] = editedRowData.guest_phone;
+        updatedFields.guest_phone = editedRowData.guest_phone;
       }
       if (editedRowData.cost !== undefined) {
         updatedFields.cost = editedRowData.cost;
@@ -92,13 +93,13 @@ const Query = () => {
       if (editedRowData.lead_stage !== undefined) {
         updatedFields.lead_stage = editedRowData.lead_stage;
       }
-  
+
       const response = await updateQueries(id, updatedFields);
-  
+
       if (response.success) {
         showSnackbar(response.message, "success");
       }
-  
+
       fetchQuery();
       setEditingRowId(null);
       setEditedRowData({});
@@ -106,7 +107,7 @@ const Query = () => {
       console.error("Update failed:", error);
     }
   };
-  
+
   const filteredRows = filteredQuery.filter((item) => {
     const searchLower = searchQuery.toLowerCase();
     const name = item.guest_info?.guest_name?.toLowerCase() || "";
@@ -131,13 +132,13 @@ const Query = () => {
       default: return "default";
     }
   };
-  const handleEditOpen = async(id, value) => {
-    console.log("id : ", id);
-    
+  const handleEditOpen = async (id, value) => {
+    console.log("value : ", value);
+
     const res = await fetchOperationByQueries(id);
     console.log("fetchOperationByQueries : ", res.data);
-    
-    dispatch(setSelectedquerie(res.data));
+    const idObj = {id}
+    dispatch(setSelectedquerie(idObj));
     navigate("/query/view");
 
   }
@@ -237,12 +238,12 @@ const Query = () => {
                         </IconButton>
                       </Tooltip>
                       {row.advance > 0 &&
-                      <Tooltip title="open">
-                        <IconButton color="warning" size="small" onClick={() => handleEditOpen(row._id, row)}>
-                          {/* <KeyboardArrowRightOutlinedIcon fontSize="small" /> */}
-                          <Typography color="primary">Manage</Typography>
-                        </IconButton>
-                      </Tooltip>
+                        <Tooltip title="open">
+                          <IconButton color="warning" size="small" onClick={() => handleEditOpen(row.operation_id, row)}>
+                            {/* <KeyboardArrowRightOutlinedIcon fontSize="small" /> */}
+                            <Typography color="primary">Manage</Typography>
+                          </IconButton>
+                        </Tooltip>
                       }
                     </>
                   )}

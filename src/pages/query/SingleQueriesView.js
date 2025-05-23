@@ -1,23 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+
 import {
-  Box,
-  Button,
-  Divider,
-  Drawer,
-  Grid,
-  IconButton,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
+  Box, Button, Divider, Drawer, Grid, IconButton, Paper, Table, TableBody, TableCell, TableContainer,
+  TableHead, TableRow, TextField, Typography, Autocomplete
 } from '@mui/material';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useSelector } from 'react-redux';
+import { getAllHotels } from '../../api/hotelsAPI';
+import { getAllVehicle } from '../../api/vehicleAPI';
+import { getSingleOperation, updateFollowupDetails } from '../../api/operationAPI';
+import { fetchOperationByQueries } from '../../api/queriesAPI';
 
 const formatDate = (dateString) => {
   if (!dateString) return '';
@@ -27,24 +19,14 @@ const formatDate = (dateString) => {
 
 function SingleQueriesView() {
   const { fetchSelectedquerie } = useSelector((state) => state.queries);
+  console.log("fetchSelectedquerie :", fetchSelectedquerie.id);
 
-  const [itineraryData, setItineraryData] = useState(
-    fetchSelectedquerie?.followup_details?.map((item, index) => ({
-      day: (index + 1).toString(),
-      date: item.journey_date || '',
-      place: item.destination || '',
-      hotelName: item.hotel_name || '',
-      hotelAmount: item.hotel_amount || '',
-      hotelConfirmation: item.hotel_confirmation || '',
-      checkinDate: item.checkin_date || '',
-      checkoutDate: item.checkout_date || '',
-      mealPlan: item.meal_plan || '',
-      vehicleName: item.vehicle_name || '',
-      vehiclePayment: item.vehicle_payment || '',
-      vehicleStatus: item.vehicle_status || '',
-    })) || []
-  );
-
+  const [hotels, setHotels] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [roomOptions, setRoomOptions] = useState([]);
+  const [driverOptions, setDriverOptions] = useState([]);
+  const [operation, setOperation] = useState({});
+  const [itineraryData, setItineraryData] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
   const [editRow, setEditRow] = useState({});
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -68,10 +50,40 @@ function SingleQueriesView() {
     advancePayment: fetchSelectedquerie?.guest_details?.advance || '',
     duePayment:
       typeof fetchSelectedquerie?.guest_details?.cost === 'number' &&
-      typeof fetchSelectedquerie?.guest_details?.advance === 'number'
+        typeof fetchSelectedquerie?.guest_details?.advance === 'number'
         ? fetchSelectedquerie.guest_details?.cost - fetchSelectedquerie.guest_details?.advance
         : '',
   });
+  const detchOperationData = async () => {
+    const operationData = await getSingleOperation(fetchSelectedquerie.id);
+    setOperation(operationData);
+    
+    const followUpData = operationData?.followup_details?.map((item, index) => ({
+      day: (index + 1).toString(),
+      date: item.journey_date || '',
+      place: item.destination || '',
+      hotelName: item.hotel_name || '',
+      hotelAmount: item.hotel_amount || '',
+      hotelConfirmation: item.hotel_confirmation || '',
+      checkinDate: item.checkin_date || '',
+      checkoutDate: item.checkout_date || '',
+      mealPlan: item.meal_plan || '',
+      vehicleName: item.vehicle_name || '',
+      vehiclePayment: item.vehicle_payment || '',
+      vehicleStatus: item.vehicle_status || '',
+      driverName: item.driver || '',
+    })) || []
+
+    setItineraryData(followUpData);
+  
+ }
+    useEffect(() => {
+   
+    detchOperationData();
+    // fetchOperationByQueries().then(setOperation);
+    getAllHotels().then(setHotels);
+    getAllVehicle().then(setVehicles);
+  }, []);
 
   const handleGuestChange = (e) => {
     setGuestInfo({ ...guestInfo, [e.target.name]: e.target.value });
@@ -81,20 +93,30 @@ function SingleQueriesView() {
     setEditRow(row);
     setEditIndex(index);
     setDrawerOpen(true);
+
+    const selectedHotel = hotels.find(h => h.hotel_name === row.hotelName);
+    setRoomOptions(selectedHotel?.category || []);
+
+    const owner = vehicles.find(v => v.vehicles.some(veh => veh.vehicle_name === row.vehicleName));
+    setDriverOptions(owner?.drivers || []);
   };
 
   const handleEditChange = (e) => {
     setEditRow({ ...editRow, [e.target.name]: e.target.value });
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     const newData = [...itineraryData];
     newData[editIndex] = editRow;
+    const itnObj = { followup_details: newData }
     setItineraryData(newData);
+    await updateFollowupDetails(fetchSelectedquerie.id,itnObj);
     setDrawerOpen(false);
   };
 
   const saveGuestInfo = () => {
+    console.log("guestInfo:", guestInfo);
+    
     setGuestDrawer(false);
   };
 
@@ -132,6 +154,7 @@ function SingleQueriesView() {
     { label: 'Vehicle Name', field: 'vehicleName' },
     { label: 'Vehicle Payment', field: 'vehiclePayment' },
     { label: 'Vehicle Status', field: 'vehicleStatus' },
+    { label: 'Driver Name', field: 'driverName' }
   ];
 
   return (
@@ -233,25 +256,92 @@ function SingleQueriesView() {
 
       {/* Edit Itinerary Drawer */}
       <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
-        <Box sx={{ width: 400, p: 3 }}>
+        <Box sx={{ width: 500, p: 3 }}>
           <Typography variant="h6" fontWeight="bold" gutterBottom>Edit Itinerary</Typography>
           <Divider sx={{ mb: 2 }} />
           <Grid container spacing={2}>
-            {columns.map((col) => (
-              <Grid item xs={12} key={col.field}>
-                <TextField
-                  fullWidth
-                  type={['date', 'checkinDate', 'checkoutDate'].includes(col.field) ? 'date' : 'text'}
-                  label={col.label}
-                  name={col.field}
-                  value={['date', 'checkinDate', 'checkoutDate'].includes(col.field)
-                    ? editRow[col.field]?.slice(0, 10) || ''
-                    : editRow[col.field] || ''}
-                  onChange={handleEditChange}
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-            ))}
+            {columns.map((col) => {
+              if (col.field === 'hotelName') {
+                return (
+                  <Grid item xs={12} key={col.field}>
+                    <Autocomplete
+                      fullWidth
+                      options={hotels}
+                      getOptionLabel={(option) => option.hotel_name}
+                      renderInput={(params) => <TextField {...params} label="Hotel Name" />}
+                      value={hotels.find(h => h.hotel_name === editRow.hotelName) || null}
+                      onChange={(e, value) => {
+                        setEditRow({ ...editRow, hotelName: value?.hotel_name || '', hotelAmount: '' });
+                        setRoomOptions(value?.category || []);
+                      }}
+                    />
+                  </Grid>
+                );
+              }
+              if (col.field === 'hotelAmount') {
+                return (
+                  <Grid item xs={12} key={col.field}>
+                    <Autocomplete
+                      fullWidth
+                      options={roomOptions}
+                      getOptionLabel={(option) => `${option.room_cat} - ₹${option.room_price}`}
+                      renderInput={(params) => <TextField {...params} label="Room Category" />}
+                      onChange={(e, value) => {
+                        setEditRow({ ...editRow, hotelAmount: value?.room_price || '' });
+                      }}
+                    />
+                  </Grid>
+                );
+              }
+              if (col.field === 'vehicleName') {
+                return (
+                  <Grid item xs={12} key={col.field}>
+                    <Autocomplete
+                      fullWidth
+                      options={vehicles.flatMap(v => v.vehicles)}
+                      getOptionLabel={(option) => option.vehicle_name}
+                      renderInput={(params) => <TextField {...params} label="Vehicle Name" />}
+                      value={vehicles.flatMap(v => v.vehicles).find(v => v.vehicle_name === editRow.vehicleName) || null}
+                      onChange={(e, value) => {
+                        setEditRow({ ...editRow, vehicleName: value?.vehicle_name || '' });
+                        const owner = vehicles.find(v => v.vehicles.some(veh => veh.vehicle_name === value?.vehicle_name));
+                        setDriverOptions(owner?.drivers || []);
+                      }}
+                    />
+                  </Grid>
+                );
+              }
+              if (col.field === 'driverName') {
+                return (
+                  <Grid item xs={12} key={col.field}>
+                    <Autocomplete
+                      fullWidth
+                      options={driverOptions}
+                      getOptionLabel={(option) => option.driver_name}
+                      renderInput={(params) => <TextField {...params} label="Driver Name" />}
+                      onChange={(e, value) => {
+                        setEditRow({ ...editRow, driverName: value?.driver_name || '' });
+                      }}
+                    />
+                  </Grid>
+                );
+              }
+              return (
+                <Grid item xs={12} key={col.field}>
+                  <TextField
+                    fullWidth
+                    type={['date', 'checkinDate', 'checkoutDate'].includes(col.field) ? 'date' : 'text'}
+                    label={col.label}
+                    name={col.field}
+                    value={['date', 'checkinDate', 'checkoutDate'].includes(col.field)
+                      ? editRow[col.field]?.slice(0, 10) || ''
+                      : editRow[col.field] || ''}
+                    onChange={handleEditChange}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Grid>
+              );
+            })}
           </Grid>
           <Box textAlign="right" mt={3}>
             <Button variant="contained" color="primary" onClick={saveEdit}>Save</Button>
@@ -261,7 +351,7 @@ function SingleQueriesView() {
 
       {/* Edit Guest Drawer */}
       <Drawer anchor="right" open={guestDrawer} onClose={() => setGuestDrawer(false)}>
-        <Box sx={{ width: 400, p: 3 }}>
+        <Box sx={{ width: 500, p: 3 }}>
           <Typography variant="h6" fontWeight="bold" gutterBottom>Edit Guest & Stay Information</Typography>
           <Divider sx={{ mb: 2 }} />
           <Grid container spacing={2}>
@@ -285,7 +375,7 @@ function SingleQueriesView() {
 
       {/* Edit Booking Drawer */}
       <Drawer anchor="right" open={bookingDrawer} onClose={() => setBookingDrawer(false)}>
-        <Box sx={{ width: 400, p: 3 }}>
+        <Box sx={{ width: 500, p: 3 }}>
           <Typography variant="h6" fontWeight="bold" gutterBottom>Edit Booking & Payment</Typography>
           <Divider sx={{ mb: 2 }} />
           <Grid container spacing={2}>
