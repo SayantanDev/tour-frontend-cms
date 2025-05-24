@@ -8,8 +8,9 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useSelector } from 'react-redux';
 import { getAllHotels } from '../../api/hotelsAPI';
 import { getAllVehicle } from '../../api/vehicleAPI';
-import { getSingleOperation, updateFollowupDetails } from '../../api/operationAPI';
+import { getQueriesByoperation, getSingleOperation, updateFollowupDetails } from '../../api/operationAPI';
 import { fetchOperationByQueries } from '../../api/queriesAPI';
+import useSnackbar from '../../hooks/useSnackbar';
 
 const formatDate = (dateString) => {
   if (!dateString) return '';
@@ -20,7 +21,7 @@ const formatDate = (dateString) => {
 function SingleQueriesView() {
   const { fetchSelectedquerie } = useSelector((state) => state.queries);
   console.log("fetchSelectedquerie :", fetchSelectedquerie.id);
-
+  const { showSnackbar, SnackbarComponent } = useSnackbar();
   const [hotels, setHotels] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [roomOptions, setRoomOptions] = useState([]);
@@ -33,31 +34,11 @@ function SingleQueriesView() {
   const [guestDrawer, setGuestDrawer] = useState(false);
   const [bookingDrawer, setBookingDrawer] = useState(false);
 
-  const [guestInfo, setGuestInfo] = useState({
-    name: fetchSelectedquerie?.guest_details?.guest_info?.guest_name || '',
-    contact: fetchSelectedquerie?.guest_details?.guest_info?.guest_phone || '',
-    email: fetchSelectedquerie?.guest_details?.guest_info?.guest_email || '',
-    pax: fetchSelectedquerie?.guest_details?.pax || '',
-    hotel: fetchSelectedquerie?.guest_details?.stay_info?.hotel || '',
-    rooms: fetchSelectedquerie?.guest_details?.stay_info?.rooms || '',
-    carname: fetchSelectedquerie?.guest_details?.car_details?.car_name || '',
-    carcount: fetchSelectedquerie?.guest_details?.car_details?.car_count || '',
-    source: fetchSelectedquerie?.guest_details?.lead_source || '',
-    bookingDate: fetchSelectedquerie?.createdAt?.slice(0, 10) || '',
-    tourDate: fetchSelectedquerie?.guest_details?.travel_date?.slice(0, 10) || '',
-    bookingStatus: fetchSelectedquerie?.guest_details?.lead_stage || '',
-    cost: fetchSelectedquerie?.guest_details?.cost || '',
-    advancePayment: fetchSelectedquerie?.guest_details?.advance || '',
-    duePayment:
-      typeof fetchSelectedquerie?.guest_details?.cost === 'number' &&
-        typeof fetchSelectedquerie?.guest_details?.advance === 'number'
-        ? fetchSelectedquerie.guest_details?.cost - fetchSelectedquerie.guest_details?.advance
-        : '',
-  });
+  const [guestInfo, setGuestInfo] = useState({});
   const detchOperationData = async () => {
     const operationData = await getSingleOperation(fetchSelectedquerie.id);
     setOperation(operationData);
-    
+
     const followUpData = operationData?.followup_details?.map((item, index) => ({
       day: (index + 1).toString(),
       date: item.journey_date || '',
@@ -75,10 +56,36 @@ function SingleQueriesView() {
     })) || []
 
     setItineraryData(followUpData);
-  
- }
-    useEffect(() => {
-   
+    const queriesData = await getQueriesByoperation(operationData._id);
+    console.log("queriesData : ", queriesData);
+
+
+    const guestAndStayData = {
+      name: operationData?.guest_info?.name || '',
+      contact: operationData?.guest_info?.phone || '',
+      email: operationData?.guest_info?.email || '',
+      pax: operationData?.trip_details?.number_of_adults || '',
+      hotel: queriesData?.stay_info?.hotel || '',
+      rooms: queriesData?.stay_info?.rooms || '',
+      carname: queriesData?.car_details?.car_name || '',
+      carcount: queriesData?.car_details?.car_count || '',
+      source: queriesData?.lead_source || '',
+      bookingDate: operationData?.createdAt?.slice(0, 10) || '',
+      tourDate: queriesData?.travel_date?.slice(0, 10) || '',
+      bookingStatus: queriesData?.lead_stage || '',
+      cost: queriesData?.cost || '',
+      advancePayment: queriesData?.advance || '',
+      duePayment:
+        typeof queriesData?.cost === 'number' &&
+          typeof queriesData?.advance === 'number'
+          ? queriesData.cost - operationData.guest_details?.advance
+          : '',
+    }
+    setGuestInfo(guestAndStayData);
+  }
+
+
+  useEffect(() => {
     detchOperationData();
     // fetchOperationByQueries().then(setOperation);
     getAllHotels().then(setHotels);
@@ -110,13 +117,16 @@ function SingleQueriesView() {
     newData[editIndex] = editRow;
     const itnObj = { followup_details: newData }
     setItineraryData(newData);
-    await updateFollowupDetails(fetchSelectedquerie.id,itnObj);
+    const res = await updateFollowupDetails(fetchSelectedquerie.id, itnObj);
+    if (res) {
+      showSnackbar(res.message, "success");
+    }
     setDrawerOpen(false);
   };
 
   const saveGuestInfo = () => {
     console.log("guestInfo:", guestInfo);
-    
+
     setGuestDrawer(false);
   };
 
@@ -400,6 +410,7 @@ function SingleQueriesView() {
           </Box>
         </Box>
       </Drawer>
+      <SnackbarComponent />
     </Box>
   );
 };
