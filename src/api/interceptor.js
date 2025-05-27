@@ -1,56 +1,61 @@
+import axios from 'axios';
 
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
-// import { addLoginToken, removeLoginToken } from 'src/reduxcomponents/slices/tokenSlice';
-// import { store } from 'src/reduxcomponents/store';
-
-// const getToken = () => {
-//     const state = store.getState();
-//     const authToken = state?.tokens.tokens.token ? state?.tokens.tokens.token : '';
-//     return authToken;
-// };
-
-// const getRefreshToken = () => {
-//     const state = store.getState();
-//     return state?.tokens.tokens.refreshToken;
-// }
-
-// axios.defaults.headers.common['Content-Type'] = 'application/json';
-axios.defaults.headers.common['Accept'] = 'application/json';
-axios.defaults.headers.common['Access-Control-Allow-Origin'] = '*';
-axios.defaults.headers.common['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept, Authorization';
+const axiosServices = axios.create({
+  baseURL: `${process.env.REACT_APP_BASE_URL}`,
+});
 
 
-export const setupAxios = () => {
-    axios.interceptors.request.use(
-        function (config) {
-            delete config?.headers?.Authorization;
-            // const token = getToken();
-            const token = 'sdfhejehsdjehffjehfjehferhferj';
-            if (token && token !== '') {
-                config.headers['Authorization'] = `Bearer ${token}`;
-            }
-            if (config.url.includes('/addPackage') || config.url.includes('/editPackage')){
-                config.headers['Content-Type'] = 'multipart/form-data';
-            } else {
-                config.headers['Content-Type'] = 'application/json';
-            }
-            return config;
-        },
-        function (error) {
-            return Promise.reject(error);
-        }
-    );
+// Request Interceptor: Attach access token
+axiosServices.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-    axios.interceptors.response.use(
-        async function (response) {
-            return response;
-        },
-        async function (error) {
-            return Promise.reject(error);
-        }
-    );
-};
+// Response Interceptor: Refresh token on 401
+axiosServices.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
 
-setupAxios();
+    // Check if error is due to access token expiry and not already retried
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry
+    ) {
+      originalRequest._retry = true;
 
-export default axios;
+      try {
+        const refreshToken = localStorage.getItem("refreshToken");
+
+        // Request new access token using refresh token
+        const { data } = await axios.post(
+          `${process.env.REACT_APP_BASE_URL}/refresh-token`, // Adjust this endpoint
+          { refreshToken }
+        );
+
+        // Save new access token
+        localStorage.setItem("accessToken", data.accessToken);
+
+        // Update header and retry original request
+        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+        return axiosServices(originalRequest);
+      } catch (err) {
+        // Refresh token invalid or expired
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/"; // Redirect to login
+        return Promise.reject(err);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+export default axiosServices;

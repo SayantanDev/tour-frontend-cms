@@ -2,13 +2,13 @@ import React, { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Container, Button, Typography, Paper } from '@mui/material';
-import { removeLoginToken } from './../../reduxcomponents/slices/tokenSlice';
+import { logoutUser } from './../../reduxcomponents/slices/tokenSlice';
 
 const Logout = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   useEffect(() => {
-    dispatch(removeLoginToken());
+    dispatch(logoutUser());
   }, [dispatch]);
 
 //   const backToLogin = () => {

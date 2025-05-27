@@ -1,27 +1,27 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-const initialTokenState = {
-    tokens: {
-        token: '',
-        refreshToken: '',
-    }
-};
-
 const tokenSlice = createSlice({
-    name: 'token',
-    initialState: initialTokenState,
-    reducers: {
-        addLoginToken: (state, action) => {
-            state.tokens = action.payload;
-        },
-        removeLoginToken: (state) => {
-            state.tokens = {
-                token: '',
-                refreshToken: '',
-            }
-        }
+  name: 'auth',
+  initialState: {
+    token: null,
+    refreshToken: null,
+    user: null
+  },
+  reducers: {
+    addLoginToken: (state, action) => {
+      state.token = action.payload.token;
+      state.refreshToken = action.payload.refreshToken;
+      state.user = action.payload.user;
+    },
+    logoutUser: (state) => {
+      state.token = null;
+      state.refreshToken = null;
+      state.user = null;
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
     }
+  }
 });
 
-export const { addLoginToken, removeLoginToken } = tokenSlice.actions;
+export const { addLoginToken, logoutUser } = tokenSlice.actions;
 export default tokenSlice.reducer;
