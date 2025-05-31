@@ -26,7 +26,7 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, setCustomerInput
     const { showSnackbar, SnackbarComponent } = useSnackbar();
     const { fetchNewPackageInfo: pakageData } = useSelector((state) => state.package);
     const [tab, setTab] = useState(0);
-    const [newPackageId, setNewPackageId] = useState(selectedCard.id);
+    // const [newPackageId, setNewPackageId] = useState(selectedCard.id);
     const handleChange = (event, newValue) => {
         setTab(newValue);
     };
@@ -77,7 +77,7 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, setCustomerInput
 
                 if (resCreatePakg.status === 201) {
                     finalPackageId = resCreatePakg.data.data._id;
-                    setNewPackageId(finalPackageId);
+                    // setNewPackageId(finalPackageId);
                     showSnackbar('You created a new package', 'success');
                 } else {
                     showSnackbar('Something went wrong', 'error');
