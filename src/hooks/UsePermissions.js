@@ -1,14 +1,16 @@
+// hooks/usePermissions.js
 import { useCallback } from "react";
 import { useSelector } from "react-redux";
 
-const userPermission = [
+const userPermissionData = [
   { role: "Admin", permissions: "all" },
   {
     role: "Admin-a",
     permissions: [
       { module: "inquiry", value: ["view", "create", "alter", "delete"] },
       { module: "user", value: ["view", "create", "alter", "delete"] },
-      { module: "queries", value: ["view", "create", "alter", "delete"] },
+      { module: "queries", value: ["view", "create", "alter", "delete","assuser"] },
+      { module: "operation", value: ["view", "create", "alter", "delete"] },
     ],
   },
   {
@@ -19,26 +21,31 @@ const userPermission = [
       { module: "dashboard", value: ["view"] },
     ],
   },
+  {
+    role: "User",
+    permissions: [
+      { module: "inquiry", value: ["view"] },
+      { module: "queries", value: ["view", "create"] },
+      { module: "dashboard", value: ["view"] },
+      { module: "logout", value: ["view"] },
+      { module: "operation", value: ["changeRequest"] },
+    ],
+  },
 ];
 
 const usePermissions = () => {
-  const userRole = "Admin"; // Replace with: useSelector((state) => state.user.role);
+  const userRole = useSelector((state) => state.tokens.user.permission);
 
   return useCallback(
     (moduleName, permissionType) => {
-      // console.log("moduleName:", moduleName, "permissionType:", permissionType);
-      
-      const roleData = userPermission.find((role) => role.role === userRole);
+      const roleData = userPermissionData.find((role) => role.role === userRole);
       if (!roleData) return false;
-
       if (roleData.permissions === "all") return true;
-      
-      const modulePermissions = roleData.permissions.find((mod) => mod.module === moduleName);
-      if (!modulePermissions) return false;
 
-      return modulePermissions.value.includes(permissionType);
+      const modulePermissions = roleData.permissions.find((mod) => mod.module === moduleName);
+      return modulePermissions?.value.includes(permissionType) || false;
     },
-    [userRole] // Dependencies
+    [userRole]
   );
 };
 

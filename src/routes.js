@@ -36,12 +36,12 @@ const Router = () => {
           <Route path="/dashboard" element={<ProtectedRoute Element={Dashboard} module="dashboard" />} />
           <Route path="/query" element={<ProtectedRoute Element={Query} module="queries" />} />
           <Route path="/inquiry" element={<ProtectedRoute Element={Itinerary} module="inquiry" />} />
-          <Route path="/createItinerary" element={<ProtectedRoute Element={CreateItinerary} module="itinerary" />} />
+          <Route path="/createItinerary" element={<ProtectedRoute Element={CreateItinerary} module="inquiry" />} />
           <Route path="/packages" element={<ProtectedRoute Element={AllPackages} module="packages" />} />
           <Route path="/hotels" element={<ProtectedRoute Element={Hotels} module="hotels" />} />
           <Route path="/Vehicles" element={<ProtectedRoute Element={Vehicles} module="Vehicles" />} />
           <Route path="/packages/view/:id" element={<ProtectedRoute Element={View} module="packages" />} />
-          <Route path="/query/view" element={<ProtectedRoute Element={SingleQueriesView}  />} />
+          <Route path="/query/view" element={<ProtectedRoute Element={SingleQueriesView} module="queries"  />} />
           <Route path="/packages/edit" element={<ProtectedRoute Element={Edit} module="packages" />} />
           <Route path="/costTable" element={<ProtectedRoute Element={AdditionalCost} module="costs" />} />
           <Route path="/users" element={<ProtectedRoute Element={Users} module="user" />} />

@@ -15,3 +15,15 @@ export async function deleteInquiry(id) {
     const result = await axios.delete(DELETE_URL);
     return result.data;
 }
+
+export async function InquiryUserAssign(payload){
+    const ADDUSER_URL = `${INQRY_URL}/user-assign`;
+    const result = await axios.post(ADDUSER_URL,payload);
+    return result.data;
+}
+
+export async function InquiryUserRemove(payload){
+    const ADDUSER_URL = `${INQRY_URL}/user-remove`;
+    const result = await axios.post(ADDUSER_URL,payload);
+    return result.data;
+}

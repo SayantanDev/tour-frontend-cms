@@ -28,3 +28,14 @@ export async function fetchOperationByQueries(id){
     return result.data;
 }
 
+export async function assignUsersToQueries(payload) {
+    const UPDATEUSER_URL = `${QRY_URL}/assign-users`;
+    const result = await axios.patch(UPDATEUSER_URL,payload );
+    return result.data;
+}
+export async function removeUsersFromQueries(payload){
+    const UPDATEUSER_URL = `${QRY_URL}/remove-users`;
+    const result = await axios.patch(UPDATEUSER_URL,payload );
+    return result.data;
+}
+

@@ -2,15 +2,20 @@ import React, { useEffect, useState } from 'react';
 
 import {
   Box, Button, Divider, Drawer, Grid, IconButton, Paper, Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, TextField, Typography, Autocomplete
+  TableHead, TableRow, TextField, Typography, Autocomplete,
+  DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useSelector } from 'react-redux';
 import { getAllHotels } from '../../api/hotelsAPI';
 import { getAllVehicle } from '../../api/vehicleAPI';
-import { getQueriesByoperation, getSingleOperation, updateFollowupDetails } from '../../api/operationAPI';
+import { addChangeRequest, getQueriesByoperation, getSingleOperation, updateFollowupDetails } from '../../api/operationAPI';
 import { fetchOperationByQueries } from '../../api/queriesAPI';
 import useSnackbar from '../../hooks/useSnackbar';
+import usePermissions from '../../hooks/UsePermissions';
 
 const formatDate = (dateString) => {
   if (!dateString) return '';
@@ -20,7 +25,7 @@ const formatDate = (dateString) => {
 
 function SingleQueriesView() {
   const { fetchSelectedquerie } = useSelector((state) => state.queries);
-  console.log("fetchSelectedquerie :", fetchSelectedquerie.id);
+  const hasPermission = usePermissions();
   const { showSnackbar, SnackbarComponent } = useSnackbar();
   const [hotels, setHotels] = useState([]);
   const [vehicles, setVehicles] = useState([]);
@@ -33,8 +38,10 @@ function SingleQueriesView() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [guestDrawer, setGuestDrawer] = useState(false);
   const [bookingDrawer, setBookingDrawer] = useState(false);
-
   const [guestInfo, setGuestInfo] = useState({});
+  const [changeRequestOpen, setChangeRequestOpen] = useState(false);
+  const [description, setDescription] = useState('');
+
   const detchOperationData = async () => {
     const operationData = await getSingleOperation(fetchSelectedquerie.id);
     setOperation(operationData);
@@ -166,6 +173,23 @@ function SingleQueriesView() {
     { label: 'Vehicle Status', field: 'vehicleStatus' },
     { label: 'Driver Name', field: 'driverName' }
   ];
+  const handleChangeRequest = async () => {
+    // Example: You can send this to an API or log it
+    if (!description.trim()) {
+      alert("Please enter a description before submitting.");
+      return;
+    }
+
+    // Example usage
+    console.log("Change Request Submitted:", description);
+
+    // Reset and close the dialog
+    setDescription('');
+    setChangeRequestOpen(false);
+
+    await addChangeRequest(fetchSelectedquerie.id, { description });
+    showSnackbar("Change Request Submitted Successfully", "success");
+  };
 
   return (
     <Box p={2}>
@@ -179,9 +203,11 @@ function SingleQueriesView() {
             <Box sx={{ border: '1px solid #ccc', borderRadius: 2 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
                 <Typography variant="subtitle1" fontWeight="bold" color="secondary">Guest & Stay Information</Typography>
-                <IconButton onClick={() => setGuestDrawer(true)}>
-                  <EditOutlinedIcon />
-                </IconButton>
+                {hasPermission("operation", "alter") && (
+                  <IconButton onClick={() => setGuestDrawer(true)}>
+                    <EditOutlinedIcon />
+                  </IconButton>
+                )}
               </Box>
               <Divider />
               <TableContainer>
@@ -203,9 +229,11 @@ function SingleQueriesView() {
             <Box sx={{ border: '1px solid #ccc', borderRadius: 2 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
                 <Typography variant="subtitle1" fontWeight="bold" color="secondary">Booking & Payment</Typography>
-                <IconButton onClick={() => setBookingDrawer(true)}>
-                  <EditOutlinedIcon />
-                </IconButton>
+                {hasPermission("operation", "alter") && (
+                  <IconButton onClick={() => setBookingDrawer(true)}>
+                    <EditOutlinedIcon />
+                  </IconButton>
+                )}
               </Box>
               <Divider />
               <TableContainer>
@@ -226,6 +254,15 @@ function SingleQueriesView() {
               </TableContainer>
             </Box>
           </Grid>
+          {hasPermission("operation", "changeRequest") && (
+            <Grid xs={12} >
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
+                <Button variant="contained" color="secondary" onClick={() => setChangeRequestOpen(true)} >
+                  Change Request
+                </Button>
+              </Box>
+            </Grid>
+          )}
         </Grid>
       </Paper>
 
@@ -411,6 +448,28 @@ function SingleQueriesView() {
         </Box>
       </Drawer>
       <SnackbarComponent />
+      {/* change request popup */}
+      <Dialog open={changeRequestOpen} onClose={() => setChangeRequestOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Change Request</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Description"
+            fullWidth
+            multiline
+            rows={4}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setChangeRequestOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleChangeRequest}>
+            Send Request
+          </Button>
+        </DialogActions>
+      </Dialog>
+
     </Box>
   );
 };

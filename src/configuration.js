@@ -2,58 +2,59 @@ export const CONFIG_STR = {
     drawerWidth: 150,
     navigationStrings: [
         {
-          label: 'Dashboard',
-          link: '/dashboard',
-          module: "dashboard",
-          icon: "InsertChartOutlined" 
+            label: 'Dashboard',
+            link: '/dashboard',
+            module: "dashboard",
+            icon: "InsertChartOutlined"
         },
         {
-          label: 'Inquiry',
-          link: '/inquiry',
-          module: "inquiry",
-          icon: "AttachEmailOutlined" 
-          
+            label: 'Inquiry',
+            link: '/inquiry',
+            module: "inquiry",
+            icon: "AttachEmailOutlined"
+
         },
         {
-          label: 'Queries',
-          link: '/query',
-          module: "queries",
-          icon: "AddToHomeScreenOutlined" 
+            label: 'Leads',
+            link: '/query',
+            module: "queries",
+            icon: "AddToHomeScreenOutlined"
         },
         {
-          label: 'Packages',
-          link: '/packages',
-          module: "package",
-          icon: "CasesOutlined" 
+            label: 'Packages',
+            link: '/packages',
+            module: "package",
+            icon: "CasesOutlined"
         },
         {
-          label: 'Hotels',
-          link: '/hotels',
-          module: "hotel",
-          icon: "CasesOutlined" 
+            label: 'Hotels',
+            link: '/hotels',
+            module: "hotel",
+            icon: "CasesOutlined"
         },
         {
-          label: 'Vehicles',
-          link: '/Vehicles',
-          module: "Vehicles",
-          icon: "CasesOutlined" 
+            label: 'Vehicles',
+            link: '/Vehicles',
+            module: "Vehicles",
+            icon: "CasesOutlined"
         },
         {
-          label: 'Extra Costs',
-          link: '/costTable',
-          module: "costTable",
-          icon: "AddTaskOutlined" 
+            label: 'Extra Costs',
+            link: '/costTable',
+            module: "costTable",
+            icon: "AddTaskOutlined"
         },
         {
-          label: 'Users',
-          link: '/users',
-          module: "user",
-          icon: "PermIdentityOutlined" 
+            label: 'Users',
+            link: '/users',
+            module: "user",
+            icon: "PermIdentityOutlined"
         },
         {
-          label: 'Logout',
-          link: '/logout',
-          icon: "LogoutOutlined" 
+            label: 'Logout',
+            link: '/logout',
+            module: "logout",
+            icon: "LogoutOutlined"
         },
     ],
     sandakphuPackages: [
@@ -93,27 +94,27 @@ export const CONFIG_STR = {
                 shortItinerary: [
                     {
                         "tagName": "Day 1",
-                        "tagValue": "NJP/Bagdogra to Dhotrey" 
+                        "tagValue": "NJP/Bagdogra to Dhotrey"
                     },
                     {
                         "tagName": "Day 2",
-                        "tagValue": "Dhotrey to Tumling" 
+                        "tagValue": "Dhotrey to Tumling"
                     },
                     {
                         "tagName": "Day 3",
-                        "tagValue": "Tumling to Kali Pokhari" 
+                        "tagValue": "Tumling to Kali Pokhari"
                     },
                     {
                         "tagName": "Day 4",
-                        "tagValue": "Kali Pokhari to Sandakphu" 
+                        "tagValue": "Kali Pokhari to Sandakphu"
                     },
                     {
                         "tagName": "Day 5",
-                        "tagValue": "Sandakphu to Srikhola" 
+                        "tagValue": "Sandakphu to Srikhola"
                     },
                     {
                         "tagName": "Day 6",
-                        "tagValue": "Srikhola to NJP/Bagdogra" 
+                        "tagValue": "Srikhola to NJP/Bagdogra"
                     }
                 ],
                 itinerary: [
@@ -287,35 +288,35 @@ export const CONFIG_STR = {
                 shortItinerary: [
                     {
                         "tagName": "Day 1",
-                        "tagValue": "NJP/Bagdogra to Dhotrey" 
+                        "tagValue": "NJP/Bagdogra to Dhotrey"
                     },
                     {
                         "tagName": "Day 2",
-                        "tagValue": "Dhotrey to Tumling" 
+                        "tagValue": "Dhotrey to Tumling"
                     },
                     {
                         "tagName": "Day 3",
-                        "tagValue": "Tumling to Kali Pokhari" 
+                        "tagValue": "Tumling to Kali Pokhari"
                     },
                     {
                         "tagName": "Day 4",
-                        "tagValue": "Kali Pokhari to Sandakphu" 
+                        "tagValue": "Kali Pokhari to Sandakphu"
                     },
                     {
                         "tagName": "Day 5",
-                        "tagValue": "Sandakphu to Molley" 
+                        "tagValue": "Sandakphu to Molley"
                     },
                     {
                         "tagName": "Day 6",
-                        "tagValue": "Molley to Gorkhey" 
+                        "tagValue": "Molley to Gorkhey"
                     },
                     {
                         "tagName": "Day 7",
-                        "tagValue": "Gorkhey to Srikhola" 
+                        "tagValue": "Gorkhey to Srikhola"
                     },
                     {
                         "tagName": "Day 8",
-                        "tagValue": "Srikhola to NJP/Bagdogra" 
+                        "tagValue": "Srikhola to NJP/Bagdogra"
                     }
                 ],
                 itinerary: [
@@ -508,15 +509,15 @@ export const CONFIG_STR = {
                 shortItinerary: [
                     {
                         "tagName": "Day 1",
-                        "tagValue": "NJP/Bagdogra to Maneybhanjan and transfer to Tumling" 
+                        "tagValue": "NJP/Bagdogra to Maneybhanjan and transfer to Tumling"
                     },
                     {
                         "tagName": "Day 2",
-                        "tagValue": "Tumling to Sandakphu" 
+                        "tagValue": "Tumling to Sandakphu"
                     },
                     {
                         "tagName": "Day 3",
-                        "tagValue": "Sandakphu to Maneybhanjan and transfer to NJP/Bagdogra" 
+                        "tagValue": "Sandakphu to Maneybhanjan and transfer to NJP/Bagdogra"
                     }
                 ],
                 itinerary: [
@@ -633,27 +634,27 @@ export const CONFIG_STR = {
                 shortItinerary: [
                     {
                         "tagName": "Day 1",
-                        "tagValue": "NJP/Bagdogra to Dhotrey" 
+                        "tagValue": "NJP/Bagdogra to Dhotrey"
                     },
                     {
                         "tagName": "Day 2",
-                        "tagValue": "Dhotrey to Jaubari" 
+                        "tagValue": "Dhotrey to Jaubari"
                     },
                     {
                         "tagName": "Day 3",
-                        "tagValue": "Tumling to Kali Pokhari" 
+                        "tagValue": "Tumling to Kali Pokhari"
                     },
                     {
                         "tagName": "Day 4",
-                        "tagValue": "Exploration around Jaubari" 
+                        "tagValue": "Exploration around Jaubari"
                     },
                     {
                         "tagName": "Day 5",
-                        "tagValue": "Reserve Day" 
+                        "tagValue": "Reserve Day"
                     },
                     {
                         "tagName": "Day 6",
-                        "tagValue": "Dhotrey to NJP/Bagdogra" 
+                        "tagValue": "Dhotrey to NJP/Bagdogra"
                     }
                 ],
                 itinerary: [
@@ -827,15 +828,15 @@ export const CONFIG_STR = {
                 shortItinerary: [
                     {
                         "tagName": "Day 1",
-                        "tagValue": "NJP/Bagdogra to Dhotrey" 
+                        "tagValue": "NJP/Bagdogra to Dhotrey"
                     },
                     {
                         "tagName": "Day 2",
-                        "tagValue": "Dhotrey to Tonglu trek and back to Dhotrey" 
+                        "tagValue": "Dhotrey to Tonglu trek and back to Dhotrey"
                     },
                     {
                         "tagName": "Day 3",
-                        "tagValue": "Dhotrey to NJP/Bagdogra" 
+                        "tagValue": "Dhotrey to NJP/Bagdogra"
                     }
                 ],
                 itinerary: [
@@ -983,27 +984,27 @@ export const CONFIG_STR = {
                 shortItinerary: [
                     {
                         "tagName": "Day 1",
-                        "tagValue": "NJP/Bagdogra to Uttarey" 
+                        "tagValue": "NJP/Bagdogra to Uttarey"
                     },
                     {
                         "tagName": "Day 2",
-                        "tagValue": "Uttarey to Jaributi" 
+                        "tagValue": "Uttarey to Jaributi"
                     },
                     {
                         "tagName": "Day 3",
-                        "tagValue": "Jaributi to Kalijhar" 
+                        "tagValue": "Jaributi to Kalijhar"
                     },
                     {
                         "tagName": "Day 4",
-                        "tagValue": "Kalijhar to Phoktey Dara and back" 
+                        "tagValue": "Kalijhar to Phoktey Dara and back"
                     },
                     {
                         "tagName": "Day 5",
-                        "tagValue": "Kalijhar to Uttarey" 
+                        "tagValue": "Kalijhar to Uttarey"
                     },
                     {
                         "tagName": "Day 6",
-                        "tagValue": "Uttarey to NJP/Bagdogra" 
+                        "tagValue": "Uttarey to NJP/Bagdogra"
                     }
                 ],
                 itinerary: [
@@ -1177,19 +1178,19 @@ export const CONFIG_STR = {
                 shortItinerary: [
                     {
                         "tagName": "Day 1",
-                        "tagValue": "NJP/Bagdogra to Maneybhanjan and transfer to Tumling" 
+                        "tagValue": "NJP/Bagdogra to Maneybhanjan and transfer to Tumling"
                     },
                     {
                         "tagName": "Day 2",
-                        "tagValue": "Tumling to Sandakphu" 
+                        "tagValue": "Tumling to Sandakphu"
                     },
                     {
                         "tagName": "Day 3",
-                        "tagValue": "Sandakphu to Phalut day trip" 
+                        "tagValue": "Sandakphu to Phalut day trip"
                     },
                     {
                         "tagName": "Day 4",
-                        "tagValue": "Sandakphu to Maneybhanjan and transfer to NJP/Bagdogra" 
+                        "tagValue": "Sandakphu to Maneybhanjan and transfer to NJP/Bagdogra"
                     }
                 ],
                 itinerary: [
@@ -1315,15 +1316,15 @@ export const CONFIG_STR = {
                 shortItinerary: [
                     {
                         "tagName": "Day 1",
-                        "tagValue": "NJP/Bagdogra to Maneybhanjan and transfer to Tumling" 
+                        "tagValue": "NJP/Bagdogra to Maneybhanjan and transfer to Tumling"
                     },
                     {
                         "tagName": "Day 2",
-                        "tagValue": "Tumling to Sandakphu" 
+                        "tagValue": "Tumling to Sandakphu"
                     },
                     {
                         "tagName": "Day 3",
-                        "tagValue": "Sandakphu to Maneybhanjan and transfer to NJP/Bagdogra" 
+                        "tagValue": "Sandakphu to Maneybhanjan and transfer to NJP/Bagdogra"
                     }
                 ],
                 itinerary: [
@@ -1440,11 +1441,11 @@ export const CONFIG_STR = {
                 shortItinerary: [
                     {
                         "tagName": "Day 1",
-                        "tagValue": "NJP/Bagdogra to Maneybhanjan and Land Rover ride to Tonglu/Tumling" 
+                        "tagValue": "NJP/Bagdogra to Maneybhanjan and Land Rover ride to Tonglu/Tumling"
                     },
                     {
                         "tagName": "Day 2",
-                        "tagValue": "Tonglu/Tumling to Maneybhanjan and drop to NJP/Bagdogra" 
+                        "tagValue": "Tonglu/Tumling to Maneybhanjan and drop to NJP/Bagdogra"
                     }
                 ],
                 itinerary: [
@@ -1521,27 +1522,27 @@ export const CONFIG_STR = {
                 shortItinerary: [
                     {
                         "tagName": "Day 1",
-                        "tagValue": "NJP/Bagdogra to Gangtok" 
+                        "tagValue": "NJP/Bagdogra to Gangtok"
                     },
                     {
                         "tagName": "Day 2",
-                        "tagValue": "Gangtok to Tsomgo Lake and Baba Mandir(Nathu La optional)" 
+                        "tagValue": "Gangtok to Tsomgo Lake and Baba Mandir(Nathu La optional)"
                     },
                     {
                         "tagName": "Day 3",
-                        "tagValue": "Gangtok to Lachen" 
+                        "tagValue": "Gangtok to Lachen"
                     },
                     {
                         "tagName": "Day 4",
-                        "tagValue": "Lachen to Lachung via Gurudongmar" 
+                        "tagValue": "Lachen to Lachung via Gurudongmar"
                     },
                     {
                         "tagName": "Day 5",
-                        "tagValue": "Lachung to Gangtok via Yumthang" 
+                        "tagValue": "Lachung to Gangtok via Yumthang"
                     },
                     {
                         "tagName": "Day 6",
-                        "tagValue": "Gangtok to NJP/Bagdogra" 
+                        "tagValue": "Gangtok to NJP/Bagdogra"
                     }
                 ],
                 itinerary: [
@@ -1616,23 +1617,23 @@ export const CONFIG_STR = {
                 shortItinerary: [
                     {
                         "tagName": "Day 1",
-                        "tagValue": "NJP/Bagdogra to Gangtok" 
+                        "tagValue": "NJP/Bagdogra to Gangtok"
                     },
                     {
                         "tagName": "Day 2",
-                        "tagValue": "Gangtok to Lachen" 
+                        "tagValue": "Gangtok to Lachen"
                     },
                     {
                         "tagName": "Day 3",
-                        "tagValue": "Lachen to Lachung via Gurudongmar" 
+                        "tagValue": "Lachen to Lachung via Gurudongmar"
                     },
                     {
                         "tagName": "Day 4",
-                        "tagValue": "Lachung to Gangtok via Yumthang" 
+                        "tagValue": "Lachung to Gangtok via Yumthang"
                     },
                     {
                         "tagName": "Day 5",
-                        "tagValue": "Gangtok to NJP/Bagdogra" 
+                        "tagValue": "Gangtok to NJP/Bagdogra"
                     }
                 ],
                 itinerary: [
@@ -1703,27 +1704,27 @@ export const CONFIG_STR = {
                 shortItinerary: [
                     {
                         "tagName": "Day 1",
-                        "tagValue": "NJP/Bagdogra to Gangtok" 
+                        "tagValue": "NJP/Bagdogra to Gangtok"
                     },
                     {
                         "tagName": "Day 2",
-                        "tagValue": "Gangtok to Tsomgo Lake and Baba Mandir(Nathu La optional)" 
+                        "tagValue": "Gangtok to Tsomgo Lake and Baba Mandir(Nathu La optional)"
                     },
                     {
                         "tagName": "Day 3",
-                        "tagValue": "Gangtok to Lachen" 
+                        "tagValue": "Gangtok to Lachen"
                     },
                     {
                         "tagName": "Day 4",
-                        "tagValue": "Lachen to Lachung via Gurudongmar" 
+                        "tagValue": "Lachen to Lachung via Gurudongmar"
                     },
                     {
                         "tagName": "Day 5",
-                        "tagValue": "Lachung to Gangtok via Yumthang" 
+                        "tagValue": "Lachung to Gangtok via Yumthang"
                     },
                     {
                         "tagName": "Day 6",
-                        "tagValue": "Gangtok to NJP/Bagdogra" 
+                        "tagValue": "Gangtok to NJP/Bagdogra"
                     }
                 ],
                 itinerary: [
@@ -1774,27 +1775,27 @@ export const CONFIG_STR = {
                 shortItinerary: [
                     {
                         "tagName": "Day 1",
-                        "tagValue": "NJP/Bagdogra to Gangtok" 
+                        "tagValue": "NJP/Bagdogra to Gangtok"
                     },
                     {
                         "tagName": "Day 2",
-                        "tagValue": "Gangtok to Tsomgo Lake and Baba Mandir(Nathu La optional)" 
+                        "tagValue": "Gangtok to Tsomgo Lake and Baba Mandir(Nathu La optional)"
                     },
                     {
                         "tagName": "Day 3",
-                        "tagValue": "Gangtok to Lachen" 
+                        "tagValue": "Gangtok to Lachen"
                     },
                     {
                         "tagName": "Day 4",
-                        "tagValue": "Lachen to Lachung via Gurudongmar" 
+                        "tagValue": "Lachen to Lachung via Gurudongmar"
                     },
                     {
                         "tagName": "Day 5",
-                        "tagValue": "Lachung to Gangtok via Yumthang" 
+                        "tagValue": "Lachung to Gangtok via Yumthang"
                     },
                     {
                         "tagName": "Day 6",
-                        "tagValue": "Gangtok to NJP/Bagdogra" 
+                        "tagValue": "Gangtok to NJP/Bagdogra"
                     }
                 ],
                 itinerary: [

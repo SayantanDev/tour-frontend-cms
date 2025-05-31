@@ -32,7 +32,8 @@ const Login = () => {
             dispatch(addLoginToken({
                 token: res.data.accessToken,
                 refreshToken: res.data.refreshToken,
-                user: res.data.user
+                user: res.data.user,
+                permission: res.data.permission,
             }));
 
             navigate('/dashboard');

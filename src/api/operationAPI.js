@@ -27,3 +27,9 @@ export async function getQueriesByoperation(id) {
     const result = await axios.get(ADDUSER_URL);
     return result.data;
 }
+
+export async function addChangeRequest(id,payload){
+    const ADDUSER_URL = `${QRY_URL}/change-request/${id}`;
+    const result = await axios.post(ADDUSER_URL, payload);
+    return result.data;
+}
