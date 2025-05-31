@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { RootState } from '../reduxcomponents/slices/rootReducer';
+// import { RootState } from '../reduxcomponents/slices/rootReducer';
 
 const withAuthRedirect = (WrappedComponent) => {
     return (props) => {

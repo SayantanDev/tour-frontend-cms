@@ -8,7 +8,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
 import PackageDialog from './PackageDialog';
 import { getAllPackages, getSinglePackages } from '../../api/packageAPI';
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setSelectedPackage } from "../../reduxcomponents/slices/packagesSlice";
 
@@ -46,7 +46,6 @@ const AllPackages = () => {
                 setTableRows(arr_san);
             })
             .catch((err) => {
-                console.log('Get packages error:', err);
             });
     }, []);
     useEffect(() => {
@@ -118,9 +117,6 @@ const AllPackages = () => {
             navigate(`/packages/edit`);
 
         } catch (error) {
-            console.log("error is :", error);
-
-
         }
 
     }

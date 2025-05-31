@@ -10,8 +10,6 @@ export async function getAllVehicle() {
 };
 
 export async function insertVehicle(payload) {
-    console.log("payload : ",payload);
-    
     const ADDUSER_URL = `${QRY_URL}/insert`;
     const result = await axios.post(ADDUSER_URL, payload);
     return result.data;

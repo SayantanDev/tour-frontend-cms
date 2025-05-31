@@ -20,10 +20,7 @@ const ShortItinerary = ({ customerInput,setCustomerInput, selectedCard }) => {
 
   // 1. Determine total days based on selectedCard itinerary first
   const totalDays = selectedCard?.itinerary?.length || customerInput.days || 1;
-  const [dayCount, setDayCount] = useState(totalDays);
-
-  console.log("total itinerary count : ", dayCount);
-
+  // const [dayCount, setDayCount] = useState(totalDays);
   // 2. Create itinerary, prioritizing selectedCard values
   const makeEmptyItinerary = (days, existingValues = []) =>
     Array.from({ length: days }, (_, i) => ({

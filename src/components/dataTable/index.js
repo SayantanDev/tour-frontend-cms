@@ -4,7 +4,6 @@ import { updateQueries } from '../../api/queriesAPI';
 
 const DataTable = ({ rows, columns,setEditableRowId }) => {
   const handleRowEdit = async (updatedRow) => {
-    console.log("Updated row:", updatedRow);
     const id = updatedRow.id;
   
     let editObj = {};
@@ -26,18 +25,15 @@ const DataTable = ({ rows, columns,setEditableRowId }) => {
       editObj["cost"] = updatedRow.cost;
     }
   
-    try {
-      const res = await updateQueries(id, editObj);
+    // try {
+    //   const res = await updateQueries(id, editObj);
   
-      if (res.success === true) {
-        console.log("Data updated successfully", res);
-        // Optional: show toast or refresh
-      }
-    } catch (error) {
-      console.log("Error updating data:", error);
-    }
+    //   // if (res.success === true) {
+    //   //   // Optional: show toast or refresh
+    //   // }
+    // } catch (error) {
+    // }
   
-    console.log("Sent update object:", editObj);
     return updatedRow; // This is important for DataGrid to finalize the edit
   };
   

@@ -26,7 +26,6 @@ const Users = () => {
                 setAllUsers(res.data);
             })
             .catch((err) => {
-                console.log('Get user error:', err);
             });
     }, [userAdded]);
 
@@ -41,13 +40,12 @@ const Users = () => {
         setDialogOpen(true);
     };
     const handleEditUserClick = (selectedRow) => {
-        console.log("selectedRow", selectedRow);
-        const data = {
-            fullName: selectedRow.fullName,
-            email: selectedRow.email,
-            permission: selectedRow.permission,
-            id: selectedRow._id
-        }
+        // const data = {
+        //     fullName: selectedRow.fullName,
+        //     email: selectedRow.email,
+        //     permission: selectedRow.permission,
+        //     id: selectedRow._id
+        // }
         setUserFormData(selectedRow);
         setDialogOpen(true);
     };
@@ -60,10 +58,7 @@ const Users = () => {
     };
     const handleAddUserSubmit = (e) => {
         e.preventDefault();
-        // console.log("userFormData submit : ", userFormData);
         if (userFormData.id) {
-            console.log("update user:", userFormData);
-            
             updateUser(userFormData,userFormData.id)
                 .then((res) => {
                     setUserFormData({
@@ -77,7 +72,6 @@ const Users = () => {
                     setUserAdded(true);
                 })
                 .catch((err) => {
-                    console.log('Update user error:', err);
                     setUserFormData({
                         fullName: '',
                         email: '',
@@ -90,8 +84,6 @@ const Users = () => {
                 });
 
         } else {
-            console.log("add user:", userFormData);
-            
             addUser(userFormData)
                 .then((res) => {
                     setUserFormData({
@@ -105,7 +97,6 @@ const Users = () => {
                     setUserAdded(true);
                 })
                 .catch((err) => {
-                    console.log('Add user error:', err);
                     setUserFormData({
                         fullName: '',
                         email: '',
@@ -136,7 +127,6 @@ const Users = () => {
                         setAllUsers(res.data);
                     })
                     .catch((err) => {
-                        console.log('Get user error:', err);
                     });
                 setDelUserId('');
                 setDialogDelOpen(false);
@@ -176,8 +166,6 @@ const Users = () => {
             ),
         }
     ];
-
-    console.log('allUsers', allUsers);
 
     return (
         <Container>

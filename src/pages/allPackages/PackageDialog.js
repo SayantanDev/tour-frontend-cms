@@ -4,7 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import SandakphuCreateEditForm from './SandakphuCreateEditForm';
 import SikkimCreateEditForm from './SikkimCreateEditForm';
 import DarjeelingCreateEditForm from './DarjeelingCreateEditForm';
-import { addPackage, updatePackage, deletePackage } from '../../api/packageAPI';
+import { addPackage } from '../../api/packageAPI';
 
 const initialData = {
     disabled: false,

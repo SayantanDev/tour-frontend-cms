@@ -1,7 +1,6 @@
 import React from "react";
 import { Grid, List, ListItem, ListItemText, AccordionDetails, Accordion, 
-    AccordionSummary, Table, TableBody, 
-    TableCell, TableContainer, TableHead, TableRow, TextField, Paper, Typography
+    AccordionSummary, TextField, Paper, Typography
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 

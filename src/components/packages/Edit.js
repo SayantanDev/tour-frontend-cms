@@ -3,7 +3,7 @@ import { Formik, Form, Field } from "formik";
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Stepper, Step, StepLabel, Button, Card, CardContent, Typography, TextField, List, ListItem, IconButton, Box } from "@mui/material";
 import { useSelector } from "react-redux";
-import { Margin } from "@mui/icons-material";
+// import { Margin } from "@mui/icons-material";
 
 const steps = ["Package Info", "Overview", "Short Itinerary", "Itinerary", "Cost", "How to Reach", "Things to Carry","Covering"];
 
@@ -15,7 +15,6 @@ function Edit() {
   <Formik
    initialValues={fetchSelectedPackage}
    onSubmit={(values) => {
-    console.log(values);
    }}
   >
    {({ values, handleChange, handleSubmit, setFieldValue }) => (

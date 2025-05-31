@@ -13,7 +13,7 @@ import { useSelector } from 'react-redux';
 import { getAllHotels } from '../../api/hotelsAPI';
 import { getAllVehicle } from '../../api/vehicleAPI';
 import { addChangeRequest, getQueriesByoperation, getSingleOperation, updateFollowupDetails } from '../../api/operationAPI';
-import { fetchOperationByQueries } from '../../api/queriesAPI';
+// import { fetchOperationByQueries } from '../../api/queriesAPI';
 import useSnackbar from '../../hooks/useSnackbar';
 import usePermissions from '../../hooks/UsePermissions';
 
@@ -31,7 +31,7 @@ function SingleQueriesView() {
   const [vehicles, setVehicles] = useState([]);
   const [roomOptions, setRoomOptions] = useState([]);
   const [driverOptions, setDriverOptions] = useState([]);
-  const [operation, setOperation] = useState({});
+  // const [operation, setOperation] = useState({});
   const [itineraryData, setItineraryData] = useState([]);
   const [editIndex, setEditIndex] = useState(null);
   const [editRow, setEditRow] = useState({});
@@ -44,7 +44,7 @@ function SingleQueriesView() {
 
   const detchOperationData = async () => {
     const operationData = await getSingleOperation(fetchSelectedquerie.id);
-    setOperation(operationData);
+    // setOperation(operationData);
 
     const followUpData = operationData?.followup_details?.map((item, index) => ({
       day: (index + 1).toString(),
@@ -64,9 +64,6 @@ function SingleQueriesView() {
 
     setItineraryData(followUpData);
     const queriesData = await getQueriesByoperation(operationData._id);
-    console.log("queriesData : ", queriesData);
-
-
     const guestAndStayData = {
       name: operationData?.guest_info?.name || '',
       contact: operationData?.guest_info?.phone || '',
@@ -91,10 +88,8 @@ function SingleQueriesView() {
     setGuestInfo(guestAndStayData);
   }
 
-
   useEffect(() => {
     detchOperationData();
-    // fetchOperationByQueries().then(setOperation);
     getAllHotels().then(setHotels);
     getAllVehicle().then(setVehicles);
   }, []);
@@ -132,8 +127,6 @@ function SingleQueriesView() {
   };
 
   const saveGuestInfo = () => {
-    console.log("guestInfo:", guestInfo);
-
     setGuestDrawer(false);
   };
 
@@ -179,9 +172,6 @@ function SingleQueriesView() {
       alert("Please enter a description before submitting.");
       return;
     }
-
-    // Example usage
-    console.log("Change Request Submitted:", description);
 
     // Reset and close the dialog
     setDescription('');

@@ -1,12 +1,8 @@
-import React, { useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, MenuItem, Grid, FormHelperText } from '@mui/material';
+import React from 'react';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, MenuItem, Grid } from '@mui/material';
 import { CONFIG_STR } from "../../configuration";
 
 const AddUserDialog = ({ open, userFormData, handleAddUserSubmit, handleChange, handleClose }) => {
-
-    console.log("userFormData mmm:", userFormData);
-
-
     return (
         <Dialog fullWidth open={open} onClose={handleClose} disableBackdropClick>
             <DialogTitle>{userFormData.id ? 'Edit' : 'Add New'} User</DialogTitle>

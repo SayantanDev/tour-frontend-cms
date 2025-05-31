@@ -7,7 +7,7 @@ import {
     OutlinedInput, InputLabel, FormControl, Chip
 } from "@mui/material";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
-import { deleteInquiry, getAllInquiries, InquiryUserAssign, InquiryUserRemove } from "../../api/inquiryAPI";
+import { getAllInquiries, InquiryUserAssign, InquiryUserRemove } from "../../api/inquiryAPI";
 import { getAllUsers } from "../../api/userAPI";
 import { useDispatch } from "react-redux";
 import { setSelectedInquiry } from "../../reduxcomponents/slices/inquirySlice";
@@ -99,21 +99,21 @@ const Inquiry = () => {
         setDeleteDialogOpen(true);
     };
 
-    const handleCloseDeleteDialog = () => {
-        setDeleteDialogOpen(false);
-        setSelectedInquiryId(null);
-    };
+    // const handleCloseDeleteDialog = () => {
+    //     // setDeleteDialogOpen(false);
+    //     setSelectedInquiryId(null);
+    // };
 
-    const handleConfirmDelete = async () => {
-        try {
-            await deleteInquiry(selectedInquiryId);
-            await fetchInquiries();
-        } catch (error) {
-            console.error("Error deleting inquiry:", error);
-        } finally {
-            handleCloseDeleteDialog();
-        }
-    };
+    // const handleConfirmDelete = async () => {
+    //     try {
+    //         await deleteInquiry(selectedInquiryId);
+    //         await fetchInquiries();
+    //     } catch (error) {
+    //         console.error("Error deleting inquiry:", error);
+    //     } finally {
+    //         handleCloseDeleteDialog();
+    //     }
+    // };
 
     const handleAssignUser = async () => {
         try {

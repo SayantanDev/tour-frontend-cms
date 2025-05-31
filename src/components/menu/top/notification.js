@@ -29,8 +29,6 @@ function Notification() {
     const socket = io(socketUrl);
 
     socket.on("connect", () => {
-      console.log("✅ Connected to socket server");
-
       if (user && user._id && user.permission) {
         socket.emit("register", {
           userId: user._id,

@@ -15,8 +15,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Stack,
-  Chip
+  Stack
 } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';

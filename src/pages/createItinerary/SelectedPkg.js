@@ -14,8 +14,6 @@ import {
 
 import { saveAs } from 'file-saver';
 import { createQueries } from '../../api/queriesAPI';
-// import parse from 'html-react-parser';
-// import { TravelExplore } from '@mui/icons-material';
 import BasicInfo from '../../components/ItineraryTabs/BasicInfo';
 import ShortItinerary from '../../components/ItineraryTabs/ShortItinerary';
 import Reach from '../../components/ItineraryTabs/Reach';
@@ -29,9 +27,6 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, setCustomerInput
     const { fetchNewPackageInfo: pakageData } = useSelector((state) => state.package);
     const [tab, setTab] = useState(0);
     const [newPackageId, setNewPackageId] = useState(selectedCard.id);
-    // console.log("fetchNewPackageInfo :", pakageData);
-
-
     const handleChange = (event, newValue) => {
         setTab(newValue);
     };
@@ -69,12 +64,7 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, setCustomerInput
         label: `${pakageData?.location} Tour ${customerInput.days - 1}N ${customerInput.days}D`,
         duration: customerInput.days,
     };
-    // useEffect(() => {
-    //     console.log("queriesValueObj :", queriesValueObj);
-
-    // },[selectedCard,createPackageObj]);
-
-
+    
     const handleNext = async () => {
         try {
 
@@ -86,7 +76,6 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, setCustomerInput
                 const resCreatePakg = await createPackage(packageObject);
 
                 if (resCreatePakg.status === 201) {
-
                     finalPackageId = resCreatePakg.data.data._id;
                     setNewPackageId(finalPackageId);
                     showSnackbar('You created a new package', 'success');
@@ -229,7 +218,6 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, setCustomerInput
                 const blob = await Packer.toBlob(doc);
                 saveAs(blob, "generated-document.docx");
                 dispatch(removePackageInfo());
-                // console.log("Document generated successfully!");
             }else{
             showSnackbar(`${response.message}`, "error");
 

@@ -1,16 +1,12 @@
 import React, { useEffect, useState } from "react";
 import {
-  Container, Typography, IconButton, Tooltip, Box, Chip, MenuItem, Menu,
-  Modal, Grid, Paper, Divider, TextField, Button, Table, TableBody,
+  Container, Typography, IconButton, Tooltip, Box, Chip, MenuItem,
+  Modal, Paper, TextField, Button, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, TablePagination, Select, Checkbox
 } from "@mui/material";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import DeleteIcon from "@mui/icons-material/Delete";
-import UpgradeIcon from "@mui/icons-material/Upgrade";
-import { fetchOperationByQueries, getAllQueries, updateQueries } from "../../api/queriesAPI";
-// import { getAllUsers } from "../../api/userAPI"; // Adjust as needed
+import { getAllQueries, updateQueries } from "../../api/queriesAPI";
 import usePermissions from "../../hooks/UsePermissions";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { setSelectedquerie } from "../../reduxcomponents/slices/queriesSlice";
 import { useNavigate } from "react-router-dom";
 import useSnackbar from "../../hooks/useSnackbar";
@@ -21,12 +17,12 @@ const Query = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const canView = checkPermission("queries", "view");
-  const canEdit = checkPermission("queries", "alter");
+  // const canEdit = checkPermission("queries", "alter");
   const { showSnackbar, SnackbarComponent } = useSnackbar();
 
-  const [query, setQuery] = useState([]);
+  // const [query, setQuery] = useState([]);
   const [filteredQuery, setFilteredQuery] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [dateQuery, setDateQuery] = useState("");
   const [statusQuery, setStatusQuery] = useState("");
@@ -51,12 +47,12 @@ const Query = () => {
     try {
       const response = await getAllQueries();
       const sortedData = response.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      setQuery(sortedData);
+      // setQuery(sortedData);
       setFilteredQuery(sortedData);
     } catch (error) {
       console.error("Error fetching query:", error);
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
@@ -64,8 +60,6 @@ const Query = () => {
     try {
       const users = await getAllUsers();
       const filtered = users.data.filter(u => u.permission === "User");
-      console.log("Filtered users:", filtered);
-
       setAllUsers(filtered);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -109,7 +103,7 @@ const Query = () => {
   };
 
   const handleEditOpen = async (id) => {
-    const res = await fetchOperationByQueries(id);
+    // const res = await fetchOperationByQueries(id);
     dispatch(setSelectedquerie({ id }));
     navigate("/query/view");
   };

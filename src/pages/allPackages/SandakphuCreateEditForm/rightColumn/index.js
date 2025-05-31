@@ -1,8 +1,6 @@
-import React, {useState} from "react";
+import React from "react";
 import Header from './header';
 import Overview from './overview';
-import Sitinerary from './sItinerary';
-import Itinerary from './itinerary';
 import Reach from './reach';
 import Cost from './cost';
 import Carry from './carry';
@@ -14,8 +12,6 @@ const RightColumn = ({
     handleSandakDtlChange, 
     handleSandakphuChange
 }) => {
-    // const [ pageDetails, setPageDetails ] = useState(sandakphuFormData?.details);
-
     const headerUpdate = (obj) => {
         const newData = {
             ...sandakphuFormData?.details,

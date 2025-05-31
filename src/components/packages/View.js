@@ -19,8 +19,6 @@ function View() {
  const [singleData, setSingleData] = useState([]);
  const [selectedDay, setSelectedDay] = useState(null);
 
- console.log("single data is :  :::", singleData);
-
  const [tabIndex, setTabIndex] = useState(0);
 
  const handleTabChange = (event, newValue) => {

@@ -1,23 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
     AppBar,
     Toolbar,
     Typography,
-    IconButton,
-    Popover,
-    Button,
-    Box,
-    Link,
+    IconButton
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import Notification from "./notification";
 
-
-
-
 const Top = ({ toggleDrawer }) => {
-
 
     return (
         <AppBar position="fixed">

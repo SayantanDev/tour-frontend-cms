@@ -5,12 +5,12 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Typography, Slider, Button, TextField,
+  Typography, Button, TextField,
   FormControlLabel,
   Checkbox
   //RadioGroup,FormControlLabel,Radio,Checkbox,TextField,
 } from '@mui/material';
-import { CONFIG_STR } from "../../configuration";
+// import { CONFIG_STR } from "../../configuration";
 import { useDispatch } from 'react-redux';
 import { setNewPackageInfo } from '../../reduxcomponents/slices/packagesSlice';
 
@@ -58,7 +58,6 @@ const FilterBar = ({
       if (filterObject.locationSecond === 'Trek') {
         calculateSandakphuTrekCost();
       } else if (filterObject.locationSecond === 'Land Rover') {
-        console.log("1222121");
         calculateSandakphuLandRoverCost();
       } else {
         calculateTotalCost();

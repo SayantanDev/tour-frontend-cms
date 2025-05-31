@@ -6,19 +6,17 @@ import {
     TableContainer,
     TableHead,
     TableRow,
-    Button,
     Paper,
-    TextField,
-    Grid,
     Box
   } from '@mui/material';
   import { CONFIG_STR } from '../../configuration';
   
 
 const AdditionalCost = () => {
-    const [carTypes, setCarTypes] = useState(CONFIG_STR.additionalCosts.car);
-    const [hotelTypes, setHotelTypes] = useState(CONFIG_STR.additionalCosts.hotel);
-
+    // const [carTypes, setCarTypes] = useState(CONFIG_STR.additionalCosts.car);
+    // const [hotelTypes, setHotelTypes] = useState(CONFIG_STR.additionalCosts.hotel);
+    const carTypes = CONFIG_STR.additionalCosts.car
+    const hotelTypes = CONFIG_STR.additionalCosts.hotel
     
     return (
         <div style={{ padding: '20px' }}>

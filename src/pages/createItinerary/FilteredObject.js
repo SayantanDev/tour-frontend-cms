@@ -13,9 +13,9 @@ import AddCircleOutlinedIcon from "@mui/icons-material/AddCircleOutlined";
 const FilteredObject = ({filteredData, handleCardClick, filteredLocation,loading}) => {
   const durationFilter = 6;
   // Apply duration filter if durationFilter is provided
-  const filteredByDuration = durationFilter
-    ? filteredData.filter((card) => card.duration === durationFilter)
-    : filteredData;
+  // const filteredByDuration = durationFilter
+  //   ? filteredData.filter((card) => card.duration === durationFilter)
+  //   : filteredData;
 
     if (loading) {
       return (

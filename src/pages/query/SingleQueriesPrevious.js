@@ -30,10 +30,6 @@ const itineraryDataInitial = [
 
 function SingleQueriesView() {
   const { fetchSelectedquerie } = useSelector((state) => state.queries);
-
-  console.log("fetchSelectedquerie : ", fetchSelectedquerie);
-
-
   const [editGuest, setEditGuest] = useState(false);
   const [editBooking, setEditBooking] = useState(false);
   const [guestInfo, setGuestInfo] = useState({

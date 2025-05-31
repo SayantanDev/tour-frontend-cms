@@ -47,8 +47,6 @@ const Query = () => {
     const [statusQuery, setStatusQuery] = useState("");
     const [locationQuery, setLocationQuery] = useState("")
     const [editableRowId, setEditableRowId] = useState(null)
-
-    console.log("querie", query);
     const navigate = useNavigate();
     useEffect(() => {
         if (!canView) return; // Stop fetching if the user cannot view
@@ -75,8 +73,6 @@ const Query = () => {
         try {
             const response = await getAllQueries();
             const sortedData = response.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-            console.log("sorted data is ", sortedData);
-
             setQuery(sortedData);
             setFilteredQuery(sortedData);
         } catch (error) {
@@ -98,10 +94,8 @@ const Query = () => {
     };
 
     const handleStatusUpdate = async (newStatus) => {
-        console.log(`Updating status for row ${selectedRow} to ${newStatus}`);
         const value = {
             lead_stage: newStatus
-
         }
         try {
             const res = await updateQueries(selectedRow, value);
@@ -109,18 +103,10 @@ const Query = () => {
             handleClosee();
 
         } catch (error) {
-            console.log(error);
-
-
         }
-        // Implement API call or state update logic here
-
     };
 
     const handleView = (id, value) => {
-        // console.log("Viewing query:", id);
-        console.log("selected row:", value);
-
         setSelectedData(value);
         SetView(true)
     };
@@ -144,21 +130,6 @@ const Query = () => {
 
     const handleDelete = async (id) => {
         if (!canDelete) return;
-        console.log("Deleting query:", id);
-        // try {
-        //     const res = await deleteQueries(id); //delete api function name
-        //     if (res.success===true) {
-        //         console.log("selected row delete successfully");
-
-        //         fetchQuery();
-
-        //     }
-
-        // } catch (error) {
-        //     console.log(error);
-
-        // }
-
     };
 
     if (!canView) {

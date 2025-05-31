@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { getAllQueries } from "../../api/queriesAPI";
-import { Card, CardContent, Typography, Box, Paper, Grid } from '@mui/material';
+import { Card, CardContent, Typography, Box, Grid } from '@mui/material';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import NewReleasesIcon from '@mui/icons-material/NewReleases';
@@ -11,12 +11,8 @@ import CancelIcon from '@mui/icons-material/Cancel';
 function TotalQuiry() {
   // const [query, setQuery] = useState([]);
   const [filteredQuery, setFilteredQuery] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  console.log("filteredQuery isss:", filteredQuery);
-
-
-
+  // const [loading, setLoading] = useState(true);
+  
   useEffect(() => {
     const fetchQuery = async () => {
       try {
@@ -27,7 +23,7 @@ function TotalQuiry() {
       } catch (error) {
         console.error("Error fetching query:", error);
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     };
     fetchQuery();

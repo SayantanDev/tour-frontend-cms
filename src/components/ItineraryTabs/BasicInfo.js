@@ -5,9 +5,7 @@ import {
   CardContent,
   Typography,
   Grid,
-  Container,
-  Box,
-  Divider,
+  Container
 } from "@mui/material";
 
 const InfoBlock = ({ label, value }) => (
@@ -17,11 +15,8 @@ const InfoBlock = ({ label, value }) => (
     </Typography>
     <Typography
       variant="body1"
-    //   color="text.primary"
       sx={{
-        // backgroundColor: "#f9f9f9",
         padding: "8px 12px",
-        // borderRadius: 1,
         boxShadow: "inset 0 0 2px rgba(0,0,0,0.1)",
       }}
     >

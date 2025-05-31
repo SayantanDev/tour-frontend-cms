@@ -22,8 +22,6 @@ const Login = () => {
         event.preventDefault();
         try {
             const res = await loginUser(loginData);
-            console.log("login response:", res);
-
             // Save tokens in localStorage (for axios interceptor)
             localStorage.setItem("accessToken", res.data.accessToken);
             localStorage.setItem("refreshToken", res.data.refreshToken);

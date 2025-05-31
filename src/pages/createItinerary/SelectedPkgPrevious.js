@@ -18,9 +18,6 @@ import parse from 'html-react-parser';
 import { TravelExplore } from '@mui/icons-material';
 
 const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCost }) => {
-    console.log("selectedCard:", selectedCard);
-    console.log("customerInput:", customerInput);
-
     const queriesValueObj = {
         guest_info: {
             guest_name: customerInput.name || "",
@@ -45,9 +42,7 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
         lead_source: "website",
         verified: true,
     };
-    console.log("selectedCard.destination :",selectedCard.location);
     
-
     const handleNext = async () => {
         try {
             // Make API call first
@@ -55,9 +50,6 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
 
             if (response.success) {
                 alert("Queries created successfully");
-                console.log("Queries created successfully",response);
-                
-
                 // Now generate the document
                 const doc = new Document({
                     sections: [
@@ -167,8 +159,6 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, totalQuotetionCo
 
                 const blob = await Packer.toBlob(doc);
                 saveAs(blob, "generated-document.docx");
-
-                console.log("Document generated successfully!");
             }
         } catch (error) {
             console.error("Error generating document or API call:", error);

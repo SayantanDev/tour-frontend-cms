@@ -7,7 +7,7 @@ import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 
 const TotalInquiry = () => {
  const [filteredInquiries, setFilteredInquiries] = useState([]);
- const [loading, setLoading] = useState(true);
+//  const [loading, setLoading] = useState(true);
 
  useEffect(() => {
   const fetchInquiries = async () => {
@@ -20,7 +20,7 @@ const TotalInquiry = () => {
    } catch (error) {
     console.error("Error fetching inquiries:", error);
    } finally {
-    setLoading(false);
+    // setLoading(false);
    }
   };
   fetchInquiries();

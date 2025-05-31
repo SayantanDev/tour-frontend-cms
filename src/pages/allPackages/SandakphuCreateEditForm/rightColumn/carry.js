@@ -1,7 +1,7 @@
 import React, {useEffect} from "react";
 import { List, ListItem, ListItemText, Typography, AccordionDetails, 
     Grid, Accordion, AccordionSummary } from '@mui/material';
-    import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 const Carry = ({carryData, carryUpdate, label}) => {
     useEffect(() => {
