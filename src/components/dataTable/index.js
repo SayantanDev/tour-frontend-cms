@@ -1,11 +1,8 @@
 import React from 'react';
 import { DataGrid } from '@mui/x-data-grid';
-import { updateQueries } from '../../api/queriesAPI';
 
 const DataTable = ({ rows, columns,setEditableRowId }) => {
   const handleRowEdit = async (updatedRow) => {
-    const id = updatedRow.id;
-  
     let editObj = {};
   
     // Prepare update object with only changed fields
@@ -24,15 +21,6 @@ const DataTable = ({ rows, columns,setEditableRowId }) => {
     if (updatedRow.cost !== undefined) {
       editObj["cost"] = updatedRow.cost;
     }
-  
-    // try {
-    //   const res = await updateQueries(id, editObj);
-  
-    //   // if (res.success === true) {
-    //   //   // Optional: show toast or refresh
-    //   // }
-    // } catch (error) {
-    // }
   
     return updatedRow; // This is important for DataGrid to finalize the edit
   };

@@ -32,7 +32,7 @@ function View() {
   }
   fetchdata();
 
- }, [])
+ }, [id])
 
  return (
   <Box
