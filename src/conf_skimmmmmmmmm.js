@@ -389,5 +389,5 @@ export const CONFIG_STR = {
             { type: '5 Star', cost: 15000 },
         ]
     },
-    drawerWidth: 150,
+    drawerWidth: 180,
 };

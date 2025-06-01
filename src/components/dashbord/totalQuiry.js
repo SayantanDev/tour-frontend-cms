@@ -37,7 +37,7 @@ function TotalQuiry() {
     <Card
       sx={{
         width: '10vw',
-        minWidth: 120,
+        minWidth: 140,
         height: 100,
         borderRadius: '12px',
         boxShadow: 3,
@@ -46,11 +46,18 @@ function TotalQuiry() {
         alignItems: 'center',
         justifyContent: 'center',
         p: 2,
+        transition: 'all 0.3s ease',
+        cursor: 'pointer',
+        '&:hover': {
+          backgroundColor: '#d9fcef',
+          transform: 'translateY(-4px)',
+          boxShadow: 6,
+        },
       }}
     >
       <CardContent sx={{ p: 0, width: '100%', height: '100%' }}>
         <Box sx={{ height: '100%', width: '100%', textAlign: 'center' }}>
-          <Box>{icon}</Box>
+          <Box mb={0.5}>{icon}</Box>
           <Typography variant="body2" color="text.secondary">
             {label}
           </Typography>

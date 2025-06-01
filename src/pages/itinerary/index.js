@@ -4,7 +4,7 @@ import {
     Container, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
     IconButton, Collapse, Box, Card, CardContent, Tooltip, CircularProgress, Grid, TextField, Checkbox,
     TablePagination, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, MenuItem, Select,
-    OutlinedInput, InputLabel, FormControl, Chip
+    OutlinedInput, InputLabel, FormControl, Chip, Stack
 } from "@mui/material";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 import { getAllInquiries, InquiryUserAssign, InquiryUserRemove } from "../../api/inquiryAPI";
@@ -154,33 +154,69 @@ const Inquiry = () => {
 
     return (
         <Container>
-            <Typography variant="h4" gutterBottom>Inquiry List</Typography>
-            <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
-                <Grid item xs={6}>
-                    <Button variant="contained" onClick={() => navigate("/createItinerary")}>Create New Inquiry</Button>
+            
+            <Stack
+                direction="row"
+                alignItems="center"
+                spacing={2}
+                justifyContent="space-between"
+                sx={{ mb: 2, flexWrap: 'wrap' }}
+            >
+                <Typography variant="h4" color="warning" sx={{ whiteSpace: 'nowrap' }}>
+                    Inquiry List
+                </Typography>
+
+                <Stack direction="row" spacing={1} flexWrap="wrap">
+                    <Button variant="contained" size="small" onClick={() => navigate("/createItinerary")}>
+                    Create New Inquiry
+                    </Button>
                     {hasPermission("inquiry", "alter") && (
-                        <>
-                            <Button variant="outlined" sx={{ ml: 2 }} disabled={!selectedInquiries.length} onClick={() => setAssignDialogOpen(true)}>Assign User</Button>
-                            <Button variant="outlined" sx={{ ml: 2 }} disabled={!selectedInquiries.length} onClick={() => setUserRemoveDialogOpen(true)}>Remove User</Button>
-                        </>
+                    <>
+                        <Button
+                        variant="outlined"
+                        size="small"
+                        disabled={!selectedInquiries.length}
+                        onClick={() => setAssignDialogOpen(true)}
+                        >
+                        Assign User
+                        </Button>
+                        <Button
+                        variant="outlined"
+                        size="small"
+                        disabled={!selectedInquiries.length}
+                        onClick={() => setUserRemoveDialogOpen(true)}
+                        >
+                        Remove User
+                        </Button>
+                    </>
                     )}
-                </Grid>
-                <Grid item xs={6}>
-                    <TextField label="Search by Name, Email, or Phone" fullWidth value={searchQuery} onChange={handleSearch} />
-                </Grid>
-            </Grid>
+                </Stack>
+
+                <Box sx={{ minWidth: 250, flexGrow: 1, maxWidth: 300 }}>
+                    <TextField
+                    size="small"
+                    label="Search by Name, Email, or Phone"
+                    fullWidth
+                    value={searchQuery}
+                    onChange={handleSearch}
+                    />
+                </Box>
+            </Stack>
+
+
 
             {loading ? (
                 <Box display="flex" justifyContent="center"><CircularProgress /></Box>
             ) : (
                 <>
                     <TableContainer component={Paper}>
-                        <Table>
+                        <Table size="small">
                             <TableHead>
                                 <TableRow>
                                     {hasPermission("inquiry", "alter") && (
                                         <TableCell padding="checkbox">
                                             <Checkbox
+                                                size="small"
                                                 checked={selectedInquiries.length === filteredInquiries.length}
                                                 onChange={(e) => setSelectedInquiries(e.target.checked ? filteredInquiries.map(i => i._id) : [])}
                                             />
@@ -193,17 +229,18 @@ const Inquiry = () => {
                                     {hasPermission("inquiry", "alter") && (
                                         <TableCell>Assigned Users</TableCell>
                                     )}
-                                    <TableCell>Quote</TableCell>
-                                    <TableCell>Actions</TableCell>
+                                    <TableCell sx={{ width: 100 }}>Quote</TableCell>
+                                    <TableCell sx={{ width: 150 }}>Actions</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {filteredInquiries.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((inquiry, index) => (
+                                {                           filteredInquiries.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((inquiry, index) => (
                                     <React.Fragment key={inquiry._id}>
                                         <TableRow>
                                             {hasPermission("inquiry", "alter") && (
                                                 <TableCell padding="checkbox">
                                                     <Checkbox
+                                                        size="small"
                                                         checked={selectedInquiries.includes(inquiry._id)}
                                                         onChange={(e) => {
                                                             const updated = e.target.checked
@@ -222,28 +259,45 @@ const Inquiry = () => {
                                                 <TableCell>{getAssignedUserNames(inquiry)}</TableCell>
                                             )}
                                             <TableCell>
-                                                <Button onClick={() => handleInquiryClick(inquiry)}>Generate</Button>
+                                                <Button size="small" onClick={() => handleInquiryClick(inquiry)}>Generate</Button>
                                             </TableCell>
                                             <TableCell>
-                                                <Tooltip title="View"><IconButton onClick={() => handleToggleView(index)}><Visibility /></IconButton></Tooltip>
+                                                <Tooltip title="View">
+                                                    <IconButton onClick={() => handleToggleView(index)} size="small">
+                                                        <Visibility fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
                                                 {hasPermission("inquiry", "alter") && (
                                                     <>
-                                                        <Tooltip title="Edit"><IconButton><Edit /></IconButton></Tooltip>
-                                                        <Tooltip title="Delete"><IconButton onClick={() => handleOpenDeleteDialog(inquiry._id)}><Delete /></IconButton></Tooltip>
+                                                        <Tooltip title="Edit">
+                                                            <IconButton size="small">
+                                                                <Edit fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                        <Tooltip title="Delete">
+                                                            <IconButton onClick={() => handleOpenDeleteDialog(inquiry._id)} size="small">
+                                                                <Delete fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
                                                     </>
                                                 )}
                                             </TableCell>
                                         </TableRow>
                                         <TableRow>
-                                            <TableCell colSpan={8}>
+                                            <TableCell colSpan={8} sx={{ paddingBottom: 0, paddingTop: 0 }}>
                                                 <Collapse in={openRow === index}>
                                                     <Box margin={2}>
-                                                        <Card><CardContent>
-                                                            <Typography>Lead Source: {inquiry.lead_source}</Typography>
-                                                            <Typography>Message: {inquiry.guest_message}</Typography>
-                                                            <Typography>Verified: {inquiry.verifyed ? "Yes" : "No"}</Typography>
-                                                            <Typography>Arrival: {new Date(inquiry.arrival_date).toLocaleString()}</Typography>
-                                                        </CardContent></Card>
+                                                        <Card variant="outlined">
+                                                            <CardContent sx={{ padding: 1 }}>
+                                                                <Typography variant="body2">Lead Source: {inquiry.lead_source}</Typography>
+                                                                <Typography variant="body2">Message: {inquiry.guest_message}</Typography>
+                                                                <Typography variant="body2">Verified: {inquiry.verifyed ? "Yes" : "No"}</Typography>
+                                                                <Typography variant="body2">
+                                                                    Arrival: 
+                                                                    {new Date(inquiry.arrival_date).toLocaleString()}
+                                                                </Typography>
+                                                            </CardContent>
+                                                        </Card>
                                                     </Box>
                                                 </Collapse>
                                             </TableCell>

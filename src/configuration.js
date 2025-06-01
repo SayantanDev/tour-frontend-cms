@@ -1,54 +1,54 @@
 export const CONFIG_STR = {
-    drawerWidth: 150,
+    drawerWidth: 180,
     navigationStrings: [
         {
             label: 'Dashboard',
             link: '/dashboard',
             module: "dashboard",
-            icon: "InsertChartOutlined"
+            icon: "DashboardOutlined"
         },
         {
             label: 'Inquiry',
             link: '/inquiry',
             module: "inquiry",
-            icon: "AttachEmailOutlined"
+            icon: "ContactMailOutlined"
 
         },
         {
             label: 'Leads',
             link: '/query',
             module: "queries",
-            icon: "AddToHomeScreenOutlined"
+            icon: "TrendingUpOutlined"
         },
         {
             label: 'Packages',
             link: '/packages',
             module: "package",
-            icon: "CasesOutlined"
+            icon: "CardTravelOutlined"
         },
         {
             label: 'Hotels',
             link: '/hotels',
             module: "hotel",
-            icon: "CasesOutlined"
+            icon: "HotelOutlined"
         },
         {
             label: 'Vehicles',
             link: '/Vehicles',
             module: "Vehicles",
-            icon: "CasesOutlined"
+            icon: "AirportShuttleOutlined"
         },
         {
             label: 'Extra Costs',
             link: '/costTable',
             module: "costTable",
-            icon: "AddTaskOutlined"
+            icon: "AttachMoneyOutlined"
         },
         {
             label: 'Users',
             link: '/users',
             module: "user",
-            icon: "PermIdentityOutlined"
+            icon: "PeopleAltOutlined"
         },
         {
             label: 'Logout',
