@@ -1,5 +1,11 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+  createBrowserRouter,
+  createRoutesFromElements,
+  Route,
+  RouterProvider,
+} from "react-router-dom";
+
 import Layout from "./components/layout";
 import RootLayout from "./components/layout/RootLayout";
 import Login from "./pages/login";
@@ -19,38 +25,84 @@ import View from "./components/packages/View";
 import Edit from "./components/packages/Edit";
 import NotAuthorized from "./pages/NotAuthorized";
 import SingleQueriesView from "./pages/query/SingleQueriesView";
+
 const RootLayoutWithRedirect = withAuthRedirect(RootLayout);
 
-const Router = () => {
-  return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<RootLayoutWithRedirect />}>
-          <Route index element={<Login />} />
-          <Route path="/logout" element={<Logout />} />
-        </Route>
+// Create routes using React Router v6.15+ with future flags
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <>
+      {/* Public routes */}
+      <Route path="/" element={<RootLayoutWithRedirect />}>
+        <Route index element={<Login />} />
+        <Route path="logout" element={<Logout />} />
+      </Route>
 
-        {/* Protected routes */}
-        <Route path="/" element={<Layout />}>
-          <Route path="/dashboard" element={<ProtectedRoute Element={Dashboard} module="dashboard" />} />
-          <Route path="/query" element={<ProtectedRoute Element={Query} module="queries" />} />
-          <Route path="/inquiry" element={<ProtectedRoute Element={Itinerary} module="inquiry" />} />
-          <Route path="/createItinerary" element={<ProtectedRoute Element={CreateItinerary} module="inquiry" />} />
-          <Route path="/packages" element={<ProtectedRoute Element={AllPackages} module="packages" />} />
-          <Route path="/hotels" element={<ProtectedRoute Element={Hotels} module="hotels" />} />
-          <Route path="/Vehicles" element={<ProtectedRoute Element={Vehicles} module="Vehicles" />} />
-          <Route path="/packages/view/:id" element={<ProtectedRoute Element={View} module="packages" />} />
-          <Route path="/query/view" element={<ProtectedRoute Element={SingleQueriesView} module="queries"  />} />
-          <Route path="/packages/edit" element={<ProtectedRoute Element={Edit} module="packages" />} />
-          <Route path="/costTable" element={<ProtectedRoute Element={AdditionalCost} module="costs" />} />
-          <Route path="/users" element={<ProtectedRoute Element={Users} module="user" />} />
-          {/* Access Denied Page */}
-          <Route path="/not-authorized" element={<NotAuthorized />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
-  );
+      {/* Protected routes */}
+      <Route path="/" element={<Layout />}>
+        <Route
+          path="dashboard"
+          element={<ProtectedRoute Element={Dashboard} module="dashboard" />}
+        />
+        <Route
+          path="query"
+          element={<ProtectedRoute Element={Query} module="queries" />}
+        />
+        <Route
+          path="inquiry"
+          element={<ProtectedRoute Element={Itinerary} module="inquiry" />}
+        />
+        <Route
+          path="createItinerary"
+          element={<ProtectedRoute Element={CreateItinerary} module="inquiry" />}
+        />
+        <Route
+          path="packages"
+          element={<ProtectedRoute Element={AllPackages} module="packages" />}
+        />
+        <Route
+          path="hotels"
+          element={<ProtectedRoute Element={Hotels} module="hotels" />}
+        />
+        <Route
+          path="Vehicles"
+          element={<ProtectedRoute Element={Vehicles} module="Vehicles" />}
+        />
+        <Route
+          path="packages/view/:id"
+          element={<ProtectedRoute Element={View} module="packages" />}
+        />
+        <Route
+          path="query/view"
+          element={<ProtectedRoute Element={SingleQueriesView} module="queries" />}
+        />
+        <Route
+          path="packages/edit"
+          element={<ProtectedRoute Element={Edit} module="packages" />}
+        />
+        <Route
+          path="costTable"
+          element={<ProtectedRoute Element={AdditionalCost} module="costs" />}
+        />
+        <Route
+          path="users"
+          element={<ProtectedRoute Element={Users} module="user" />}
+        />
+        <Route path="not-authorized" element={<NotAuthorized />} />
+      </Route>
+    </>
+  ),
+  {
+    future: {
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+    },
+  }
+);
+
+// Provide the router
+const Router = () => {
+  return <RouterProvider router={router} />;
 };
 
 export default Router;

@@ -1,20 +1,5 @@
 
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
-// import { addLoginToken, removeLoginToken } from 'src/reduxcomponents/slices/tokenSlice';
-// import { store } from 'src/reduxcomponents/store';
-
-// const getToken = () => {
-//     const state = store.getState();
-//     const authToken = state?.tokens.tokens.token ? state?.tokens.tokens.token : '';
-//     return authToken;
-// };
-
-// const getRefreshToken = () => {
-//     const state = store.getState();
-//     return state?.tokens.tokens.refreshToken;
-// }
-
-// axios.defaults.headers.common['Content-Type'] = 'application/json';
 axios.defaults.headers.common['Accept'] = 'application/json';
 axios.defaults.headers.common['Access-Control-Allow-Origin'] = '*';
 axios.defaults.headers.common['Access-Control-Allow-Headers'] = 'Origin, X-Requested-With, Content-Type, Accept, Authorization';

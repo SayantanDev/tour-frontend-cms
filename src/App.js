@@ -5,7 +5,7 @@ import Router from './routes';
 const App = () => {
   return (
     <div className="App">
-      <Router /> {/* in route component all layout and routing defined */}
+      <Router />
     </div>
   );
 };

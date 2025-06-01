@@ -7,7 +7,7 @@ const withAuthRedirect = (WrappedComponent) => {
     return (props) => {
         const navigate = useNavigate();
         const location = useLocation();
-        const token = useSelector((state) => state.tokens.tokens.token);
+        const token = useSelector((state) => state.tokens?.tokens?.token);
         useEffect(() => {
             if (token && location.pathname !== '/logout') {
                 navigate('/dashboard');
