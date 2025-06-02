@@ -220,7 +220,7 @@ const FilterBar = ({
         finalCost *= 0.9;
         break;
       case 'b2b':
-        finalCost *= 0.95; // 5% off
+        finalCost *= 0.95; 
         break;
       default:
         break;

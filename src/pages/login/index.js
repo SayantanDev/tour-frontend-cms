@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { Container, TextField, Button, Typography, Paper } from '@mui/material';
+import { Container, TextField, Button, Typography, Paper, Box } from '@mui/material';
 import { addLoginToken } from '../../reduxcomponents/slices/tokenSlice';
 import { loginUser } from '../../api/userAPI';
 
@@ -43,26 +43,47 @@ const Login = () => {
 
     return (
         <Container 
-            component="main" 
-            maxWidth="xs" 
-            style={{ 
-                position: 'absolute', 
-                top: '50%', 
-                right: '10%', 
-                transform: 'translateY(-50%)' 
+            maxWidth="md"
+            sx={{
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                px: 4,
             }}
         >
-            <Paper 
-                elevation={3} 
-                style={{ 
-                    padding: '20px', 
-                    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-                    backdropFilter: 'blur(10px)'
-                }}
-            >
-                <Typography variant="h5" align="center">Login</Typography>
-                <form onSubmit={handleSubmit} noValidate>
-                    <TextField
+            <Box mb={2}>
+                <img
+                    src="/easo.png"
+                    alt="EasoTrip Logo"
+                    style={{
+                        maxWidth: '180px',
+                        width: '100%',
+                        height: 'auto',
+                        display: 'block',
+                        margin: '0 auto',
+                    }}
+                />
+            </Box>
+                <Paper
+                    elevation={3}
+                    sx={{
+                        width: '100%',
+                        maxWidth: 400,
+                        p: { xs: 3, sm: 4 },
+                        bgcolor: 'rgba(255, 255, 255, 0.4)',
+                        backdropFilter: 'blur(10px)',
+                        borderRadius: 2,
+                        boxShadow: 4,
+                    }}
+                >
+                    <Typography variant="h5" align="center" gutterBottom>
+                        Login
+                    </Typography>
+
+                    <form onSubmit={handleSubmit} noValidate>
+                        <TextField
                         margin="normal"
                         required
                         fullWidth
@@ -73,8 +94,8 @@ const Login = () => {
                         type="email"
                         autoComplete="email"
                         autoFocus
-                    />
-                    <TextField
+                        />
+                        <TextField
                         margin="normal"
                         required
                         fullWidth
@@ -84,20 +105,21 @@ const Login = () => {
                         label="Password"
                         type="password"
                         autoComplete="current-password"
-                    />
-                    <Button
+                        />
+                        <Button
                         type="submit"
                         fullWidth
                         variant="contained"
                         color="primary"
-                        style={{ marginTop: '16px' }}
-                    >
+                        sx={{ mt: 2 }}
+                        >
                         Login
-                    </Button>
-                </form>
-            </Paper>
+                        </Button>
+                    </form>
+                </Paper>
         </Container>
     );
+
 };
 
 export default Login;
