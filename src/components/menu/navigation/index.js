@@ -29,6 +29,7 @@ import TrendingUpOutlined from '@mui/icons-material/TrendingUpOutlined';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import HotelOutlined from '@mui/icons-material/HotelOutlined';
 import AirportShuttleOutlined from '@mui/icons-material/AirportShuttleOutlined';
 import ContactMailOutlined from '@mui/icons-material/ContactMailOutlined';
@@ -36,6 +37,8 @@ import CardTravelOutlined from '@mui/icons-material/CardTravelOutlined';
 import AttachMoneyOutlined from '@mui/icons-material/AttachMoneyOutlined';
 import PeopleAltOutlined from '@mui/icons-material/PeopleAltOutlined';
 =======
+=======
+>>>>>>> Stashed changes
 import AttachEmailOutlinedIcon from '@mui/icons-material/AttachEmailOutlined';
 import AddToHomeScreenOutlinedIcon from '@mui/icons-material/AddToHomeScreenOutlined';
 import CasesOutlinedIcon from '@mui/icons-material/CasesOutlined';
@@ -79,17 +82,23 @@ const Navigation = ({ drawerOpen }) => {
     People: PeopleIcon,
     Settings: SettingsIcon,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     AttachMoneyOutlined:AttachMoneyOutlined,
     PeopleAltOutlined:PeopleAltOutlined,
     LogoutOutlined:LogoutOutlinedIcon
     // Add more mappings here
 =======
+=======
+>>>>>>> Stashed changes
     AttachEmailOutlined: AttachEmailOutlinedIcon,
     AddToHomeScreenOutlined: AddToHomeScreenOutlinedIcon,
     CasesOutlined: CasesOutlinedIcon,
     AddTaskOutlined: AddTaskOutlinedIcon,
     PermIdentityOutlined: PermIdentityOutlinedIcon,
     LogoutOutlined: LogoutOutlinedIcon
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
   };
 

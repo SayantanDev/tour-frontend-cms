@@ -176,6 +176,50 @@ const Query = () => {
     try {
       const body = { status: action };
       if (action === "Rejected") body.reason = reason;
+<<<<<<< Updated upstream
+=======
+
+      const res = await handleChangeRequestApproval(currentQueryId, changeId, body)
+
+      if (!res) throw new Error("Action failed");
+
+      showSnackbar(`Change ${action.toLowerCase()} successfully`, "success");
+      openChangeRequestModal(currentQueryId); // Refresh list
+    } catch (err) {
+      console.error(err);
+      showSnackbar("Action failed", "error");
+    }
+  };
+  const openRejectedChangeModal = async (operationId) => {
+    try {
+      const res = await getRejectedChanges(operationId);
+      // const data = await res.json();
+      setRejectedChanges(res);
+      setRejectedModalOpen(true);
+    } catch (err) {
+      console.error("Failed to load rejected changes", err);
+      showSnackbar("Failed to load rejected changes", "error");
+    }
+  };
+
+  return (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Typography variant="h4" gutterBottom>Leads</Typography>
+      <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 3 }}>
+        <TextField label="Search" size="small" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+        <TextField type="date" label="Date" size="small" value={dateQuery} onChange={(e) => setDateQuery(e.target.value)} InputLabelProps={{ shrink: true }} />
+        <TextField select label="Status" size="small" value={statusQuery} onChange={(e) => setStatusQuery(e.target.value)} sx={{ minWidth: 180 }}>
+          {["", "Confirm", "Cancel", "FollowUp", "Postponed", "Higher Priority"].map((status) => (
+            <MenuItem key={status} value={status}>{status || "All"}</MenuItem>
+          ))}
+        </TextField>
+        <TextField select label="Location" size="small" value={locationQuery} onChange={(e) => setLocationQuery(e.target.value)} sx={{ minWidth: 180 }}>
+          {["", "Darjeeling", "Sikkim", "North Sikkim", "Sandakphu"].map((loc) => (
+            <MenuItem key={loc} value={loc}>{loc || "All"}</MenuItem>
+          ))}
+        </TextField>
+      </Box>
+>>>>>>> Stashed changes
 
       const res = await handleChangeRequestApproval(currentQueryId, changeId, body)
 
