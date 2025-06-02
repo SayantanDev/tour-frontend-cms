@@ -229,7 +229,12 @@ const FilterBar = ({
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, padding: 2, width: '100%' }}>
+      <Box 
+        sx={{ 
+          display: 'flex', flexDirection: 'column', gap: 2, padding: 2, 
+          width: '100%',bgcolor: '#eff0d5', borderRadius: 2, boxShadow: 2,
+        }}
+      >
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
         <Typography variant="h6">Filters</Typography>
         <Button
@@ -333,8 +338,6 @@ const FilterBar = ({
               fullWidth
               disabled={(filterObject.location === '')}
             />
-          </Box>
-          <Box sx={{ display: 'flex', gap: 2 }}>
             <TextField
               name="phone"
               // labelId="phone"
@@ -347,8 +350,6 @@ const FilterBar = ({
               fullWidth
               disabled={(filterObject.location === '')}
             />
-          </Box>
-          <Box sx={{ display: 'flex', gap: 2 }}>
             <TextField
               name="email"
               // labelId="email"
