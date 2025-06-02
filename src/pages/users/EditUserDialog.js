@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, MenuItem, Grid, FormHelperText } from '@mui/material';
-import { CONFIG_STR } from "../../configuration";
 
 const EditUserDialog = ({ open, userFormData, handleAddUserSubmit, handleChange, handleClose }) => {
-
+const fetchConfigData = useSelector((state) => state.config.configData);
     return (
         <Dialog open={open} onClose={handleClose} disableBackdropClick>
             <DialogTitle>Update User</DialogTitle>
@@ -58,7 +57,7 @@ const EditUserDialog = ({ open, userFormData, handleAddUserSubmit, handleChange,
                                 margin="normal"
                                 required
                             >
-                                {CONFIG_STR.userPermission.map((usr, index) => (
+                                {fetchConfigData.userPermission.map((usr, index) => (
                                     <MenuItem value={usr.name} key={index}>{usr.name}</MenuItem>
                                 ))}
                             </TextField>

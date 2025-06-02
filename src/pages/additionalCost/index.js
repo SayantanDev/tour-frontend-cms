@@ -9,7 +9,6 @@ import {
     Paper,
     Box
   } from '@mui/material';
-  import { CONFIG_STR } from '../../configuration';
 import { useSelector } from "react-redux";
   
 
@@ -17,8 +16,8 @@ const AdditionalCost = () => {
     // const [carTypes, setCarTypes] = useState(CONFIG_STR.additionalCosts.car);
     // const [hotelTypes, setHotelTypes] = useState(CONFIG_STR.additionalCosts.hotel);
     const fetchConfigData = useSelector((state) => state.config.configData);
-    const carTypes = CONFIG_STR.additionalCosts.car
-    const hotelTypes = CONFIG_STR.additionalCosts.hotel
+    const carTypes = fetchConfigData.additionalCosts.car
+    const hotelTypes = fetchConfigData.additionalCosts.hotel
     
     return (
         <div style={{ padding: '20px' }}>

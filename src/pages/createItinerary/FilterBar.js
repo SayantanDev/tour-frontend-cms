@@ -10,7 +10,6 @@ import {
   Checkbox
   //RadioGroup,FormControlLabel,Radio,Checkbox,TextField,
 } from '@mui/material';
-// import { CONFIG_STR } from "../../configuration";
 import { useDispatch } from 'react-redux';
 import { setNewPackageInfo } from '../../reduxcomponents/slices/packagesSlice';
 

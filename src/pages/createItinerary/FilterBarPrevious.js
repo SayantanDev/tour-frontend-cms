@@ -8,8 +8,6 @@ import {
   Typography,Slider, Button, TextField
   //RadioGroup,FormControlLabel,Radio,Checkbox,TextField,
 } from '@mui/material';
-import { CONFIG_STR } from "../../configuration";
-
 const FilterBar = ({
     CONFIG_STR,
     filterObject, 
