@@ -5,6 +5,11 @@
 import React, { useState } from "react";
 import { CONFIG_STR } from "../../../configuration";
 import { useNavigate } from "react-router-dom";
+<<<<<<< Updated upstream
+import { Drawer, List, ListItem, ListItemText, Toolbar, ListItemIcon, Typography,
+  ListItemButton
+ } from "@mui/material";
+=======
 import {
   Toolbar,
   Drawer,
@@ -12,10 +17,9 @@ import {
   ListItem,
   ListItemText,
   ListItemButton,
-  Badge,
-  ListItemIcon,
-  Typography
+  Badge
 } from "@mui/material";
+>>>>>>> Stashed changes
 import usePermissions from "../../../hooks/UsePermissions";
 import { useSelector, useDispatch } from "react-redux";
 import { removeNotification } from "../../../reduxcomponents/slices/notificationSlice";
@@ -30,8 +34,8 @@ import AddToHomeScreenOutlinedIcon from '@mui/icons-material/AddToHomeScreenOutl
 import CasesOutlinedIcon from '@mui/icons-material/CasesOutlined';
 import AddTaskOutlinedIcon from '@mui/icons-material/AddTaskOutlined';
 import PermIdentityOutlinedIcon from '@mui/icons-material/PermIdentityOutlined';
+>>>>>>> Stashed changes
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
-import { AirportShuttleOutlined, CardTravelOutlined, ContactMailOutlined, HotelOutlined } from "@mui/icons-material";
 
 const Navigation = ({ drawerOpen }) => {
   const checkPermission = usePermissions();

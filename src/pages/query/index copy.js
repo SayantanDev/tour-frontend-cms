@@ -216,8 +216,12 @@ const Query = () => {
           ))}
         </TextField>
       </Box>
-    {/* <Container> */}
-      {/* <Stack
+
+ 
+
+  return (
+    <Container>
+      <Stack
         direction="row"
         alignItems="center"
         spacing={2}
@@ -273,7 +277,7 @@ const Query = () => {
             </MenuItem>
           ))}
         </TextField>
-      </Stack> */}
+      </Stack>
 
       <TableContainer
         component={Paper}
@@ -282,6 +286,155 @@ const Query = () => {
         <Table size="small">
           <TableHead>
             <TableRow>
+<<<<<<< Updated upstream
+              <TableCell sx={{ px: 1.5 }}>Name</TableCell>
+              <TableCell sx={{ px: 1.5 }}>Contact</TableCell>
+              <TableCell sx={{ px: 1.5 }}>Status</TableCell>
+              <TableCell sx={{ px: 1.5 }}>Cost</TableCell>
+              <TableCell sx={{ px: 1.5 }}>Advance</TableCell>
+              <TableCell sx={{ px: 1.5 }}>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredRows
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((row) => (
+                <TableRow key={row._id} hover>
+                  <TableCell sx={{ px: 1.5 }}>
+                    {editingRowId === row._id ? (
+                      <TextField
+                        size="small"
+                        value={editedRowData.guest_name}
+                        onChange={(e) =>
+                          setEditedRowData({ ...editedRowData, guest_name: e.target.value })
+                        }
+                      />
+                    ) : (
+                      row.guest_info?.guest_name
+                    )}
+                  </TableCell>
+
+                  <TableCell sx={{ px: 1.5 }}>
+                    {editingRowId === row._id ? (
+                      <TextField
+                        size="small"
+                        value={editedRowData.guest_phone}
+                        onChange={(e) =>
+                          setEditedRowData({ ...editedRowData, guest_phone: e.target.value })
+                        }
+                      />
+                    ) : (
+                      row.guest_info?.guest_phone
+                    )}
+                  </TableCell>
+
+                  <TableCell sx={{ px: 1.5 }}>
+                    {editingRowId === row._id ? (
+                      <Select
+                        size="small"
+                        value={editedRowData.lead_stage}
+                        onChange={(e) =>
+                          setEditedRowData({ ...editedRowData, lead_stage: e.target.value })
+                        }
+                      >
+                        {["Confirm", "Cancel", "FollowUp", "Postponed", "Higher Priority"].map((status) => (
+                          <MenuItem key={status} value={status}>
+                            {status}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    ) : (
+                      <Chip
+                        label={row.lead_stage}
+                        color={getStatusColor(row.lead_stage)}
+                        size="small"
+                      />
+                    )}
+                  </TableCell>
+
+                  <TableCell sx={{ px: 1.5 }}>
+                    {editingRowId === row._id ? (
+                      <TextField
+                        size="small"
+                        value={editedRowData.cost}
+                        onChange={(e) =>
+                          setEditedRowData({ ...editedRowData, cost: e.target.value })
+                        }
+                      />
+                    ) : (
+                      row.cost || "N/A"
+                    )}
+                  </TableCell>
+
+                  <TableCell sx={{ px: 1.5 }}>
+                    {editingRowId === row._id ? (
+                      <TextField
+                        size="small"
+                        value={editedRowData.advance}
+                        onChange={(e) =>
+                          setEditedRowData({ ...editedRowData, advance: e.target.value })
+                        }
+                      />
+                    ) : row.advance ? `${row.advance}` : "0"}
+                  </TableCell>
+
+                  <TableCell sx={{ px: 1.5 }}>
+                    {editingRowId === row._id ? (
+                      <>
+                        <Button size="small" onClick={() => handleSaveEdit(row._id)}>
+                          Save
+                        </Button>
+                        <Button
+                          size="small"
+                          onClick={() => {
+                            setEditingRowId(null);
+                            setEditedRowData({});
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </>
+                    ) : (
+                      <Stack direction="row" spacing={0.5}>
+                        <Tooltip title="Edit">
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              setEditingRowId(row._id);
+                              setEditedRowData({
+                                guest_name: row.guest_info?.guest_name || "",
+                                guest_phone: row.guest_info?.guest_phone || "",
+                                cost: row.cost || "",
+                                advance: row.advance || "",
+                                lead_stage: row.lead_stage || "",
+                              });
+                            }}
+                          >
+                            <Typography color="success" fontSize="small">Edit</Typography>
+                          </IconButton>
+                        </Tooltip>
+
+                        {row.advance > 0 && (
+                          <Tooltip title="Manage Operation">
+                            <IconButton size="small" onClick={() => handleEditOpen(row.operation_id)}>
+                              <Typography color="primary" fontSize="small">Manage</Typography>
+                            </IconButton>
+                          </Tooltip>
+                        )}
+
+                        {checkPermission("queries", "assuser") && (
+                          <Tooltip title="Assign Users">
+                            <IconButton size="small" onClick={() => openUserModal(row)}>
+                              <Typography color="secondary" fontSize="small">Assign</Typography>
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </Stack>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+=======
               <TableCell>Name</TableCell>
               <TableCell>Contact</TableCell>
               <TableCell>Status</TableCell>
@@ -380,6 +533,7 @@ const Query = () => {
 
               </TableRow>
             ))}
+>>>>>>> Stashed changes
           </TableBody>
         </Table>
 
