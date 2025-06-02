@@ -4,12 +4,14 @@ import { useDispatch } from 'react-redux';
 import { Container, TextField, Button, Typography, Paper } from '@mui/material';
 import { addLoginToken } from '../../reduxcomponents/slices/tokenSlice';
 import { loginUser } from '../../api/userAPI';
+import {  setConfigData } from '../../reduxcomponents/slices/configSlice';
+import { configString } from '../../api/configApi';
 
 const Login = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [loginData, setLoginData] = useState({
-        email: '', 
+        email: '',
         password: '',
     });
 
@@ -33,7 +35,11 @@ const Login = () => {
                 user: res.data.user,
                 permission: res.data.permission,
             }));
-
+            // ✅ Dispatch config string fetch here
+            const configRes = await configString();
+            console.log("configRes", configRes.data);
+            
+            dispatch(setConfigData(configRes.data));
             navigate('/dashboard');
         } catch (err) {
             console.error("Login failed:", err.response?.data?.message || err.message);
@@ -42,20 +48,20 @@ const Login = () => {
     };
 
     return (
-        <Container 
-            component="main" 
-            maxWidth="xs" 
-            style={{ 
-                position: 'absolute', 
-                top: '50%', 
-                right: '10%', 
-                transform: 'translateY(-50%)' 
+        <Container
+            component="main"
+            maxWidth="xs"
+            style={{
+                position: 'absolute',
+                top: '50%',
+                right: '10%',
+                transform: 'translateY(-50%)'
             }}
         >
-            <Paper 
-                elevation={3} 
-                style={{ 
-                    padding: '20px', 
+            <Paper
+                elevation={3}
+                style={{
+                    padding: '20px',
                     backgroundColor: 'rgba(255, 255, 255, 0.4)',
                     backdropFilter: 'blur(10px)'
                 }}
