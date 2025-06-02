@@ -33,3 +33,19 @@ export async function addChangeRequest(id,payload){
     const result = await axios.post(ADDUSER_URL, payload);
     return result.data;
 }
+
+export async function getChangeRequest(id){
+    const ADDUSER_URL = `${QRY_URL}/change-request/${id}`;
+    const result = await axios.get(ADDUSER_URL);
+    return result.data;
+}
+export async function handleChangeRequestApproval(optId,crvId,payload){
+    const ADDUSER_URL = `${QRY_URL}/${optId}/changes/${crvId}`;
+    const result = await axios.put(ADDUSER_URL,payload);
+    return result.data;
+}
+export async function getRejectedChanges(id){
+    const ADDUSER_URL = `${QRY_URL}/rejected-changes/${id}`;
+    const result = await axios.get(ADDUSER_URL);
+    return result.data;
+} 

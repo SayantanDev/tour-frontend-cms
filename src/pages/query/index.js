@@ -11,6 +11,7 @@ import { setSelectedquerie } from "../../reduxcomponents/slices/queriesSlice";
 import { useNavigate } from "react-router-dom";
 import useSnackbar from "../../hooks/useSnackbar";
 import { getAllUsers } from "../../api/userAPI";
+import { getChangeRequest, getRejectedChanges, handleChangeRequestApproval } from "../../api/operationAPI";
 
 const Query = () => {
   const checkPermission = usePermissions();
@@ -37,6 +38,15 @@ const Query = () => {
   const [selectedQueryId, setSelectedQueryId] = useState(null);
   const [allUsers, setAllUsers] = useState([]);
   const [assignedUsers, setAssignedUsers] = useState([]);
+
+  // modal change request
+  const [changeModalOpen, setChangeModalOpen] = useState(false);
+  const [selectedChangeRequests, setSelectedChangeRequests] = useState([]);
+  const [currentQueryId, setCurrentQueryId] = useState(null);
+
+  // rejected modal
+  const [rejectedModalOpen, setRejectedModalOpen] = useState(false);
+  const [rejectedChanges, setRejectedChanges] = useState([]);
 
   useEffect(() => {
     fetchUsers();
@@ -150,6 +160,46 @@ const Query = () => {
     }
   };
 
+  const openChangeRequestModal = async (queryId) => {
+    try {
+      const res = await getChangeRequest(queryId);
+      // const data = await res.json();
+      setSelectedChangeRequests(res);
+      setCurrentQueryId(queryId);
+      setChangeModalOpen(true);
+    } catch (err) {
+      console.error("Failed to fetch change requests", err);
+      showSnackbar("Failed to load change requests", "error");
+    }
+  };
+  const handleChangeRequestAction = async (changeId, action, reason = "") => {
+    try {
+      const body = { status: action };
+      if (action === "Rejected") body.reason = reason;
+
+      const res = await handleChangeRequestApproval(currentQueryId, changeId, body)
+
+      if (!res) throw new Error("Action failed");
+
+      showSnackbar(`Change ${action.toLowerCase()} successfully`, "success");
+      openChangeRequestModal(currentQueryId); // Refresh list
+    } catch (err) {
+      console.error(err);
+      showSnackbar("Action failed", "error");
+    }
+  };
+  const openRejectedChangeModal = async (operationId) => {
+    try {
+      const res = await getRejectedChanges(operationId);
+      // const data = await res.json();
+      setRejectedChanges(res);
+      setRejectedModalOpen(true);
+    } catch (err) {
+      console.error("Failed to load rejected changes", err);
+      showSnackbar("Failed to load rejected changes", "error");
+    }
+  };
+
   return (
     <Container>
       <Stack
@@ -217,6 +267,7 @@ const Query = () => {
         <Table size="small">
           <TableHead>
             <TableRow>
+<<<<<<< Updated upstream
               <TableCell sx={{ px: 1.5 }}>Name</TableCell>
               <TableCell sx={{ px: 1.5 }}>Contact</TableCell>
               <TableCell sx={{ px: 1.5 }}>Status</TableCell>
@@ -364,6 +415,106 @@ const Query = () => {
                   </TableCell>
                 </TableRow>
               ))}
+=======
+              <TableCell>Name</TableCell>
+              <TableCell>Contact</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Cost</TableCell>
+              <TableCell>Advance</TableCell>
+              <TableCell>Actions</TableCell>
+              {checkPermission("operation", "change-request") && (<TableCell>Change Request</TableCell>)}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
+              <TableRow key={row._id} hover>
+                <TableCell>
+                  {editingRowId === row._id ? (
+                    <TextField size="small" value={editedRowData.guest_name} onChange={(e) => setEditedRowData({ ...editedRowData, guest_name: e.target.value })} />
+                  ) : row.guest_info?.guest_name}
+                </TableCell>
+                <TableCell>
+                  {editingRowId === row._id ? (
+                    <TextField size="small" value={editedRowData.guest_phone} onChange={(e) => setEditedRowData({ ...editedRowData, guest_phone: e.target.value })} />
+                  ) : row.guest_info?.guest_phone}
+                </TableCell>
+                <TableCell>
+                  {editingRowId === row._id ? (
+                    <Select size="small" value={editedRowData.lead_stage} onChange={(e) => setEditedRowData({ ...editedRowData, lead_stage: e.target.value })}>
+                      {["Confirm", "Cancel", "FollowUp", "Postponed", "Higher Priority"].map((status) => (
+                        <MenuItem key={status} value={status}>{status}</MenuItem>
+                      ))}
+                    </Select>
+                  ) : (
+                    <Chip label={row.lead_stage} color={getStatusColor(row.lead_stage)} />
+                  )}
+                </TableCell>
+                <TableCell>
+                  {editingRowId === row._id ? (
+                    <TextField size="small" value={editedRowData.cost} onChange={(e) => setEditedRowData({ ...editedRowData, cost: e.target.value })} />
+                  ) : row.cost || "N/A"}
+                </TableCell>
+                <TableCell>
+                  {editingRowId === row._id ? (
+                    <TextField size="small" value={editedRowData.advance} onChange={(e) => setEditedRowData({ ...editedRowData, advance: e.target.value })} />
+                  ) : row.advance ? `${row.advance}` : "0"}
+                </TableCell>
+
+                <TableCell>
+                  {editingRowId === row._id ? (
+                    <>
+                      <Button onClick={() => handleSaveEdit(row._id)} size="small">Save</Button>
+                      <Button onClick={() => { setEditingRowId(null); setEditedRowData({}); }} size="small">Cancel</Button>
+                    </>
+                  ) : (
+                    <>
+                      <Tooltip title="Edit">
+                        <IconButton onClick={() => {
+                          setEditingRowId(row._id);
+                          setEditedRowData({
+                            guest_name: row.guest_info?.guest_name || "",
+                            guest_phone: row.guest_info?.guest_phone || "",
+                            cost: row.cost || "",
+                            advance: row.advance || "",
+                            lead_stage: row.lead_stage || "",
+                          });
+                        }}>
+                          <Typography color="success">Edit</Typography>
+                        </IconButton>
+                      </Tooltip>
+                      {row.advance > 0 &&
+                        <Tooltip title="Manage Operation">
+                          <IconButton onClick={() => handleEditOpen(row.operation_id)}>
+                            <Typography color="primary">Manage</Typography>
+                          </IconButton>
+                        </Tooltip>
+                      }
+                      {checkPermission("queries", "assuser") && (
+                        <Tooltip title="Assign Users">
+                          <IconButton onClick={() => openUserModal(row)}>
+                            <Typography color="secondary">Assign Users</Typography>
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                    </>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Tooltip title="View Rejected Changes">
+                    <IconButton onClick={() => openRejectedChangeModal(row.operation_id)}>
+                      <Typography color="error">Rejected</Typography>
+                    </IconButton>
+                  </Tooltip>
+                </TableCell>
+
+                {/* change request */}
+                <TableCell>
+                  <Button onClick={() => openChangeRequestModal(row.operation_id)} size="small">CRV</Button>
+                </TableCell>
+
+              </TableRow>
+            ))}
+>>>>>>> Stashed changes
           </TableBody>
         </Table>
 
@@ -420,6 +571,93 @@ const Query = () => {
           </Button>
         </Box>
       </Modal>
+
+      {/* change request view */}
+      <Modal open={changeModalOpen} onClose={() => setChangeModalOpen(false)}>
+        <Box sx={{
+          position: 'absolute', top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          bgcolor: '#f5f5f5', boxShadow: 24, p: 4,
+          width: 600, maxHeight: "90vh", overflowY: "auto", borderRadius: 2
+        }}>
+          <Typography variant="h6" gutterBottom>Change Requests</Typography>
+          {selectedChangeRequests.map(change => (
+            <Paper key={change._id} sx={{ p: 2, mb: 2 }}>
+              <Typography><b>Description:</b> {change.description}</Typography>
+              <Typography><b>Status:</b> {change.approved_status}</Typography>
+              <Typography><b>User:</b> {change.user_id?.fullName} ({change.user_id?.email})</Typography>
+              <Typography>
+                <b>Submitted On:</b>{" "}
+                {new Date(change.date_time).toLocaleString("en-IN", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                })}
+              </Typography>
+
+              {change.approved_status === "Pending" && (
+                <Box sx={{ mt: 1 }}>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="success"
+                    onClick={() => handleChangeRequestAction(change._id, "Approved")}
+                    sx={{ mr: 1 }}
+                  >
+                    Approve
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="error"
+                    onClick={() => {
+                      const reason = prompt("Enter rejection reason:");
+                      if (reason) handleChangeRequestAction(change._id, "Rejected", reason);
+                    }}
+                  >
+                    Reject
+                  </Button>
+                </Box>
+              )}
+
+              {change.approved_status === "Rejected" && change.rejected_reason && (
+                <Typography sx={{ mt: 1, color: "error.main" }}>
+                  <b>Rejection Reason:</b> {change.rejected_reason}
+                </Typography>
+              )}
+            </Paper>
+          ))}
+
+          <Button onClick={() => setChangeModalOpen(false)} fullWidth sx={{ mt: 2 }}>Close</Button>
+        </Box>
+      </Modal>
+
+      {/* rejected reason view */}
+      <Modal open={rejectedModalOpen} onClose={() => setRejectedModalOpen(false)}>
+        <Box sx={{
+          position: 'absolute', top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          bgcolor: '#fff3f3', p: 4, width: 600,
+          borderRadius: 2, boxShadow: 24, maxHeight: '80vh', overflowY: 'auto'
+        }}>
+          <Typography variant="h6" gutterBottom>Rejected Change Requests</Typography>
+          {rejectedChanges.length === 0 ? (
+            <Typography>No rejected requests found.</Typography>
+          ) : (
+            rejectedChanges.map(change => (
+              <Paper key={change._id} sx={{ p: 2, mb: 2 }}>
+                <Typography><b>Description:</b> {change.description}</Typography>
+                <Typography><b>User:</b> {change.user_id?.fullName} ({change.user_id?.email})</Typography>
+                <Typography><b>Date:</b> {new Date(change.date_time).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</Typography>
+                <Typography sx={{ mt: 1, color: "error.main" }}>
+                  <b>Rejection Reason:</b> {change.rejected_reason}
+                </Typography>
+              </Paper>
+            ))
+          )}
+          <Button onClick={() => setRejectedModalOpen(false)} fullWidth sx={{ mt: 2 }}>Close</Button>
+        </Box>
+      </Modal>
+
 
       <SnackbarComponent />
     </Container>

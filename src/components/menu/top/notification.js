@@ -1,5 +1,5 @@
 // ===============================
-// components/Notification.js (Final Version with Redux Tokens)
+// components/Notification.js (Enhanced with URL Navigation per Notification Type)
 // ===============================
 
 import React, { useEffect, useState } from "react";
@@ -15,13 +15,15 @@ import io from "socket.io-client";
 import moment from "moment";
 import { useDispatch, useSelector } from "react-redux";
 import { addNotification, removeAllNotifications, removeNotification } from "../../../reduxcomponents/slices/notificationSlice";
+import { useNavigate } from "react-router-dom";
 
 const socketUrl = "http://localhost:8000";
 
 function Notification() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const notifications = useSelector((state) => state.notification.list);
-  const user = useSelector((state) => state.tokens.user); // pulling from tokens slice
+  const user = useSelector((state) => state.tokens.user);
 
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -41,6 +43,7 @@ function Notification() {
       dispatch(addNotification({
         notifiId: Date.now(),
         notify: notify.message,
+        type: notify.type || 'general',
         time: new Date()
       }));
     });
@@ -52,7 +55,23 @@ function Notification() {
 
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
-  const handleRead = (id) => dispatch(removeNotification(id));
+
+  const handleReadAndRedirect = (id, type) => {
+    dispatch(removeNotification(id));
+
+    switch (type) {
+      case 'inquiry':
+        navigate('/inquiry');
+        break;
+      case 'operation':
+      case 'followup':
+        navigate('/query');
+        break;
+      default:
+        navigate('/dashboard');
+    }
+    setAnchorEl(null);
+  };
 
   const open = Boolean(anchorEl);
   const id = open ? 'simple-popover' : undefined;
@@ -140,8 +159,11 @@ function Notification() {
             >
               <Typography sx={{ fontSize: "12px", fontWeight: 500 }}>
                 {notify.notify}.{' '}
-                <Link sx={{ cursor: "pointer" }} onClick={() => handleRead(notify.notifiId)}>
-                  Mark as read
+                <Link
+                  sx={{ cursor: "pointer" }}
+                  onClick={() => handleReadAndRedirect(notify.notifiId, notify.type)}
+                >
+                  View
                 </Link>
               </Typography>
               <Typography sx={{ fontSize: "10px", color: "gray" }}>

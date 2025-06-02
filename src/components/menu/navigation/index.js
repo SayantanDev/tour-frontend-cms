@@ -1,33 +1,74 @@
+// ===============================
+// components/Navigation.js (With Badge Notification Counts + Clear on Click)
+// ===============================
+
 import React, { useState } from "react";
 import { CONFIG_STR } from "../../../configuration";
 import { useNavigate } from "react-router-dom";
+<<<<<<< Updated upstream
 import { Drawer, List, ListItem, ListItemText, Toolbar, ListItemIcon, Typography,
   ListItemButton
  } from "@mui/material";
+=======
+import {
+  Toolbar,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemButton,
+  Badge
+} from "@mui/material";
+>>>>>>> Stashed changes
 import usePermissions from "../../../hooks/UsePermissions";
+import { useSelector, useDispatch } from "react-redux";
+import { removeNotification } from "../../../reduxcomponents/slices/notificationSlice";
 
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import TrendingUpOutlined from '@mui/icons-material/TrendingUpOutlined';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
+<<<<<<< Updated upstream
 import HotelOutlined from '@mui/icons-material/HotelOutlined';
 import AirportShuttleOutlined from '@mui/icons-material/AirportShuttleOutlined';
 import ContactMailOutlined from '@mui/icons-material/ContactMailOutlined';
 import CardTravelOutlined from '@mui/icons-material/CardTravelOutlined';
 import AttachMoneyOutlined from '@mui/icons-material/AttachMoneyOutlined';
 import PeopleAltOutlined from '@mui/icons-material/PeopleAltOutlined';
+=======
+import AttachEmailOutlinedIcon from '@mui/icons-material/AttachEmailOutlined';
+import AddToHomeScreenOutlinedIcon from '@mui/icons-material/AddToHomeScreenOutlined';
+import CasesOutlinedIcon from '@mui/icons-material/CasesOutlined';
+import AddTaskOutlinedIcon from '@mui/icons-material/AddTaskOutlined';
+import PermIdentityOutlinedIcon from '@mui/icons-material/PermIdentityOutlined';
+>>>>>>> Stashed changes
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
-
 
 const Navigation = ({ drawerOpen }) => {
   const checkPermission = usePermissions();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [currentTab, setCurrentTab] = useState("Dashboard");
 
+  const notifications = useSelector((state) => state.notification.list);
+  const inquiryCount = notifications.filter(n => n.type === 'inquiry').length;
+  const operationCount = notifications.filter(n => n.type === 'operation').length;
+
   const navLinkClicked = (link, label) => {
+    // Remove related notifications
+    if (label === "Inquiry") {
+      notifications.filter(n => n.type === 'inquiry')
+        .forEach(n => dispatch(removeNotification(n.notifiId)));
+    }
+    if (label === "Leads") {
+      notifications.filter(n => n.type === 'operation')
+        .forEach(n => dispatch(removeNotification(n.notifiId)));
+    }
+
     navigate(link);
     setCurrentTab(label);
   };
+
   const iconMap = {
     DashboardOutlined: DashboardOutlined,
     ContactMailOutlined: ContactMailOutlined,
@@ -37,19 +78,35 @@ const Navigation = ({ drawerOpen }) => {
     AirportShuttleOutlined: AirportShuttleOutlined,
     People: PeopleIcon,
     Settings: SettingsIcon,
+<<<<<<< Updated upstream
     AttachMoneyOutlined:AttachMoneyOutlined,
     PeopleAltOutlined:PeopleAltOutlined,
     LogoutOutlined:LogoutOutlinedIcon
     // Add more mappings here
+=======
+    AttachEmailOutlined: AttachEmailOutlinedIcon,
+    AddToHomeScreenOutlined: AddToHomeScreenOutlinedIcon,
+    CasesOutlined: CasesOutlinedIcon,
+    AddTaskOutlined: AddTaskOutlinedIcon,
+    PermIdentityOutlined: PermIdentityOutlinedIcon,
+    LogoutOutlined: LogoutOutlinedIcon
+>>>>>>> Stashed changes
   };
 
   const drawer = (
     <div>
       <List>
         {CONFIG_STR.navigationStrings
-          .filter((element) => checkPermission(element.module, "view")) // Check permission
+          .filter((element) => checkPermission(element.module, "view"))
           .map((element) => {
             const IconComponent = iconMap[element.icon];
+            const showBadge =
+              (element.label === "Inquiry" && inquiryCount > 0) ||
+              (element.label === "Leads" && operationCount > 0);
+
+            const badgeCount =
+              element.label === "Inquiry" ? inquiryCount :
+              element.label === "Leads" ? operationCount : 0;
 
             return (
               <ListItem
@@ -60,12 +117,18 @@ const Navigation = ({ drawerOpen }) => {
                 <ListItemButton
                   onClick={() => navLinkClicked(element.link, element.label)}
                 >
-
                   {IconComponent && <IconComponent sx={{ mr: 1 }} />}
-                  <ListItemText primary={element.label} />
+
+                  {showBadge ? (
+                    <Badge badgeContent={badgeCount} color="error">
+                      <ListItemText primary={element.label} />
+                    </Badge>
+                  ) : (
+                    <ListItemText primary={element.label} />
+                  )}
                 </ListItemButton>
               </ListItem>
-            )
+            );
           })}
       </List>
     </div>
