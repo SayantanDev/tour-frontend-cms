@@ -176,9 +176,6 @@ const Query = () => {
     try {
       const body = { status: action };
       if (action === "Rejected") body.reason = reason;
-<<<<<<< Updated upstream
-=======
-
       const res = await handleChangeRequestApproval(currentQueryId, changeId, body)
 
       if (!res) throw new Error("Action failed");
