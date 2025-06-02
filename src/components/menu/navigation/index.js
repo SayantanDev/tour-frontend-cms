@@ -6,15 +6,8 @@ import React, { useState } from "react";
 import { CONFIG_STR } from "../../../configuration";
 import { useNavigate } from "react-router-dom";
 import {
-  Toolbar,
-  Drawer,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemButton,
-  Badge,
-  ListItemIcon,
-  Typography
+  Drawer, List, ListItem, ListItemText, ListItemButton, Badge, ListItemIcon,
+  Typography, useMediaQuery,
 } from "@mui/material";
 import usePermissions from "../../../hooks/UsePermissions";
 import { useSelector, useDispatch } from "react-redux";
@@ -24,7 +17,8 @@ import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import TrendingUpOutlined from '@mui/icons-material/TrendingUpOutlined';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
-// import AttachEmailIcon from '@mui/icons-material/AttachEmail';
+import PeopleAltOutlined from '@mui/icons-material/PeopleAltOutlined';
+import AttachMoneyOutlined from '@mui/icons-material/AttachMoneyOutlined';
 import AttachEmailOutlinedIcon from '@mui/icons-material/AttachEmailOutlined';
 import AddToHomeScreenOutlinedIcon from '@mui/icons-material/AddToHomeScreenOutlined';
 import CasesOutlinedIcon from '@mui/icons-material/CasesOutlined';
@@ -33,10 +27,11 @@ import PermIdentityOutlinedIcon from '@mui/icons-material/PermIdentityOutlined';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import { AirportShuttleOutlined, CardTravelOutlined, ContactMailOutlined, HotelOutlined } from "@mui/icons-material";
 
-const Navigation = ({ drawerOpen }) => {
+const Navigation = ({ drawerOpen, setDrawerOpen }) => {
   const checkPermission = usePermissions();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const isMobileOrTablet = useMediaQuery('(max-width:900px)');
   const [currentTab, setCurrentTab] = useState("Dashboard");
 
   const notifications = useSelector((state) => state.notification.list);
@@ -56,6 +51,7 @@ const Navigation = ({ drawerOpen }) => {
 
     navigate(link);
     setCurrentTab(label);
+    isMobileOrTablet && setDrawerOpen(!drawerOpen);
   };
 
   const iconMap = {
@@ -66,6 +62,8 @@ const Navigation = ({ drawerOpen }) => {
     HotelOutlined: HotelOutlined,
     AirportShuttleOutlined: AirportShuttleOutlined,
     People: PeopleIcon,
+    AttachMoneyOutlined: AttachMoneyOutlined,
+    PeopleAltOutlined: PeopleAltOutlined,
     Settings: SettingsIcon,
     AttachEmailOutlined: AttachEmailOutlinedIcon,
     AddToHomeScreenOutlined:AddToHomeScreenOutlinedIcon,

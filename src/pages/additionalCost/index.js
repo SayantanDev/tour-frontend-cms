@@ -13,8 +13,6 @@ import {
   
 
 const AdditionalCost = () => {
-    // const [carTypes, setCarTypes] = useState(CONFIG_STR.additionalCosts.car);
-    // const [hotelTypes, setHotelTypes] = useState(CONFIG_STR.additionalCosts.hotel);
     const carTypes = CONFIG_STR.additionalCosts.car
     const hotelTypes = CONFIG_STR.additionalCosts.hotel
     
