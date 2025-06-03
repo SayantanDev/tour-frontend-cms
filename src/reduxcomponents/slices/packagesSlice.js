@@ -3,6 +3,9 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialeditState = {
     fetchSelectedPackage: {},
     fetchNewPackageInfo: {},
+    fetchNewPackageItinerary: {},
+    checkItinery: false,
+    checkReach: false,
 };
 
 const Packages = createSlice({
@@ -12,17 +15,31 @@ const Packages = createSlice({
         setSelectedPackage: (state, action) => {
             state.fetchSelectedPackage = action.payload;
         },
+        setNewPackageItinerary: (state, action) => {
+            state.fetchNewPackageItinerary = action.payload;
+        },
         setNewPackageInfo: (state, action) => {
             state.fetchNewPackageInfo = {
                 ...state.fetchNewPackageInfo,
                 ...action.payload,
             };
         },
+        setCheckItinery: (state, action) => {
+            state.checkItinery = action.payload;
+        },
+        setCheckReach: (state, action) => {
+            state.checkReach = action.payload;
+        },
         removePackageInfo: (state, action) => {
-            delete state.fetchNewPackageInfo[action.payload];
+            // delete state.fetchNewPackageInfo[action.payload];
+            state.fetchNewPackageInfo = {};
+        },
+        removePackageItinerary: (state, action) => {
+            // delete state.fetchNewPackageItinerary[action.payload];
+            state.fetchNewPackageItinerary = {};
         }
     }
 });
 
-export const { setSelectedPackage, setNewPackageInfo, removePackageInfo } = Packages.actions;
+export const { setSelectedPackage, setNewPackageItinerary, setNewPackageInfo, removePackageInfo,removePackageItinerary,setCheckItinery,setCheckReach } = Packages.actions;
 export default Packages.reducer;

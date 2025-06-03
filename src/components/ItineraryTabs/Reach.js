@@ -16,12 +16,10 @@ import {
   ExpandMore as ExpandMoreIcon,
 } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
-import { setNewPackageInfo } from "../../reduxcomponents/slices/packagesSlice";
+import { setCheckReach, setNewPackageInfo } from "../../reduxcomponents/slices/packagesSlice";
 
 function Reach({ selectedCard }) {
-  // const existingDetails = useSelector((state) => state.fetchNewPackageInfo);
   const fetchConfigData = useSelector((state) => state.config.configData);
-  
   const dispatch = useDispatch();
   const exclusionOptions = fetchConfigData.commonReach.exclusions;
   const inclusionOptions = fetchConfigData.commonReach.inclusions;
@@ -29,9 +27,6 @@ function Reach({ selectedCard }) {
   const [exclusions, setExclusions] = useState([]);
   const [inclusions, setInclusions] = useState([]);
 
-
-
-  // Sync initial data from selectedCard
   useEffect(() => {
     const formattedExclusions = selectedCard?.exclusions?.length
       ? selectedCard.exclusions.map((item) => ({ tagValue: item }))
@@ -44,27 +39,41 @@ function Reach({ selectedCard }) {
     setExclusions(formattedExclusions);
     setInclusions(formattedInclusions);
 
-    // Initial dispatch
-    dispatch(setNewPackageInfo({
-      details: {
-        cost: {
-          exclusions: formattedExclusions.map((item) => item.tagValue),
-          inclusions: formattedInclusions.map((item) => item.tagValue),
+    dispatch(
+      setNewPackageInfo({
+        details: {
+          cost: {
+            exclusions: formattedExclusions.map((item) => item.tagValue),
+            inclusions: formattedInclusions.map((item) => item.tagValue),
+          },
         },
-      },
-    }));
-  }, [exclusionOptions,inclusionOptions,selectedCard, dispatch]);
+      })
+    );
+    dispatch(setCheckReach(true));
+  }, [exclusionOptions, inclusionOptions, selectedCard, dispatch]);
 
-  // Update dispatch whenever exclusions or inclusions change
   const updateRedux = (updatedExclusions, updatedInclusions) => {
-    dispatch(setNewPackageInfo({
-      details: {
-        cost: {
-          exclusions: updatedExclusions.map((item) => item.tagValue),
-          inclusions: updatedInclusions.map((item) => item.tagValue),
-        },
-      },
-    }));
+    const current = {
+      exclusions: exclusions.map((i) => i.tagValue),
+      inclusions: inclusions.map((i) => i.tagValue),
+    };
+    const next = {
+      exclusions: updatedExclusions.map((i) => i.tagValue),
+      inclusions: updatedInclusions.map((i) => i.tagValue),
+    };
+
+    if (
+      JSON.stringify(current.exclusions) !== JSON.stringify(next.exclusions) ||
+      JSON.stringify(current.inclusions) !== JSON.stringify(next.inclusions)
+    ) {
+      dispatch(
+        setNewPackageInfo({
+          details: {
+            cost: next,
+          },
+        })
+      );
+    }
   };
 
   const handleExclusionChange = (index, value) => {
@@ -107,16 +116,12 @@ function Reach({ selectedCard }) {
 
   return (
     <Box>
-      {/* Exclusions Accordion */}
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />} id="exclusions-header">
           <Typography component="span">1. Exclusions List</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <Box sx={{ width: "50vw" }}>
-            {/* <Typography variant="body2" sx={{ mb: 3 }}>
-              If you need suggestions or want to view previous exclusions, click the link.
-            </Typography> */}
             {exclusions.map((item, idx) => (
               <Box key={idx} sx={{ mb: 2 }}>
                 <Grid container alignItems="center" spacing={2}>
@@ -152,7 +157,6 @@ function Reach({ selectedCard }) {
         </AccordionDetails>
       </Accordion>
 
-      {/* Inclusions Accordion */}
       <Accordion>
         <AccordionSummary expandIcon={<ExpandMoreIcon />} id="inclusions-header">
           <Typography component="span">2. Inclusions List</Typography>

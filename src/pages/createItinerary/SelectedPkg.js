@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button, Box, Tabs, Tab } from '@mui/material';
 import ArrowBack from '@mui/icons-material/ArrowBack';
 import {
@@ -20,11 +21,12 @@ import Reach from '../../components/ItineraryTabs/Reach';
 import { useDispatch, useSelector } from "react-redux";
 import { createPackage } from '../../api/packageAPI';
 import useSnackbar from '../../hooks/useSnackbar';
-import { removePackageInfo } from '../../reduxcomponents/slices/packagesSlice';
+import { removePackageInfo, removePackageItinerary, setCheckItinery, setCheckReach } from '../../reduxcomponents/slices/packagesSlice';
 const SelectedPkg = ({ selectedCard, handleBack, customerInput, setCustomerInput, totalQuotetionCost }) => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const { showSnackbar, SnackbarComponent } = useSnackbar();
-    const { fetchNewPackageInfo: pakageData } = useSelector((state) => state.package);
+    const { fetchNewPackageInfo: pakageData, fetchNewPackageItinerary: itineraryData,checkItinery, checkReach } = useSelector((state) => state.package);
     const [tab, setTab] = useState(0);
     // const [newPackageId, setNewPackageId] = useState(selectedCard.id);
     const handleChange = (event, newValue) => {
@@ -64,7 +66,7 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, setCustomerInput
         label: `${pakageData?.location} Tour ${customerInput.days - 1}N ${customerInput.days}D`,
         duration: customerInput.days,
     };
-    
+
     const handleNext = async () => {
         try {
 
@@ -114,15 +116,21 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, setCustomerInput
             const response = await createQueries(queriesValueObj);
 
             // showSnackbar('Queries created successfully', 'success');
-            
+
 
             if (response.success) {
                 showSnackbar('Queries created successfully', 'success');
 
                 // Fallback for optional arrays
-                const itineraryList = selectedCard?.itinerary || [];
-                const inclusionList = selectedCard?.inclusions || [];
-                const exclusionList = selectedCard?.exclusions || [];
+                const itineraryList = itineraryData?.shortItinerary || [];
+                console.log("itineraryList :: ", itineraryList);
+
+                const inclusionList = pakageData?.details?.cost?.inclusions || [];
+                console.log("inclusionList :: ", inclusionList);
+
+                const exclusionList = pakageData?.details?.cost?.exclusions || [];
+                console.log("exclusionList :: ", exclusionList);
+
 
                 const doc = new Document({
                     sections: [
@@ -218,8 +226,12 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, setCustomerInput
                 const blob = await Packer.toBlob(doc);
                 saveAs(blob, "generated-document.docx");
                 dispatch(removePackageInfo());
-            }else{
-            showSnackbar(`${response.message}`, "error");
+                dispatch(removePackageItinerary());
+                dispatch(setCheckItinery(false));
+                dispatch(setCheckReach(false));
+                navigate("/query");
+            } else {
+                showSnackbar(`${response.message}`, "error");
 
             }
         } catch (error) {
@@ -251,6 +263,7 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, setCustomerInput
                     >
                         Back
                     </Button>
+                    {(checkItinery  && checkReach ) && 
                     <Button
                         variant="contained"
                         color="success"
@@ -259,6 +272,8 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, setCustomerInput
                     >
                         Generate
                     </Button>
+                    }
+                    
                 </Box>
                 {/* further contant */}
                 <Tabs value={tab} onChange={handleChange} centered>

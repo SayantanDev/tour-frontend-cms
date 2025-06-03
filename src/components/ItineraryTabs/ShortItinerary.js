@@ -8,31 +8,34 @@ import {
   Button,
 } from "@mui/material";
 import { Delete as DeleteIcon, Add as AddIcon } from "@mui/icons-material";
-import { useDispatch } from "react-redux";
-import { setNewPackageInfo } from "../../reduxcomponents/slices/packagesSlice";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  setCheckItinery,
+  setNewPackageInfo,
+  setNewPackageItinerary,
+} from "../../reduxcomponents/slices/packagesSlice";
 
-
-const ShortItinerary = ({ customerInput,setCustomerInput, selectedCard }) => {
+const ShortItinerary = ({ customerInput, setCustomerInput, selectedCard }) => {
   const dispatch = useDispatch();
+  const { fetchNewPackageItinerary: customItinerary } = useSelector(
+    (state) => state.package
+  );
 
-  // 1. Get total number of days from props
-  // const totalDays = customerInput.days ?? 1;
+  const totalDays =
+    selectedCard?.itinerary?.length || customerInput.days || 1;
 
-  // 1. Determine total days based on selectedCard itinerary first
-  const totalDays = selectedCard?.itinerary?.length || customerInput.days || 1;
-  // const [dayCount, setDayCount] = useState(totalDays);
-  // 2. Create itinerary, prioritizing selectedCard values
   const makeEmptyItinerary = (days, existingValues = []) =>
     Array.from({ length: days }, (_, i) => ({
       tagName: `Day ${i + 1}`,
       tagValue: existingValues[i] ?? "",
     }));
 
-  // 3. Initialize itinerary state
   const [itinerary, setItinerary] = useState([]);
 
   useEffect(() => {
-    const existingValues = selectedCard?.itinerary?.map((day) => day.tagValue) || [];
+    const existingValues =
+      selectedCard?.itinerary?.map((day) => day.tagValue) ||
+      customItinerary.shortItinerary?.map((day) => day.tagValue) || [];
     const newItinerary = makeEmptyItinerary(totalDays, existingValues);
 
     setItinerary((prev) => {
@@ -41,11 +44,8 @@ const ShortItinerary = ({ customerInput,setCustomerInput, selectedCard }) => {
         prev.every((item, idx) => item.tagValue === newItinerary[idx].tagValue);
       return isSame ? prev : newItinerary;
     });
-
   }, [totalDays, selectedCard]);
 
-
-  // 5. Handle input change
   const handlePlanChange = (index, value) => {
     setItinerary((prev) => {
       const next = [...prev];
@@ -54,35 +54,32 @@ const ShortItinerary = ({ customerInput,setCustomerInput, selectedCard }) => {
     });
   };
 
-  // 6. Add a new day
   const handleAddDay = () => {
     setItinerary((prev) => {
       const updated = [...prev, { tagName: `Day ${prev.length + 1}`, tagValue: "" }];
-      setCustomerInput?.({ ...customerInput, days: updated.length }); //Update days
+      setCustomerInput?.({ ...customerInput, days: updated.length });
       return updated;
     });
   };
-  
-  // 7. Delete a day and update day labels
+
   const handleDeleteDay = (index) => {
     setItinerary((prev) => {
       const updated = prev
         .filter((_, i) => i !== index)
         .map((item, i) => ({ ...item, tagName: `Day ${i + 1}` }));
-      setCustomerInput?.({ ...customerInput, days: updated.length }); // Update days
+      setCustomerInput?.({ ...customerInput, days: updated.length });
       return updated;
     });
   };
-  
-  // 8. Dispatch to Redux only when all fields are filled
-  const handleSaveItinerary = () => {
+
+  useEffect(() => {
     const allFilled = itinerary.every((item) => item.tagValue.trim() !== "");
-    if (allFilled) {
-      dispatch(setNewPackageInfo({ details: { shortItinerary: itinerary } }));
-    } else {
-      alert("Please fill in all day plans before saving.");
+    if (allFilled && itinerary.length > 0) {
+      dispatch(setNewPackageItinerary({ shortItinerary: itinerary }));
+      dispatch(setCheckItinery(true));
+
     }
-  };
+  }, [itinerary, dispatch]);
 
   return (
     <Box sx={{ width: "50vw" }}>
@@ -126,14 +123,6 @@ const ShortItinerary = ({ customerInput,setCustomerInput, selectedCard }) => {
           onClick={handleAddDay}
         >
           Add Day
-        </Button>
-
-        <Button
-          variant="outlined"
-          onClick={handleSaveItinerary}
-          color="success"
-        >
-          Save Itinerary
         </Button>
       </Box>
     </Box>

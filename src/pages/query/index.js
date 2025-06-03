@@ -48,6 +48,10 @@ const Query = () => {
   const [rejectedModalOpen, setRejectedModalOpen] = useState(false);
   const [rejectedChanges, setRejectedChanges] = useState([]);
 
+  // delete 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [queryToDelete, setQueryToDelete] = useState(null);
+
   useEffect(() => {
     fetchUsers();
     if (canView) fetchQuery();
@@ -131,6 +135,28 @@ const Query = () => {
       (!locationQuery || item.destination === locationQuery)
     );
   });
+  const handleOpenDeleteDialog = (queryId) => {
+    setQueryToDelete(queryId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      // const res = await deleteQuery(queryToDelete); // make sure deleteQuery API is defined
+      // if (res.success) {
+      //   showSnackbar("Query deleted successfully", "success");
+      //   fetchQuery(); // refresh table
+      // } else {
+      //   showSnackbar("Delete failed", "error");
+      // }
+    } catch (error) {
+      console.error("Delete failed", error);
+      showSnackbar("Something went wrong", "error");
+    } finally {
+      setDeleteDialogOpen(false);
+      setQueryToDelete(null);
+    }
+  };
 
   const openUserModal = (row) => {
     setSelectedQueryId(row._id);
@@ -163,7 +189,7 @@ const Query = () => {
   const openChangeRequestModal = async (queryId) => {
     try {
       const res = await getChangeRequest(queryId);
-      console.log("getChangeRequest response : ",res);
+      console.log("getChangeRequest response : ", res);
       // const data = await res.json();
       setSelectedChangeRequests(res);
       setCurrentQueryId(queryId);
@@ -192,7 +218,7 @@ const Query = () => {
     try {
       const res = await getRejectedChanges(operationId);
       console.log("");
-      
+
       // const data = await res.json();
       setRejectedChanges(res);
       setRejectedModalOpen(true);
@@ -359,12 +385,20 @@ const Query = () => {
                         </Tooltip>
                       }
                       {checkPermission("queries", "assuser") && (
+                      <Tooltip title="Delete">
+                        <IconButton onClick={() => handleOpenDeleteDialog(row._id)}>
+                          <Typography color="error">Delete</Typography>
+                        </IconButton>
+                      </Tooltip>
+                      )}
+                      {checkPermission("queries", "assuser") && (
                         <Tooltip title="Assign Users">
                           <IconButton onClick={() => openUserModal(row)}>
                             <Typography color="secondary">Assign Users</Typography>
                           </IconButton>
                         </Tooltip>
                       )}
+
                     </>
                   )}
                 </TableCell>
@@ -381,11 +415,6 @@ const Query = () => {
                     </IconButton>
                   </Tooltip>
                 </TableCell>
-
-                {/* change request
-                <TableCell>
-                  <Button onClick={() => openChangeRequestModal(row.operation_id)} size="small">CRV</Button>
-                </TableCell> */}
 
               </TableRow>
             ))}

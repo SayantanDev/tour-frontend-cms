@@ -47,6 +47,7 @@ function SingleQueriesView() {
   const [verifyStatus, setVerifyStatus] = useState('');
   const [rejectedReason, setRejectedReason] = useState('');
   const [verifyIndex, setVerifyIndex] = useState(null); // index of the itinerary row
+  const [rejectedViewOpen, setRejectedViewOpen] = useState(false);
 
   const detchOperationData = async () => {
     const operationData = await getSingleOperation(fetchSelectedquerie.id);
@@ -327,6 +328,12 @@ function SingleQueriesView() {
       <Typography variant="h5" align="center" fontWeight="bold" color="primary" gutterBottom mt={5}>
         Short Itinerary
       </Typography>
+      <Box display="flex" justifyContent="flex-end" mb={1}>
+        <Button variant="outlined" color="error" onClick={() => setRejectedViewOpen(true)}>
+          rejected
+        </Button>
+      </Box>
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead sx={{ backgroundColor: '#e8f5e9' }}>
@@ -450,7 +457,9 @@ function SingleQueriesView() {
           </Grid>
           <Box textAlign="right" mt={3}>
             <Button variant="contained" color="primary" onClick={saveEdit}>Save</Button>
-            <Button variant="contained" color="success" sx={{ ml: 1 }} onClick={handleVerifyItineray}>Verify</Button>
+            {hasPermission("operation", "verify") && (
+              <Button variant="contained" color="success" sx={{ ml: 1 }} onClick={handleVerifyItineray}>Verify</Button>
+            )}
           </Box>
         </Box>
       </Drawer>
@@ -596,6 +605,32 @@ function SingleQueriesView() {
         </DialogActions>
       </Dialog>
 
+      <Dialog open={rejectedViewOpen} onClose={() => setRejectedViewOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>All Rejected Reasons</DialogTitle>
+        <DialogContent dividers>
+          {itineraryData.filter(day => Array.isArray(day.rejected_reason) && day.rejected_reason.length > 0).length === 0 ? (
+            <Typography>No rejected reasons found.</Typography>
+          ) : (
+            itineraryData.map((day, idx) =>
+              Array.isArray(day.rejected_reason) && day.rejected_reason.length > 0 ? (
+                <Box key={idx} sx={{ mb: 3, p: 2, border: '1px solid #ccc', borderRadius: 2 }}>
+                  <Typography fontWeight="bold" gutterBottom>
+                    Day {day.day} - {formatDate(day.date)} - {day.place}
+                  </Typography>
+                  {day.rejected_reason.map((entry, i) => (
+                    <Typography variant="body2" key={i} sx={{ pl: 2 }}>
+                      • {new Date(entry.date_time).toLocaleString()} — {entry.description}
+                    </Typography>
+                  ))}
+                </Box>
+              ) : null
+            )
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRejectedViewOpen(false)} color="primary" variant="contained">Close</Button>
+        </DialogActions>
+      </Dialog>
 
     </Box>
   );
