@@ -9,6 +9,7 @@ import { useSelector } from "react-redux";
 
   const Layout = () => {
     const isMobileOrTablet = useMediaQuery('(max-width:900px)');
+    const fetchConfigData = useSelector((state) => state.config.configData);
     const [drawerOpen, setDrawerOpen] = useState(true);
 
   useEffect(() => {
