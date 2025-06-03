@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
+  Typography,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  Typography, Button, TextField,
+  TextField,
   FormControlLabel,
   Checkbox
-  //RadioGroup,FormControlLabel,Radio,Checkbox,TextField,
 } from '@mui/material';
 import { useDispatch } from 'react-redux';
 import { setNewPackageInfo } from '../../reduxcomponents/slices/packagesSlice';
@@ -25,9 +30,13 @@ const FilterBar = ({
   customerInput,
   setCustomerInput,
   totalQuotetionCost,
-  setTotalQuotetionCost
+  setTotalQuotetionCost,
+  open,
+  onClose
 }) => {
   const dispatch = useDispatch();
+  const [totalCost, setTotalCost] = useState(0);
+
   const handleReset = () => {
     setFilterObject({
       location: '',
@@ -49,9 +58,9 @@ const FilterBar = ({
       days: 0,
       rooms: 0,
     });
-    setTotalQuotetionCost(0)
+    setTotalQuotetionCost(0);
   };
-  const [totalCost, setTotalCost] = useState(0);
+
   useEffect(() => {
     if (filterObject.location === 'Sandakphu') {
       if (filterObject.locationSecond === 'Trek') {
@@ -65,11 +74,9 @@ const FilterBar = ({
       calculateTotalCost();
     }
     if (customerInput.days > 0) {
-  dispatch(setNewPackageInfo({ duration: Number(customerInput.days) }));
-      
+      dispatch(setNewPackageInfo({ duration: Number(customerInput.days) }));
     }
-  }, [filterObject, customerInput]); // ✅ Added filterObject to dependency array
-
+  }, [filterObject, customerInput]);
 
   const calculateTotalCost = () => {
     const days = Number(customerInput.days) || 0;
@@ -82,11 +89,10 @@ const FilterBar = ({
     if (days > 0) {
       let calculatedCost = ((days * (carPrice * carCount)) + ((days - 1) * ((hotelPrice * rooms) + ((pax % rooms) * 500)))) * 1.2;
 
-      // Adjust cost based on selected location
       if (filterObject.location === 'North Sikkim') {
-        calculatedCost *= 1.05; // Increase by 5%
+        calculatedCost *= 1.05;
       } else if (filterObject.location === 'Darjeeling') {
-        calculatedCost *= 0.95; // Decrease by 5%
+        calculatedCost *= 0.95;
       }
 
       setTotalCost(calculatedCost);
@@ -99,7 +105,6 @@ const FilterBar = ({
     const pax = Number(customerInput.pax) || 0;
     const rate = Number(customerInput.trekRate) || 0;
     let totalCost = rate * pax;
-    // Determine number of cars required
     let numCars = Math.ceil(pax / 8);
     let transportCost = 0;
 
@@ -110,16 +115,12 @@ const FilterBar = ({
       if (customerInput.transportDown) transportCost += 7000 * numCars;
     }
 
-    // Add porter costs
     if (customerInput.porterSandakphu) totalCost += 4000;
     if (customerInput.porterSandakphuPhalut) totalCost += 4000;
 
-    // Add transport cost
     totalCost += transportCost;
     totalCost *= 1.2;
     setTotalCost(totalCost);
-
-    // setTotalQuotetionCost(totalCost);
   };
 
   const calculateSandakphuLandRoverCost = () => {
@@ -127,7 +128,6 @@ const FilterBar = ({
     let rate = 0;
     let extraCharge = 0;
 
-    // Assign rate and extra charge based on selection
     switch (customerInput.landRate) {
       case "Sandakphu_Budget":
         rate = 8500;
@@ -152,17 +152,13 @@ const FilterBar = ({
 
     let totalCost = 0;
 
-
-    // Adjust calculation based on pax count
     if (pax > 0 && pax <= 6) {
       let perhead = pax > 0 ? (rate / pax) + extraCharge : 0;
-
       totalCost = perhead * pax;
     } else {
       totalCost = (rate * Math.ceil(pax / 6)) + (extraCharge * pax);
     }
 
-    // Determine number of cars required
     let numCars = Math.ceil(pax / 8);
     let transportCost = 0;
 
@@ -173,19 +169,14 @@ const FilterBar = ({
       if (customerInput.transportDown) transportCost += 4500 * numCars;
     }
 
-    // Add porter costs
     if (customerInput.porterSandakphu) totalCost += 4000;
     if (customerInput.porterSandakphuPhalut) totalCost += 4000;
 
-    // Add transport cost
     totalCost += transportCost;
-
-    // Apply 20% markup
     totalCost *= 1.2;
 
     setTotalCost(totalCost);
   };
-
 
   const handleSeasonRateChange = (event) => {
     const rateType = event.target.value;
@@ -228,28 +219,11 @@ const FilterBar = ({
   };
 
   return (
-      <Box 
-        sx={{ 
-          display: 'flex', flexDirection: 'column', gap: 2, padding: 2, 
-          width: '100%',bgcolor: '#eff0d5', borderRadius: 2, boxShadow: 2,
-        }}
-      >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
-        <Typography variant="h6">Filters</Typography>
-        <Button
-          variant="contained"
-          onClick={handleReset}
-          size="small"
-          sx={{
-            backgroundColor: 'red',
-            color: 'white',
-            '&:hover': { backgroundColor: 'darkred' }
-          }}
-        >
-          Reset
-        </Button>
-      </Box>
-      <Box sx={{ display: 'flex', gap: 2, width: '420px' }}>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <DialogTitle>Filter Options</DialogTitle>
+      <DialogContent dividers>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Box sx={{ display: 'flex', gap: 2, width: '420px' }}>
         <FormControl variant="outlined" size="small" fullWidth>
           <InputLabel id="dropdown-location">Location</InputLabel>
           <Select
@@ -660,7 +634,17 @@ const FilterBar = ({
         </>
       )}
 
-    </Box>
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleReset} color="error" variant="outlined">
+          Reset
+        </Button>
+        <Button onClick={onClose} variant="contained" color="primary">
+          Apply Filters
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 
