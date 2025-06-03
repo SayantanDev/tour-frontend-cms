@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Container, Button, Typography, Paper, Box } from '@mui/material';
 import { logoutUser } from './../../reduxcomponents/slices/tokenSlice';
+import { removeConfigData } from '../../reduxcomponents/slices/configSlice';
 
 const Logout = () => {
   const dispatch = useDispatch();
@@ -10,6 +11,7 @@ const Logout = () => {
 
   useEffect(() => {
     dispatch(logoutUser());
+    dispatch(removeConfigData());
   }, [dispatch]);
 
   return (

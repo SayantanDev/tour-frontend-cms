@@ -15,16 +15,17 @@ import {
   Add as AddIcon,
   ExpandMore as ExpandMoreIcon,
 } from "@mui/icons-material";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setNewPackageInfo } from "../../reduxcomponents/slices/packagesSlice";
-import { CONFIG_STR } from "../../configuration";
 
 function Reach({ selectedCard }) {
   // const existingDetails = useSelector((state) => state.fetchNewPackageInfo);
+  const fetchConfigData = useSelector((state) => state.config.configData);
   
   const dispatch = useDispatch();
-  const exclusionOptions = CONFIG_STR.commonReach.exclusions;
-  const inclusionOptions = CONFIG_STR.commonReach.inclusions;
+  const exclusionOptions = fetchConfigData.commonReach.exclusions;
+  const inclusionOptions = fetchConfigData.commonReach.inclusions;
+
   const [exclusions, setExclusions] = useState([]);
   const [inclusions, setInclusions] = useState([]);
 

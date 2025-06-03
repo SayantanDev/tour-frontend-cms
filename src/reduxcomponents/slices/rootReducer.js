@@ -4,6 +4,7 @@ import inquiryReducer from "./inquirySlice";
 import queriesReducer from "./queriesSlice"
 import editPackage from "./packagesSlice"
 import notify from "./notificationSlice"
+import configReducer from "./configSlice"
 import { combineReducers } from "redux";
 
 const rootReducer = combineReducers({
@@ -12,7 +13,8 @@ const rootReducer = combineReducers({
 	inquiries: inquiryReducer,
 	package: editPackage,
 	notification: notify,
-	queries: queriesReducer
+	queries: queriesReducer,
+	config: configReducer
 })
 
 export default rootReducer;

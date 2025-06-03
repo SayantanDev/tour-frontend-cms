@@ -12,7 +12,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useSelector } from 'react-redux';
 import { getAllHotels } from '../../api/hotelsAPI';
 import { getAllVehicle } from '../../api/vehicleAPI';
-import { addChangeRequest, getQueriesByoperation, getSingleOperation, updateFollowupDetails } from '../../api/operationAPI';
+import { addChangeRequest, addChangeRequestForItineray, getQueriesByoperation, getSingleOperation, updateFollowupDetails } from '../../api/operationAPI';
 // import { fetchOperationByQueries } from '../../api/queriesAPI';
 import useSnackbar from '../../hooks/useSnackbar';
 import usePermissions from '../../hooks/UsePermissions';
@@ -41,12 +41,19 @@ function SingleQueriesView() {
   const [guestInfo, setGuestInfo] = useState({});
   const [changeRequestOpen, setChangeRequestOpen] = useState(false);
   const [description, setDescription] = useState('');
+  const [editHistory, setEditHistory] = useState([]);
+
+  const [verifyPopupOpen, setVerifyPopupOpen] = useState(false);
+  const [verifyStatus, setVerifyStatus] = useState('');
+  const [rejectedReason, setRejectedReason] = useState('');
+  const [verifyIndex, setVerifyIndex] = useState(null); // index of the itinerary row
 
   const detchOperationData = async () => {
     const operationData = await getSingleOperation(fetchSelectedquerie.id);
     // setOperation(operationData);
 
     const followUpData = operationData?.followup_details?.map((item, index) => ({
+      id: item._id,
       day: (index + 1).toString(),
       date: item.journey_date || '',
       place: item.destination || '',
@@ -60,6 +67,7 @@ function SingleQueriesView() {
       vehiclePayment: item.vehicle_payment || '',
       vehicleStatus: item.vehicle_status || '',
       driverName: item.driver || '',
+      status: item.approved_status || '',
     })) || []
 
     setItineraryData(followUpData);
@@ -114,21 +122,79 @@ function SingleQueriesView() {
     setEditRow({ ...editRow, [e.target.name]: e.target.value });
   };
 
+  // const saveEdit = async () => {
+  //   const newData = [...itineraryData];
+  //   newData[editIndex] = editRow;
+  //   const itnObj = { followup_details: newData }
+  //   setItineraryData(newData);
+  //   const res = await updateFollowupDetails(fetchSelectedquerie.id, itnObj);
+  //   if (res) {
+  //     showSnackbar(res.message, "success");
+  //   }
+  //   setDrawerOpen(false);
+  // };
+
   const saveEdit = async () => {
     const newData = [...itineraryData];
-    newData[editIndex] = editRow;
-    const itnObj = { followup_details: newData }
-    setItineraryData(newData);
+    const originalRow = itineraryData[editIndex];
+    const updatedRow = { ...editRow };
+
+    const changedFields = { day: updatedRow.day };
+    let hasChanged = false;
+
+    // Compare and collect changed fields
+    for (const key in updatedRow) {
+      if (key !== 'day' && updatedRow[key] !== originalRow[key]) {
+        changedFields[key] = updatedRow[key];
+        hasChanged = true;
+      }
+    }
+
+    if (!hasChanged) {
+      showSnackbar("No changes detected.", "info");
+      setDrawerOpen(false);
+      return;
+    }
+
+    // ⬇️ Store in edit history
+    setEditHistory((prev) => [...prev, changedFields]);
+
+    // ⬇️ Set status to "pending" only for this changed row
+    updatedRow.status = "Pending";
+    // console.log("updatedRow : ",updatedRow);
+
+    // ⬇️ Replace only the edited row
+    newData[editIndex] = updatedRow;
+
+    const itnObj = { followup_details: newData };
+    // console.log("itnObj : ",itnObj);
+
     const res = await updateFollowupDetails(fetchSelectedquerie.id, itnObj);
     if (res) {
+      // await addChangeRequestForItineray(fetchSelectedquerie.id, { description: changedFields });
       showSnackbar(res.message, "success");
     }
+
     setDrawerOpen(false);
   };
 
   const saveGuestInfo = () => {
     setGuestDrawer(false);
   };
+
+  const handleVerifyItineray = async () => {
+    // const res = await verifyItinerary(fetchSelectedquerie.id);
+    // if (res) {
+    //   showSnackbar(res.message, "success");
+    // }
+    // const newData = [...itineraryData];
+    setVerifyStatus('');
+    setRejectedReason('');
+    setVerifyPopupOpen(true);
+    const originalRow = itineraryData[editIndex];
+    console.log("Verify Itinerary row : ", originalRow);
+
+  }
 
   const guestFields = [
     { label: 'Name', field: 'name' },
@@ -164,7 +230,8 @@ function SingleQueriesView() {
     { label: 'Vehicle Name', field: 'vehicleName' },
     { label: 'Vehicle Payment', field: 'vehiclePayment' },
     { label: 'Vehicle Status', field: 'vehicleStatus' },
-    { label: 'Driver Name', field: 'driverName' }
+    { label: 'Driver Name', field: 'driverName' },
+    { label: 'CRV', field: 'status' }
   ];
   const handleChangeRequest = async () => {
     // Example: You can send this to an API or log it
@@ -375,6 +442,7 @@ function SingleQueriesView() {
                       : editRow[col.field] || ''}
                     onChange={handleEditChange}
                     InputLabelProps={{ shrink: true }}
+                    disabled={['day', 'date', 'checkinDate', 'checkoutDate', 'status'].includes(col.field)}
                   />
                 </Grid>
               );
@@ -382,6 +450,7 @@ function SingleQueriesView() {
           </Grid>
           <Box textAlign="right" mt={3}>
             <Button variant="contained" color="primary" onClick={saveEdit}>Save</Button>
+            <Button variant="contained" color="success" sx={{ ml: 1 }} onClick={handleVerifyItineray}>Verify</Button>
           </Box>
         </Box>
       </Drawer>
@@ -459,6 +528,74 @@ function SingleQueriesView() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Dialog open={verifyPopupOpen} onClose={() => setVerifyPopupOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Verify Itinerary (Day {itineraryData[editIndex]?.day})</DialogTitle>
+        <DialogContent>
+          <Typography>Select Status</Typography>
+          <Box mt={1}>
+            <Button
+              variant={verifyStatus === 'Approved' ? 'contained' : 'outlined'}
+              color="success"
+              onClick={() => setVerifyStatus('Approved')}
+              sx={{ mr: 1 }}
+            >
+              Approve
+            </Button>
+            <Button
+              variant={verifyStatus === 'Rejected' ? 'contained' : 'outlined'}
+              color="error"
+              onClick={() => setVerifyStatus('Rejected')}
+            >
+              Reject
+            </Button>
+          </Box>
+
+          {verifyStatus === 'Rejected' && (
+            <TextField
+              label="Rejection Reason"
+              fullWidth
+              multiline
+              rows={3}
+              value={rejectedReason}
+              onChange={(e) => setRejectedReason(e.target.value)}
+              sx={{ mt: 2 }}
+            />
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setVerifyPopupOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={!verifyStatus || (verifyStatus === 'Rejected' && !rejectedReason.trim())}
+            onClick={async () => {
+              const updatedItinerary = [...itineraryData];
+              const item = updatedItinerary[editIndex];
+
+              item.status = verifyStatus;
+
+              if (verifyStatus === 'Rejected') {
+                item.rejected_reason = item.rejected_reason || [];
+                item.rejected_reason.push({ description: rejectedReason });
+              }
+
+              const res = await updateFollowupDetails(fetchSelectedquerie.id, {
+                followup_details: updatedItinerary
+              });
+
+              if (res) {
+                setItineraryData(updatedItinerary);
+                showSnackbar(`Day ${item.day} marked as ${verifyStatus}`, "success");
+                setVerifyPopupOpen(false);
+              }
+            }}
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+
 
     </Box>
   );

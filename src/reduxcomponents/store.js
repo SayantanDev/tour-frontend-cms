@@ -6,7 +6,7 @@ import rootReducer from "./slices/rootReducer";
 const persistConfig = {
     key: 'root',
     storage,
-    safelist: ['loggedinUser', 'sideOpen', 'configLabels', 'auth', 'inquiries','package','notification',"queries"],
+    safelist: ['loggedinUser', 'sideOpen', 'configLabels', 'auth', 'inquiries','package','notification',"queries","config"],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

@@ -1,8 +1,9 @@
 import React from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, MenuItem, Grid } from '@mui/material';
-import { CONFIG_STR } from "../../configuration";
+import { useSelector } from 'react-redux';
 
 const AddUserDialog = ({ open, userFormData, handleAddUserSubmit, handleChange, handleClose }) => {
+    const fetchConfigData = useSelector((state) => state.config.configData);
     return (
         <Dialog fullWidth open={open} onClose={handleClose} disableBackdropClick>
             <DialogTitle>{userFormData.id ? 'Edit' : 'Add New'} User</DialogTitle>
@@ -57,7 +58,7 @@ const AddUserDialog = ({ open, userFormData, handleAddUserSubmit, handleChange, 
                                 margin="normal"
                                 required
                             >
-                                {CONFIG_STR.userPermission.map((usr, index) => (
+                                {fetchConfigData.userPermission.map((usr, index) => (
                                     <MenuItem value={usr.name} key={index}>{usr.name}</MenuItem>
                                 ))}
                             </TextField>

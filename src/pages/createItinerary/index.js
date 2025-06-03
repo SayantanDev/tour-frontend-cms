@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import FilterBar from "./FilterBar";
 import FilteredObject from "./FilteredObject";
 import SelectedPkg from "./SelectedPkg";
-import { Divider, Box, Snackbar, Alert } from "@mui/material";
+import { Divider, Box, Snackbar, Alert, Typography, IconButton , Collapse } from "@mui/material";
+import FilterListIcon from '@mui/icons-material/FilterList';
 import { CONFIG_STR } from "../../configuration";
 import { getAllPackages } from "../../api/packageAPI";
 import { useDispatch, useSelector } from "react-redux";
@@ -12,7 +13,7 @@ import useDebounce from "../../utils/useDebounce";
 const CreateItinerary = () => {
     const dispatch = useDispatch();
     const { fetchSelectedInquiry: inquiryData } = useSelector((state) => state.inquiries);
-
+    const [showFilters, setShowFilters] = useState(false);
     const [filterObject, setFilterObject] = useState({
         location: '',
         duration: 3,
@@ -108,7 +109,6 @@ const CreateItinerary = () => {
             }, delay);
         }
     };
-        
 
     useEffect(() => {
         fetchPackages();
@@ -216,62 +216,70 @@ const CreateItinerary = () => {
     };
 
     return (
-        <Box display="flex">
-            <Box position="relative" height="calc(100vh - 100px)">
-                <FilterBar
-                    CONFIG_STR={CONFIG_STR}
-                    filterObject={filterObject}
-                    setFilterObject={setFilterObject}
-                    handleDropdownChange={handleDropdownChange}
-                    secondDropdownOptions={secondDropdownOptions}
-                    handleRangeChange={handleRangeChange}
-                    setFilteredData={setFilteredData}
-                    handleCustomerInputChange={handleCustomerInputChange}
-                    customerInput={customerInput}
-                    setCustomerInput={setCustomerInput}
-                    totalQuotetionCost={totalQuotetionCost}
-                    setTotalQuotetionCost={setTotalQuotetionCost}
-                />
-                {cardClicked && (
-                    <Box
-                        position="absolute"
-                        top={0}
-                        left={0}
-                        right={0}
-                        bottom={0}
-                        bgcolor="rgba(255, 255, 255, 0.7)"
-                        zIndex={1}
-                        onClick={(e) => e.stopPropagation()}
-                    />
-                )}
-            </Box>
-            <Divider orientation="vertical" flexItem />
-            <Box flex="0 0 70%" display="flex" alignItems="flex-start" justifyContent="center">
-                {!cardClicked && (
-                    <FilteredObject
-                        filteredData={debouncedFilterObject}
-                        handleCardClick={handleCardClick}
-                        filteredLocation={filterObject.location}
-                        loading={loading}
-                    />
-                )}
-                {cardClicked && (
-                    <SelectedPkg
-                        selectedCard={selectedCard}
-                        cardClicked={cardClicked}
-                        setCardClicked={setCardClicked}
-                        handleBack={handleBack}
+        <Box width="100%" px={2}>
+            {/* <Box position="relative" height="calc(100vh - 100px)"> */}
+                <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    mb={2}
+                >
+                    <Typography variant="h6" fontWeight={600}>
+                        Create Itinerary
+                    </Typography>
+                    <IconButton
+                        onClick={() => setShowFilters(!showFilters)}
+                        color={showFilters ? "primary" : "default"}
+                        sx={{ border: '1px solid #ccc', borderRadius: 1 }}
+                    >
+                        <FilterListIcon />
+                    </IconButton>
+                </Box>
+                <Collapse in={showFilters} timeout="auto" unmountOnExit>
+                    <FilterBar
+                        CONFIG_STR={CONFIG_STR}
+                        filterObject={filterObject}
+                        setFilterObject={setFilterObject}
+                        handleDropdownChange={handleDropdownChange}
+                        secondDropdownOptions={secondDropdownOptions}
+                        handleRangeChange={handleRangeChange}
+                        setFilteredData={setFilteredData}
+                        handleCustomerInputChange={handleCustomerInputChange}
                         customerInput={customerInput}
                         setCustomerInput={setCustomerInput}
                         totalQuotetionCost={totalQuotetionCost}
+                        setTotalQuotetionCost={setTotalQuotetionCost}
                     />
-                )}
-            </Box>
-            <Snackbar open={openSnackbar} autoHideDuration={4000} onClose={handleCloseSnackbar}>
-                <Alert severity="error" onClose={handleCloseSnackbar}>
-                    {errorMsg}
-                </Alert>
-            </Snackbar>
+                </Collapse>
+                {/* <Box flex="0 0 70%" display="flex" alignItems="flex-start" justifyContent="center"> */}
+                <Box width="100%" display="flex" justifyContent="center">
+                    {!cardClicked && (
+                        <FilteredObject
+                            filteredData={debouncedFilterObject}
+                            handleCardClick={handleCardClick}
+                            filteredLocation={filterObject.location}
+                            loading={loading}
+                        />
+                    )}
+                    {cardClicked && (
+                        <SelectedPkg
+                            selectedCard={selectedCard}
+                            cardClicked={cardClicked}
+                            setCardClicked={setCardClicked}
+                            handleBack={handleBack}
+                            customerInput={customerInput}
+                            setCustomerInput={setCustomerInput}
+                            totalQuotetionCost={totalQuotetionCost}
+                        />
+                    )}
+                </Box>
+                <Snackbar open={openSnackbar} autoHideDuration={4000} onClose={handleCloseSnackbar}>
+                    <Alert severity="error" onClose={handleCloseSnackbar}>
+                        {errorMsg}
+                    </Alert>
+                </Snackbar>
+            
+            {/* </Box> */}
         </Box>
     );
 };

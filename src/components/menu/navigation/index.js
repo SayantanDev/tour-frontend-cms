@@ -2,8 +2,7 @@
 // components/Navigation.js (With Badge Notification Counts + Clear on Click)
 // ===============================
 
-import React, { useState } from "react";
-import { CONFIG_STR } from "../../../configuration";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Drawer, List, ListItem, ListItemText, ListItemButton, Badge, ListItemIcon,
@@ -35,6 +34,8 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
   const [currentTab, setCurrentTab] = useState("Dashboard");
 
   const notifications = useSelector((state) => state.notification.list);
+  const fetchConfigData = useSelector((state) => state.config.configData);
+
   const inquiryCount = notifications.filter(n => n.type === 'inquiry').length;
   const operationCount = notifications.filter(n => n.type === 'operation').length;
 
@@ -57,8 +58,8 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
   const iconMap = {
     DashboardOutlined: DashboardOutlined,
     ContactMailOutlined: ContactMailOutlined,
-    TrendingUpOutlined:TrendingUpOutlined,
-    CardTravelOutlined:CardTravelOutlined,
+    TrendingUpOutlined: TrendingUpOutlined,
+    CardTravelOutlined: CardTravelOutlined,
     HotelOutlined: HotelOutlined,
     AirportShuttleOutlined: AirportShuttleOutlined,
     People: PeopleIcon,
@@ -66,18 +67,18 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
     PeopleAltOutlined: PeopleAltOutlined,
     Settings: SettingsIcon,
     AttachEmailOutlined: AttachEmailOutlinedIcon,
-    AddToHomeScreenOutlined:AddToHomeScreenOutlinedIcon,
-    CasesOutlined:CasesOutlinedIcon,
-    AddTaskOutlined:AddTaskOutlinedIcon,
-    PermIdentityOutlined:PermIdentityOutlinedIcon,
-    LogoutOutlined:LogoutOutlinedIcon
+    AddToHomeScreenOutlined: AddToHomeScreenOutlinedIcon,
+    CasesOutlined: CasesOutlinedIcon,
+    AddTaskOutlined: AddTaskOutlinedIcon,
+    PermIdentityOutlined: PermIdentityOutlinedIcon,
+    LogoutOutlined: LogoutOutlinedIcon
     // Add more mappings here
   };
 
   const drawer = (
     <div>
       <List>
-        {CONFIG_STR.navigationStrings
+        {fetchConfigData.navigationStrings
           .filter((element) => checkPermission(element.module, "view"))
           .map((element) => {
             const IconComponent = iconMap[element.icon];
@@ -87,7 +88,7 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
 
             const badgeCount =
               element.label === "Inquiry" ? inquiryCount :
-              element.label === "Leads" ? operationCount : 0;
+                element.label === "Leads" ? operationCount : 0;
 
             return (
               <ListItem
@@ -136,10 +137,10 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
     // </Drawer>
     <Drawer
       sx={{
-        width: CONFIG_STR.drawerWidth,
+        width: fetchConfigData.drawerWidth,
         flexShrink: 0,
         "& .MuiDrawer-paper": {
-          width: CONFIG_STR.drawerWidth,
+          width: fetchConfigData.drawerWidth,
           boxSizing: "border-box",
           // pt: "64px",
           marginTop: "64px",
@@ -155,7 +156,7 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
       {/* <Toolbar /> */}
 
       <List sx={{ p: 0 }}>
-        {CONFIG_STR.navigationStrings
+        {fetchConfigData.navigationStrings
           .filter((item) => checkPermission(item.module, "view"))
           .map((item) => {
             const Icon = iconMap[item.icon];
