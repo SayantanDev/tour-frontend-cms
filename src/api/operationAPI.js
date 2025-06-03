@@ -34,6 +34,12 @@ export async function addChangeRequest(id,payload){
     return result.data;
 }
 
+export async function addChangeRequestForItineray(id,payload){
+    const ADDUSER_URL = `${QRY_URL}/change-request-itineray/${id}`;
+    const result = await axios.post(ADDUSER_URL, payload);
+    return result.data;
+}
+
 export async function getChangeRequest(id){
     const ADDUSER_URL = `${QRY_URL}/change-request/${id}`;
     const result = await axios.get(ADDUSER_URL);
@@ -49,3 +55,12 @@ export async function getRejectedChanges(id){
     const result = await axios.get(ADDUSER_URL);
     return result.data;
 } 
+
+export async function verifyItinerary(operationId, index, status, reason = ""){
+    const ADDUSER_URL = `${QRY_URL}/${operationId}/verify-itinerary/${index}`;
+    const result = await axios.put(ADDUSER_URL,{
+    approved_status: status,
+    rejected_reason: reason
+  });
+    return result.data;
+}

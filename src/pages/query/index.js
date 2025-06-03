@@ -163,6 +163,7 @@ const Query = () => {
   const openChangeRequestModal = async (queryId) => {
     try {
       const res = await getChangeRequest(queryId);
+      console.log("getChangeRequest response : ",res);
       // const data = await res.json();
       setSelectedChangeRequests(res);
       setCurrentQueryId(queryId);
@@ -190,6 +191,8 @@ const Query = () => {
   const openRejectedChangeModal = async (operationId) => {
     try {
       const res = await getRejectedChanges(operationId);
+      console.log("");
+      
       // const data = await res.json();
       setRejectedChanges(res);
       setRejectedModalOpen(true);
@@ -216,7 +219,7 @@ const Query = () => {
           ))}
         </TextField>
       </Box>
-    {/* <Container> */}
+      {/* <Container> */}
       {/* <Stack
         direction="row"
         alignItems="center"
@@ -371,12 +374,18 @@ const Query = () => {
                       <Typography color="error">Rejected</Typography>
                     </IconButton>
                   </Tooltip>
+                  <Tooltip title="View Changes Request">
+                    <IconButton onClick={() => openChangeRequestModal(row.operation_id)}>
+                      <Button size="small">CRV</Button>
+                      {/* <Typography color="error">Rejected</Typography> */}
+                    </IconButton>
+                  </Tooltip>
                 </TableCell>
 
-                {/* change request */}
+                {/* change request
                 <TableCell>
                   <Button onClick={() => openChangeRequestModal(row.operation_id)} size="small">CRV</Button>
-                </TableCell>
+                </TableCell> */}
 
               </TableRow>
             ))}
