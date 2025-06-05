@@ -25,6 +25,7 @@ import View from "./components/packages/View";
 import Edit from "./components/packages/Edit";
 import NotAuthorized from "./pages/NotAuthorized";
 import SingleQueriesView from "./pages/query/SingleQueriesView";
+import PackageCreate from "./components/packages/packageForm";
 
 const RootLayoutWithRedirect = withAuthRedirect(RootLayout);
 
@@ -71,6 +72,10 @@ const router = createBrowserRouter(
         <Route
           path="packages/view/:id"
           element={<ProtectedRoute Element={View} module="packages" />}
+        />
+        <Route
+          path="packages/createandedit"
+          element={<ProtectedRoute Element={PackageCreate} module="packages" />}
         />
         <Route
           path="query/view"

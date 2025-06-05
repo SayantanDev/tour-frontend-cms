@@ -37,9 +37,12 @@ const Packages = createSlice({
         removePackageItinerary: (state, action) => {
             // delete state.fetchNewPackageItinerary[action.payload];
             state.fetchNewPackageItinerary = {};
+        },
+        removeSelectedPackage: (state, action) => {
+            state.fetchSelectedPackage = {};
         }
     }
 });
 
-export const { setSelectedPackage, setNewPackageItinerary, setNewPackageInfo, removePackageInfo,removePackageItinerary,setCheckItinery,setCheckReach } = Packages.actions;
+export const { setSelectedPackage, setNewPackageItinerary, setNewPackageInfo, removePackageInfo,removePackageItinerary,setCheckItinery,setCheckReach, removeSelectedPackage } = Packages.actions;
 export default Packages.reducer;

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Container, Typography, Button, IconButton } from '@mui/material';
-import DataTable from '../../components/dataTable';
-import { CONFIG_STR } from '../../configuration';
-// import DeleteIcon from '@mui/icons-material/Delete';
+import {
+    Container, Typography, Button, IconButton, TextField, Box, Autocomplete,
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
+    TablePagination
+} from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
@@ -10,199 +11,119 @@ import PackageDialog from './PackageDialog';
 import { getAllPackages, getSinglePackages } from '../../api/packageAPI';
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { setSelectedPackage } from "../../reduxcomponents/slices/packagesSlice";
+import { removeSelectedPackage, setSelectedPackage } from "../../reduxcomponents/slices/packagesSlice";
 
 const AllPackages = () => {
-    const [currentTab, setCurrentTab] = useState('sandakphu');
     const [allPackages, setAllPackages] = useState([]);
-    const [tableRows, setTableRows] = useState([]);
+    const [filteredPackages, setFilteredPackages] = useState([]);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [newD, setNewD] = useState(false);
     const [singleRowData, setSingleRowData] = useState({});
+    const [filterLocation, setFilterLocation] = useState(null);
+    const [filterType, setFilterType] = useState(null);
+    const [searchLabel, setSearchLabel] = useState('');
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+
     const navigate = useNavigate();
-
     const dispatch = useDispatch();
-
-
 
     useEffect(() => {
         getAllPackages()
             .then((res) => {
                 setAllPackages(res.data);
-                let arr_san = [];
-                res.data
-                    .filter(pkg => pkg.location === 'Sandakphu')
-                    .map((pkg) => {
-                        let curObj = {
-                            id: pkg._id,
-                            title: pkg.label,
-                            type: pkg.type,
-                            duration: pkg?.details?.header?.h2,
-                            cost: (pkg?.type === 'Trek') ? pkg?.details?.cost?.singleCost : pkg?.details?.cost?.multipleCost[0]?.Budget
-                        };
-                        arr_san.push(curObj);
-                        return true;
-                    });
-                setTableRows(arr_san);
             })
             .catch((err) => {
+                console.error('Failed to fetch packages', err);
             });
     }, []);
+
+    const uniqueLocations = [...new Set(allPackages.map(pkg => pkg.location))];
+    const uniqueTypes = [...new Set(allPackages.map(pkg => pkg.type))];
+
     useEffect(() => {
-        switch (currentTab) {
-            case 'sandakphu':
-                let arr_san = [];
-                allPackages
-                    .filter(pkg => pkg.location === 'Sandakphu')
-                    .map((pkg) => {
-                        let curObj = {
-                            id: pkg._id,
-                            title: pkg.label,
-                            type: pkg.type,
-                            duration: pkg?.details?.header?.h2,
-                            cost: (pkg?.type === 'Trek') ? pkg?.details?.cost?.singleCost : pkg?.details?.cost?.multipleCost[0]?.Budget
-                        };
-                        arr_san.push(curObj);
-                        return true;
-                    });
-                setTableRows(arr_san);
-                break;
-            case 'darjeeling':
-                let arr_dar = [];
-                CONFIG_STR.sandakphuPackages.map((pkg, index) => {
-                    let curObj = {
-                        id: index,
-                        title: '====',
-                        type: '====',
-                        duration: '====',
-                        cost: '====',
-                    };
-                    arr_dar.push(curObj);
-                    return true;
-                });
-                setTableRows(arr_dar);
-                break;
-            case 'sikkim':
-                let arr_si = [];
-                allPackages
-                    .filter(pkg => pkg.location === 'Sikkim')
-                    .map((pkg) => {
-                        let curObj = {
-                            id: pkg._id,
-                            title: pkg.label,
-                            type: pkg.type,
-                            duration: pkg?.details?.header?.h2,
-                            cost: pkg?.details?.cost?.valueCost[2]?.price
-                        };
-                        arr_si.push(curObj);
-                        return true;
-                    });
-                setTableRows(arr_si);
-                break;
-            default:
-                break;
+        let filtered = [...allPackages];
+
+        if (filterLocation) {
+            filtered = filtered.filter(pkg => pkg.location?.toLowerCase() === filterLocation.toLowerCase());
         }
-    }, [currentTab]);
+        if (filterType) {
+            filtered = filtered.filter(pkg => pkg.type?.toLowerCase() === filterType.toLowerCase());
+        }
+        if (searchLabel) {
+            filtered = filtered.filter(pkg => pkg.label?.toLowerCase().includes(searchLabel.toLowerCase()));
+        }
 
-    const handleView = async (rowId) => {
+        const rows = filtered.map(pkg => ({
+            id: pkg._id,
+            title: pkg.label,
+            type: pkg.type,
+            duration: pkg?.details?.header?.h2,
+            cost: pkg?.type === 'Trek'
+                ? pkg?.details?.cost?.singleCost
+                : pkg?.details?.cost?.multipleCost?.[0]?.Budget || 'N/A',
+        }));
 
-        navigate(`/packages/view/${rowId}`);
+        setFilteredPackages(rows);
+    }, [allPackages, filterLocation, filterType, searchLabel]);
 
-    }
+    const handleView = (id) => {
+        navigate(`/packages/view/${id}`);
+    };
 
-    const handleEdit = async (rowId) => {
+    const handleEdit = async (id) => {
         try {
-            const singleData = await getSinglePackages(rowId)
+            const singleData = await getSinglePackages(id);
             dispatch(setSelectedPackage(singleData.data));
-            navigate(`/packages/edit`);
-
+            navigate(`/packages/createandedit`);
         } catch (error) {
+            console.error('Failed to fetch single package', error);
         }
+    };
 
-    }
-    const handleDialogClose = () => {
-        setSingleRowData({});
-        setNewD(false);
-        setDialogOpen(false);
-    }
     const createNewPackage = () => {
-        navigate(`/packages/edit`);
-        // setSingleRowData({});
-        // setNewD(false);
-        // setDialogOpen(true)
-    }
+        dispatch(removeSelectedPackage());
+        navigate(`/packages/createandedit`);
+    };
 
-    const columns = [
-        { field: 'title', headerName: 'Title', width: 290, filterable: true },
-        { field: 'type', headerName: 'Type', width: 150, filterable: true },
-        { field: 'duration', headerName: 'Duratoin', width: 220, filterable: true },
-        { field: 'cost', headerName: 'Cost', width: 150, filterable: true },
-        {
-            field: 'action',
-            headerName: 'Action',
-            width: 180,
-            renderCell: (params) => (
-                <div>
-                    <IconButton
-                        color="warning"
-                        onClick={() => handleView(params.row.id)}
-                    >
-                        <VisibilityIcon />
-                    </IconButton>
+    const handleChangePage = (_, newPage) => {
+        setPage(newPage);
+    };
 
-                    <IconButton
-                        color="primary"
-                        onClick={() => handleEdit(params.row.id)}
-                    >
-                        <EditIcon />
-                    </IconButton>
-                    <IconButton
-                        color="error"
-                    // onClick={() => handleDelete(params.row.id)}
-                    >
-                        <LocationOffIcon />
-                    </IconButton>
-                </div>
-            ),
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(+event.target.value);
+        setPage(0);
+    };
 
-        },
-    ];
+    const paginatedRows = filteredPackages.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
     return (
         <Container>
-            <Typography>
-            </Typography>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', '& button': { margin: '8px' } }}>
-                    <Button
-                        variant="contained"
-                        size="small"
-                        color={currentTab === 'sandakphu' ? "success" : "warning"}
-                        sx={{ m: 1 }}
-                        onClick={() => setCurrentTab('sandakphu')}
-                    >
-                        Sandakphu
-                    </Button>
-                    <Button
-                        variant="contained"
-                        size="small"
-                        color={currentTab === 'darjeeling' ? "success" : "warning"}
-                        sx={{ m: 1 }}
-                        onClick={() => setCurrentTab('darjeeling')}
-                    >
-                        Darjeeling
-                    </Button>
-                    <Button
-                        variant="contained"
-                        size="small"
-                        color={currentTab === 'sikkim' ? "success" : "warning"}
-                        sx={{ m: 1 }}
-                        onClick={() => setCurrentTab('sikkim')}
-                    >
-                        Sikkim
-                    </Button>
-                </div>
+            <Typography variant="h6" sx={{ mb: 2 }}>All Packages</Typography>
 
+            {/* Filters */}
+            <Box sx={{ display: 'flex', gap: 2, my: 2, flexWrap: 'wrap' }}>
+                <TextField
+                    label="Search Title"
+                    size="small"
+                    value={searchLabel}
+                    onChange={(e) => setSearchLabel(e.target.value)}
+                    sx={{ width: 250 }}
+                />
+                <Autocomplete
+                    value={filterLocation}
+                    onChange={(e, newVal) => setFilterLocation(newVal)}
+                    options={uniqueLocations}
+                    renderInput={(params) => <TextField {...params} label="Location" size="small" />}
+                    sx={{ width: 200 }}
+                />
+                <Autocomplete
+                    value={filterType}
+                    onChange={(e, newVal) => setFilterType(newVal)}
+                    options={uniqueTypes}
+                    renderInput={(params) => <TextField {...params} label="Type" size="small" />}
+                    sx={{ width: 200 }}
+                />
                 <Button
                     variant="contained"
                     size="small"
@@ -211,16 +132,75 @@ const AllPackages = () => {
                 >
                     Add New Package
                 </Button>
-            </div>
-            <DataTable rows={tableRows} columns={columns} />
+            </Box>
+
+            {/* Table */}
+            <Paper>
+                <TableContainer>
+                    <Table size="small">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Title</TableCell>
+                                <TableCell>Type</TableCell>
+                                <TableCell>Duration</TableCell>
+                                <TableCell>Cost</TableCell>
+                                <TableCell align="center">Action</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {paginatedRows.map((row) => (
+                                <TableRow key={row.id}>
+                                    <TableCell>{row.title}</TableCell>
+                                    <TableCell>{row.type}</TableCell>
+                                    <TableCell>{row.duration}</TableCell>
+                                    <TableCell>{row.cost}</TableCell>
+                                    <TableCell align="center">
+                                        <IconButton color="warning" onClick={() => handleView(row.id)}>
+                                            <VisibilityIcon />
+                                        </IconButton>
+                                        <IconButton color="primary" onClick={() => handleEdit(row.id)}>
+                                            <EditIcon />
+                                        </IconButton>
+                                        <IconButton color="error">
+                                            <LocationOffIcon />
+                                        </IconButton>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                            {paginatedRows.length === 0 && (
+                                <TableRow>
+                                    <TableCell colSpan={5} align="center">
+                                        No packages found.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+                <TablePagination
+                    component="div"
+                    count={filteredPackages.length}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                    rowsPerPageOptions={[5, 10, 20]}
+                />
+            </Paper>
+
+            {/* Dialog (Optional) */}
             <PackageDialog
                 open={dialogOpen}
                 singleRowData={singleRowData}
                 newD={newD}
-                handleClose={handleDialogClose}
+                handleClose={() => {
+                    setSingleRowData({});
+                    setNewD(false);
+                    setDialogOpen(false);
+                }}
             />
         </Container>
     );
-}
+};
 
 export default AllPackages;

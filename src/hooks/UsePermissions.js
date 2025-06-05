@@ -31,6 +31,15 @@ const userPermissionData = [
       { module: "operation", value: ["changeRequest"] },
     ],
   },
+  {
+    role: "EsoOperator",
+    permissions: [
+      { module: "dashboard", value: ["view"] },
+      { module: "packages", value: ["view","create","alter"] },
+      { module: "logout", value: ["view"] },
+
+    ],
+  },
 ];
 
 const usePermissions = () => {
