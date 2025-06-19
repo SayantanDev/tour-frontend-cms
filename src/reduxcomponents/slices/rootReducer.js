@@ -5,6 +5,7 @@ import queriesReducer from "./queriesSlice"
 import editPackage from "./packagesSlice"
 import notify from "./notificationSlice"
 import configReducer from "./configSlice"
+import placeReducer from "./placesSlice"
 import { combineReducers } from "redux";
 
 const rootReducer = combineReducers({
@@ -14,7 +15,8 @@ const rootReducer = combineReducers({
 	package: editPackage,
 	notification: notify,
 	queries: queriesReducer,
-	config: configReducer
+	config: configReducer,
+	place: placeReducer
 })
 
 export default rootReducer;

@@ -26,6 +26,8 @@ import Edit from "./components/packages/Edit";
 import NotAuthorized from "./pages/NotAuthorized";
 import SingleQueriesView from "./pages/query/SingleQueriesView";
 import PackageCreate from "./components/packages/packageForm";
+import PlacesForm from "./components/places/placesForm";
+import AllPlaces from "./pages/allPlaces";
 
 const RootLayoutWithRedirect = withAuthRedirect(RootLayout);
 
@@ -76,6 +78,14 @@ const router = createBrowserRouter(
         <Route
           path="packages/createandedit"
           element={<ProtectedRoute Element={PackageCreate} module="packages" />}
+        />
+        <Route
+          path="places/createandedit"
+          element={<ProtectedRoute Element={PlacesForm} module="places" />}
+        />
+        <Route
+          path="places/view"
+          element={<ProtectedRoute Element={AllPlaces} module="places" />}
         />
         <Route
           path="query/view"

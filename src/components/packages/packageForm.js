@@ -14,41 +14,43 @@ import _ from 'lodash';
 
 const getInitialValues = (data) => {
   const newData = {
-  disabled: false,
-  image: '',
-  duration: '',
-  isActive: false,
-  tags: [],
-  location: '',
-  type: '',
-  url: '',
-  label: '',
-  meta: { title: '', description: '', keywords: [] },
-  details: {
-    header: { h1: '', h2: '', h3: '' },
-    overview: [{ tagName: '', tagValue: '' }],
-    covering: [''],
-    shortItinerary: [{ tagName: '', tagValue: '' }],
-    itinerary: [{ headerTag: '', headerValue: '', Distance: '', Duration: '', Altitude: '', Time: '', para: '' }],
-    howToReach: { para: '' },
-    cost: {
-      singleCost: '',
-      multipleCost: [{ pax: '', Standard: '', Budget: '' }],
-      valueCost: [{ type: '', price: '' }],
-      inclusions: [''],
-      exclusions: [''],
-    },
-    thingsToCarry: {
-      Basics: [],
-      Documents: [],
-      Clothing: [],
-      Medicine: [],
-      Toiletries: [],
-      Accessories: [],
+    disabled: false,
+    image: '',
+    duration: '',
+    isActive: false,
+    tags: [],
+    location: '',
+    type: '',
+    url: '',
+    label: '',
+    meta: { title: '', description: '', keywords: [] },
+    shortInclusions: [''],
+    details: {
+      header: { h1: '', h2: '', h3: '' },
+      overview: [{ tagName: '', tagValue: '' }],
+      covering: [''],
+      shortItinerary: [{ tagName: '', tagValue: '' }],
+      itinerary: [{ headerTag: '', headerValue: '', Distance: '', Duration: '', Altitude: '', Time: '', para: [''], images: [''], activity: [''], inclusions: [''] }],
+      howToReach: { para: [''], itineraryReach: [{ tagName: '', tagValue: [''] }] },
+      cost: {
+        singleCost: '',
+        multipleCost: [{ pax: '', pricing: [{ catagory: '', price: '' }] }],
+        daysCost: [{ days: '', pricing: [{ catagory: '', price: '' }] }],
+        valueCost: [{ type: '', price: '' }],
+        inclusions: [''],
+        exclusions: [''],
+      },
+      thingsToCarry: {
+        Basics: [],
+        Documents: [],
+        Clothing: [],
+        Medicine: [],
+        Toiletries: [],
+        Accessories: [],
+      }
     }
-  }
-};
-if (data) {
+  };
+  if (data) {
     return _.merge({}, newData, data);
   }
 
@@ -163,15 +165,15 @@ const PackageForm = () => {
   const { showSnackbar, SnackbarComponent } = useSnackbar();
 
   const handleSubmit = async (values) => {
-    
+
     try {
       // let res;
       if (selectedPackage && selectedPackage._id) {
-       const res = await updatePackage(values, selectedPackage._id); // You'll need to import and define this API
-       if (res) {
-        showSnackbar('Package updated successfully', 'success');
-        
-       }
+        const res = await updatePackage(values, selectedPackage._id); // You'll need to import and define this API
+        if (res) {
+          showSnackbar('Package updated successfully', 'success');
+
+        }
       } else {
         const res = await createPackage(values);
         showSnackbar('You created a new package', 'success');
@@ -278,7 +280,9 @@ const PackageForm = () => {
                   </Grid>
                 </Grid>
               </SectionWrapper>
-
+              <SectionWrapper title="Short Inclusions">
+                <RenderEditableList name="shortInclusions" values={values.shortInclusions} setFieldValue={setFieldValue} label="Short Inclusions" />
+              </SectionWrapper>
               <SectionWrapper title="Overview">
                 <FieldArray name="details.overview">
                   {({ push, remove }) => (
@@ -317,12 +321,13 @@ const PackageForm = () => {
                   {({ push, remove }) => (
                     <>
                       {values.details.itinerary.map((item, index) => (
-                        <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
+                        <Grid container spacing={2} key={index} sx={{ mb: 4, border: '1px solid #ccc', borderRadius: 2, p: 2 }}>
+                          {/* Basic Fields */}
                           <Grid item xs={3}>
                             <TextField
                               label="Header Tag"
                               name={`details.itinerary[${index}].headerTag`}
-                              value={values.details.itinerary[index].headerTag}
+                              value={item.headerTag}
                               onChange={(e) => {
                                 const selectedTag = e.target.value;
                                 const match = values.details.shortItinerary.find(si => si.tagName === selectedTag);
@@ -341,56 +346,458 @@ const PackageForm = () => {
                             <TextField
                               label="Header Value"
                               name={`details.itinerary[${index}].headerValue`}
-                              value={values.details.itinerary[index].headerValue}
+                              value={item.headerValue}
+                              onChange={handleChange}
                               select
                               fullWidth
-                              onChange={handleChange}
                             >
                               {values.details.shortItinerary.map((opt, idx) => (
                                 <MenuItem key={idx} value={opt.tagValue}>{opt.tagValue}</MenuItem>
                               ))}
                             </TextField>
                           </Grid>
-                          <Grid item xs={2}><TextField label="Distance" name={`details.itinerary[${index}].Distance`} value={values.details.itinerary[index].Distance} onChange={handleChange} fullWidth /></Grid>
-                          <Grid item xs={2}><TextField label="Duration" name={`details.itinerary[${index}].Duration`} value={values.details.itinerary[index].Duration} onChange={handleChange} fullWidth /></Grid>
-                          <Grid item xs={2}><TextField label="Altitude" name={`details.itinerary[${index}].Altitude`} value={values.details.itinerary[index].Altitude} onChange={handleChange} fullWidth /></Grid>
-                          <Grid item xs={2}><TextField label="Time" name={`details.itinerary[${index}].Time`} value={values.details.itinerary[index].Time} onChange={handleChange} fullWidth /></Grid>
-                          <Grid item xs={10}><TextField label="Paragraph" name={`details.itinerary[${index}].para`} value={values.details.itinerary[index].para} onChange={handleChange} multiline fullWidth /></Grid>
-                          <Grid item xs={12}><Button onClick={() => remove(index)} color="error">Remove</Button></Grid>
+                          <Grid item xs={2}><TextField label="Distance" name={`details.itinerary[${index}].Distance`} value={item.Distance} onChange={handleChange} fullWidth /></Grid>
+                          <Grid item xs={2}><TextField label="Duration" name={`details.itinerary[${index}].Duration`} value={item.Duration} onChange={handleChange} fullWidth /></Grid>
+                          <Grid item xs={2}><TextField label="Altitude" name={`details.itinerary[${index}].Altitude`} value={item.Altitude} onChange={handleChange} fullWidth /></Grid>
+                          <Grid item xs={2}><TextField label="Time" name={`details.itinerary[${index}].Time`} value={item.Time} onChange={handleChange} fullWidth /></Grid>
+
+                          {/* para[] */}
+                          <Grid item xs={12}>
+                            <Typography variant="subtitle1" sx={{ mb: 1 }}>Paragraphs</Typography>
+                            <FieldArray name={`details.itinerary[${index}].para`}>
+                              {({ push, remove }) => (
+                                <Grid container spacing={1}>
+                                  {item.para?.map((p, pIdx) => (
+                                    <Grid item xs={12} key={pIdx}>
+                                      <TextField
+                                        fullWidth
+                                        multiline
+                                        minRows={3}
+                                        label={`Paragraph ${pIdx + 1}`}
+                                        value={p}
+                                        onChange={(e) =>
+                                          setFieldValue(`details.itinerary[${index}].para[${pIdx}]`, e.target.value)
+                                        }
+                                        InputProps={{
+                                          endAdornment: (
+                                            <Button color="error" onClick={() => remove(pIdx)}>Remove</Button>
+                                          ),
+                                        }}
+                                      />
+                                    </Grid>
+                                  ))}
+                                  <Grid item xs={12}>
+                                    <Button onClick={() => push('')} variant="outlined">
+                                      Add Paragraph
+                                    </Button>
+                                  </Grid>
+                                </Grid>
+                              )}
+                            </FieldArray>
+                          </Grid>
+
+
+                          {/* images[] */}
+                          <Grid item xs={12}>
+                            <Typography variant="subtitle1">Image URLs</Typography>
+                            <FieldArray name={`details.itinerary[${index}].images`}>
+                              {({ push, remove }) => (
+                                <Grid container spacing={1}>
+                                  {item.images?.map((img, imgIdx) => (
+                                    <Grid item xs={12} key={imgIdx}>
+                                      <TextField
+                                        fullWidth
+                                        label={`Image ${imgIdx + 1}`}
+                                        value={img}
+                                        onChange={(e) =>
+                                          setFieldValue(`details.itinerary[${index}].images[${imgIdx}]`, e.target.value)
+                                        }
+                                        InputProps={{
+                                          endAdornment: (
+                                            <Button color="error" onClick={() => remove(imgIdx)}>Remove</Button>
+                                          )
+                                        }}
+                                      />
+                                    </Grid>
+                                  ))}
+                                  <Grid item xs={12}>
+                                    <Button onClick={() => push('')} variant="outlined">Add Image</Button>
+                                  </Grid>
+                                </Grid>
+                              )}
+                            </FieldArray>
+                          </Grid>
+
+                          {/* activity[] */}
+                          <Grid item xs={12}>
+                            <Typography variant="subtitle1">Activities</Typography>
+                            <FieldArray name={`details.itinerary[${index}].activity`}>
+                              {({ push, remove }) => (
+                                <Grid container spacing={1}>
+                                  {item.activity?.map((act, actIdx) => (
+                                    <Grid item xs={12} key={actIdx}>
+                                      <TextField
+                                        fullWidth
+                                        label={`Activity ${actIdx + 1}`}
+                                        value={act}
+                                        onChange={(e) =>
+                                          setFieldValue(`details.itinerary[${index}].activity[${actIdx}]`, e.target.value)
+                                        }
+                                        InputProps={{
+                                          endAdornment: (
+                                            <Button color="error" onClick={() => remove(actIdx)}>Remove</Button>
+                                          )
+                                        }}
+                                      />
+                                    </Grid>
+                                  ))}
+                                  <Grid item xs={12}>
+                                    <Button onClick={() => push('')} variant="outlined">Add Activity</Button>
+                                  </Grid>
+                                </Grid>
+                              )}
+                            </FieldArray>
+                          </Grid>
+
+                          {/* inclusions[] */}
+                          <Grid item xs={12}>
+                            <Typography variant="subtitle1">Inclusions</Typography>
+                            <FieldArray name={`details.itinerary[${index}].inclusions`}>
+                              {({ push, remove }) => (
+                                <Grid container spacing={1}>
+                                  {item.inclusions?.map((inc, incIdx) => (
+                                    <Grid item xs={12} key={incIdx}>
+                                      <TextField
+                                        fullWidth
+                                        label={`Inclusion ${incIdx + 1}`}
+                                        value={inc}
+                                        onChange={(e) =>
+                                          setFieldValue(`details.itinerary[${index}].inclusions[${incIdx}]`, e.target.value)
+                                        }
+                                        InputProps={{
+                                          endAdornment: (
+                                            <Button color="error" onClick={() => remove(incIdx)}>Remove</Button>
+                                          )
+                                        }}
+                                      />
+                                    </Grid>
+                                  ))}
+                                  <Grid item xs={12}>
+                                    <Button onClick={() => push('')} variant="outlined">Add Inclusion</Button>
+                                  </Grid>
+                                </Grid>
+                              )}
+                            </FieldArray>
+                          </Grid>
+
+                          <Grid item xs={12}>
+                            <Button onClick={() => remove(index)} color="error" variant="contained">
+                              Remove Itinerary
+                            </Button>
+                          </Grid>
                         </Grid>
                       ))}
-                      <Button onClick={() => push({ headerTag: '', headerValue: '', Distance: '', Duration: '', Altitude: '', Time: '', para: '' })}>Add Itinerary</Button>
+                      <Button
+                        onClick={() =>
+                          push({
+                            headerTag: '',
+                            headerValue: '',
+                            Distance: '',
+                            Duration: '',
+                            Altitude: '',
+                            Time: '',
+                            para: [],
+                            images: [],
+                            activity: [],
+                            inclusions: [],
+                          })
+                        }
+                        variant="contained"
+                      >
+                        Add Itinerary
+                      </Button>
                     </>
                   )}
                 </FieldArray>
               </SectionWrapper>
-
               <SectionWrapper title="How To Reach">
-                <TextField label="Paragraph" name="details.howToReach.para" value={values.details.howToReach.para} onChange={handleChange} multiline rows={3} fullWidth />
+                {/* para[] as textareas */}
+                <FieldArray name="details.howToReach.para">
+                  {({ push, remove }) => (
+                    <Grid container spacing={2}>
+                      {values.details.howToReach.para?.map((p, pIdx) => (
+                        <Grid item xs={12} key={pIdx}>
+                          <TextField
+                            fullWidth
+                            multiline
+                            minRows={3}
+                            label={`Paragraph ${pIdx + 1}`}
+                            value={p}
+                            onChange={(e) =>
+                              setFieldValue(`details.howToReach.para[${pIdx}]`, e.target.value)
+                            }
+                            InputProps={{
+                              endAdornment: (
+                                <Button onClick={() => remove(pIdx)} color="error">Remove</Button>
+                              )
+                            }}
+                          />
+                        </Grid>
+                      ))}
+                      <Grid item xs={12}>
+                        <Button onClick={() => push('')} variant="outlined">Add Paragraph</Button>
+                      </Grid>
+                    </Grid>
+                  )}
+                </FieldArray>
+
+                {/* itineraryReach[] */}
+                <FieldArray name="details.howToReach.itineraryReach">
+                  {({ push, remove }) => (
+                    <Box sx={{ mt: 4 }}>
+                      <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>Itinerary Reach</Typography>
+                      {values.details.howToReach.itineraryReach?.map((reachItem, reachIdx) => (
+                        <Grid container spacing={2} key={reachIdx} sx={{ mb: 2, border: '1px solid #ccc', p: 2, borderRadius: 2 }}>
+                          <Grid item xs={5}>
+                            <TextField
+                              fullWidth
+                              label="Tag Name"
+                              value={reachItem.tagName}
+                              onChange={(e) =>
+                                setFieldValue(`details.howToReach.itineraryReach[${reachIdx}].tagName`, e.target.value)
+                              }
+                            />
+                          </Grid>
+
+                          {/* tagValue[] inside each itineraryReach */}
+                          <Grid item xs={12}>
+                            {/* <Typography variant="subtitle1" sx={{ mb: 1 }}>Tag Values</Typography> */}
+                            <FieldArray name={`details.howToReach.itineraryReach[${reachIdx}].tagValue`}>
+                              {({ push, remove }) => (
+                                <Grid container spacing={1}>
+                                  {reachItem.tagValue?.map((val, valIdx) => (
+                                    <Grid item xs={12} key={valIdx}>
+                                      <TextField
+                                        fullWidth
+                                        label={`Tag Value ${valIdx + 1}`}
+                                        value={val}
+                                        onChange={(e) =>
+                                          setFieldValue(`details.howToReach.itineraryReach[${reachIdx}].tagValue[${valIdx}]`, e.target.value)
+                                        }
+                                        InputProps={{
+                                          endAdornment: (
+                                            <Button onClick={() => remove(valIdx)} color="error">Remove</Button>
+                                          )
+                                        }}
+                                      />
+                                    </Grid>
+                                  ))}
+                                  <Grid item xs={12}>
+                                    <Button onClick={() => push('')} variant="outlined">Add Value</Button>
+                                  </Grid>
+                                </Grid>
+                              )}
+                            </FieldArray>
+                          </Grid>
+
+                          <Grid item xs={12}>
+                            <Button onClick={() => remove(reachIdx)} color="error" variant="contained">
+                              Remove Itinerary Reach
+                            </Button>
+                          </Grid>
+                        </Grid>
+                      ))}
+                      <Button
+                        onClick={() => push({ tagName: '', tagValue: [] })}
+                        variant="contained"
+                      >
+                        Add Itinerary Reach
+                      </Button>
+                    </Box>
+                  )}
+                </FieldArray>
               </SectionWrapper>
-
               <SectionWrapper title="Costing">
+                {/* Single Cost */}
                 <Grid container spacing={2}>
-                  <Grid item xs={3}><TextField label="Single Cost" name="details.cost.singleCost" value={values.details.cost.singleCost} onChange={handleChange} fullWidth /></Grid>
+                  <Grid item xs={3}>
+                    <TextField
+                      label="Single Cost"
+                      name="details.cost.singleCost"
+                      value={values.details.cost.singleCost}
+                      onChange={handleChange}
+                      fullWidth
+                      type="number"
+                    />
+                  </Grid>
                 </Grid>
-                <Typography sx={{ mt: 2, mb: 1 }}>Multiple Cost</Typography>
 
+                {/* Multiple Cost */}
+                <Typography sx={{ mt: 3, mb: 3 }} > Multiple Cost (Per Pax)</Typography>
                 <FieldArray name="details.cost.multipleCost">
                   {({ push, remove }) => (
                     <>
-                      {values.details.cost.multipleCost.map((_, index) => (
-                        <Grid container spacing={1} key={index} sx={{ mb: 2 }}>
-                          <Grid item xs={3}><TextField label="Pax" name={`details.cost.multipleCost[${index}].pax`} value={values.details.cost.multipleCost[index].pax} onChange={handleChange} fullWidth /></Grid>
-                          <Grid item xs={3}><TextField label="Standard" name={`details.cost.multipleCost[${index}].Standard`} value={values.details.cost.multipleCost[index].Standard} onChange={handleChange} fullWidth /></Grid>
-                          <Grid item xs={3}><TextField label="Budget" name={`details.cost.multipleCost[${index}].Budget`} value={values.details.cost.multipleCost[index].Budget} onChange={handleChange} fullWidth /></Grid>
-                          <Grid item xs={1}><Button onClick={() => remove(index)} color="error">X</Button></Grid>
+                      {values.details.cost.multipleCost.map((item, index) => (
+                        <Grid container spacing={2} key={index} sx={{ mb: 2, p: 2, border: '1px solid #ccc', borderRadius: 2 }}>
+                          <Grid item xs={6} sx={{ mb: 3 }} >
+                            <TextField
+                              label="Pax"
+                              name={`details.cost.multipleCost[${index}].pax`}
+                              value={item.pax}
+                              onChange={handleChange}
+                              fullWidth
+                              type="number"
+                            />
+                          </Grid>
+
+                          {/* Pricing inside each pax */}
+                          <FieldArray name={`details.cost.multipleCost[${index}].pricing`}>
+                            {({ push, remove }) => (
+                              <>
+                                {item.pricing?.map((priceItem, pIdx) => (
+                                  <Grid container spacing={1} key={pIdx}>
+                                    <Grid item xs={5}>
+                                      <TextField
+                                        label="Category"
+                                        name={`details.cost.multipleCost[${index}].pricing[${pIdx}].catagory`}
+                                        value={priceItem.catagory}
+                                        onChange={handleChange}
+                                        fullWidth
+                                      />
+                                    </Grid>
+                                    <Grid item xs={5}>
+                                      <TextField
+                                        label="Price"
+                                        name={`details.cost.multipleCost[${index}].pricing[${pIdx}].price`}
+                                        value={priceItem.price}
+                                        onChange={handleChange}
+                                        type="number"
+                                        fullWidth
+                                      />
+                                    </Grid>
+                                    <Grid item xs={2}>
+                                      <Button onClick={() => remove(pIdx)} color="error">Remove</Button>
+                                    </Grid>
+                                  </Grid>
+                                ))}
+                                <Grid item xs={12}>
+                                  <Button onClick={() => push({ catagory: '', price: '' })}>Add Pricing</Button>
+                                </Grid>
+                              </>
+                            )}
+                          </FieldArray>
+
+                          <Grid item xs={12}>
+                            <Button onClick={() => remove(index)} color="error" variant="outlined">Remove Cost Option</Button>
+                          </Grid>
                         </Grid>
                       ))}
-                      <Grid item xs={12}><Button onClick={() => push({ pax: '', Standard: '', Budget: '' })}>Add Cost Option</Button></Grid>
+                      <Button onClick={() => push({ pax: '', pricing: [] })}>Add Cost Option</Button>
+                    </>
+                  )}
+                </FieldArray>
+
+                {/* Days Cost */}
+                <Typography sx={{ mt: 3, mb: 3 }}>Days Based Costing</Typography>
+                <FieldArray name="details.cost.daysCost">
+                  {({ push, remove }) => (
+                    <>
+                      {values.details.cost.daysCost?.map((dayItem, index) => (
+                        <Grid container spacing={2} key={index} sx={{ mb: 2, p: 2, border: '1px solid #ccc', borderRadius: 2 }}>
+                          <Grid item xs={6} sx={{ mb: 3 }} >
+                            <TextField
+                              label="Days"
+                              name={`details.cost.daysCost[${index}].days`}
+                              value={dayItem.days}
+                              onChange={handleChange}
+                              fullWidth
+                              type="number"
+                            />
+                          </Grid>
+
+                          <FieldArray name={`details.cost.daysCost[${index}].pricing`}>
+                            {({ push, remove }) => (
+                              <>
+                                {dayItem.pricing?.map((pItem, pIdx) => (
+                                  <Grid container spacing={1} key={pIdx}>
+                                    <Grid item xs={5}>
+                                      <TextField
+                                        label="Category"
+                                        name={`details.cost.daysCost[${index}].pricing[${pIdx}].catagory`}
+                                        value={pItem.catagory}
+                                        onChange={handleChange}
+                                        fullWidth
+                                      />
+                                    </Grid>
+                                    <Grid item xs={5}>
+                                      <TextField
+                                        label="Price"
+                                        name={`details.cost.daysCost[${index}].pricing[${pIdx}].price`}
+                                        value={pItem.price}
+                                        onChange={handleChange}
+                                        type="number"
+                                        fullWidth
+                                      />
+                                    </Grid>
+                                    <Grid item xs={2}>
+                                      <Button onClick={() => remove(pIdx)} color="error">Remove</Button>
+                                    </Grid>
+                                  </Grid>
+                                ))}
+                                <Grid item xs={12}>
+                                  <Button onClick={() => push({ catagory: '', price: '' })}>Add Pricing</Button>
+                                </Grid>
+                              </>
+                            )}
+                          </FieldArray>
+
+                          <Grid item xs={12}>
+                            <Button onClick={() => remove(index)} color="error" variant="outlined">Remove Day Cost</Button>
+                          </Grid>
+                        </Grid>
+                      ))}
+                      <Button onClick={() => push({ days: '', pricing: [] })}>Add Day Cost</Button>
+                    </>
+                  )}
+                </FieldArray>
+
+                {/* Value Cost */}
+                <Typography sx={{ mt: 4, mb: 1 }}>Value-Based Cost</Typography>
+                <FieldArray name="details.cost.valueCost">
+                  {({ push, remove }) => (
+                    <>
+                      {values.details.cost.valueCost?.map((valItem, index) => (
+                        <Grid container spacing={2} key={index} sx={{ mb: 2 }}>
+                          <Grid item xs={4}>
+                            <TextField
+                              label="Type"
+                              name={`details.cost.valueCost[${index}].type`}
+                              value={valItem.type}
+                              onChange={handleChange}
+                              fullWidth
+                            />
+                          </Grid>
+                          <Grid item xs={4}>
+                            <TextField
+                              label="Price"
+                              name={`details.cost.valueCost[${index}].price`}
+                              value={valItem.price}
+                              onChange={handleChange}
+                              fullWidth
+                              type="number"
+                            />
+                          </Grid>
+                          <Grid item xs={2}>
+                            <Button onClick={() => remove(index)} color="error">Remove</Button>
+                          </Grid>
+                        </Grid>
+                      ))}
+                      <Button onClick={() => push({ type: '', price: '' })}>Add Value Cost</Button>
                     </>
                   )}
                 </FieldArray>
               </SectionWrapper>
+
               <SectionWrapper title="Tags">
                 <RenderEditableList name="tags" values={values.tags} setFieldValue={setFieldValue} label="Tag" />
               </SectionWrapper>
