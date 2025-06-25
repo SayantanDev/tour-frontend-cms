@@ -34,7 +34,7 @@ const getInitialValues = (data) => {
       overview: [{ tagName: '', tagValue: '' }],
       expect: [''],
       best_time_to_visit: [{ name: "", description: "" }],
-      how_to_reach: [{ name: "", description: "" }],
+      how_to_reach: { description: [""], details: [{ name: "", description: "" }] },
       weather: { description: [""], details: [{ season: "", temperature: "", weather: "", best_activity: "" }] },
       geography: [''],
       attraction_and_activites: {
@@ -196,8 +196,8 @@ const PlacesForm = () => {
       } else {
         const res = await insertPlace(values);
         showSnackbar('You created a new place', 'success');
-        console.log("places data : ",values);
-        
+        console.log("places data : ", values);
+
       }
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -452,27 +452,62 @@ const PlacesForm = () => {
                 </FieldArray>
               </SectionWrapper>
               <SectionWrapper title="How to Reach">
-                <FieldArray name="details.how_to_reach">
+                {/* Description Paragraphs */}
+                <FieldArray name="details.how_to_reach.description">
+                  {({ push, remove }) => (
+                    <Grid container spacing={2} mb={2}>
+                      {values.details.how_to_reach.description?.map((desc, idx) => (
+                        <Grid item xs={12} key={idx}>
+                          <TextField
+                            fullWidth
+                            multiline
+                            minRows={2}
+                            label={`Description Paragraph ${idx + 1}`}
+                            value={desc}
+                            onChange={(e) =>
+                              setFieldValue(`details.how_to_reach.description[${idx}]`, e.target.value)
+                            }
+                            InputProps={{
+                              endAdornment: (
+                                <Button onClick={() => remove(idx)} color="error">
+                                  Remove
+                                </Button>
+                              )
+                            }}
+                          />
+                        </Grid>
+                      ))}
+                      <Grid item xs={12}>
+                        <Button variant="outlined" onClick={() => push("")}>
+                          Add Description Paragraph
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  )}
+                </FieldArray>
+
+                {/* Details List (Name + Description) */}
+                <FieldArray name="details.how_to_reach.details">
                   {({ push, remove }) => (
                     <Grid container spacing={2}>
-                      {values.details.how_to_reach?.map((item, index) => (
+                      {values.details.how_to_reach.details?.map((item, index) => (
                         <React.Fragment key={index}>
-                          <Grid item xs={12} sm={4}>
+                          <Grid item xs={12} sm={5}>
                             <TextField
+                              name={`details.how_to_reach.details[${index}].name`}
+                              label="Name"
                               fullWidth
-                              label={`Name ${index + 1}`}
-                              name={`details.how_to_reach[${index}].name`}
                               value={item.name}
                               onChange={handleChange}
                             />
                           </Grid>
-                          <Grid item xs={12} sm={7}>
+                          <Grid item xs={12} sm={6}>
                             <TextField
+                              name={`details.how_to_reach.details[${index}].description`}
+                              label="Description"
                               fullWidth
                               multiline
-                              minRows={3}
-                              label="Description"
-                              name={`details.how_to_reach[${index}].description`}
+                              minRows={2}
                               value={item.description}
                               onChange={handleChange}
                             />
@@ -489,13 +524,15 @@ const PlacesForm = () => {
                           variant="outlined"
                           onClick={() => push({ name: "", description: "" })}
                         >
-                          Add Reach Info
+                          Add How to Reach Option
                         </Button>
                       </Grid>
                     </Grid>
                   )}
                 </FieldArray>
               </SectionWrapper>
+
+
               <SectionWrapper title="Weather Information">
                 {/* Weather Description Paragraphs */}
                 <FieldArray name="details.weather.description">
