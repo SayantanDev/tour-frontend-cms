@@ -50,7 +50,7 @@ const getInitialValues = (data) => {
           }
         ]
       },
-      accommdations: [''],
+      accommdations: { description: [""], details: [{ category: "", best_stay: "", price_range: "", features: "", best_for: "" }] },
       is_homestay: {
         active: false,
         description: "",
@@ -511,7 +511,6 @@ const PlacesForm = () => {
                   )}
                 </FieldArray>
               </SectionWrapper>
-
               <SectionWrapper title="How to Reach">
                 {/* Description Paragraphs */}
                 <FieldArray name="details.how_to_reach.description">
@@ -925,37 +924,120 @@ const PlacesForm = () => {
                 </FieldArray>
               </SectionWrapper>
 
-              <SectionWrapper title="Accommdations">
-                {/* para[] as textareas */}
-                <FieldArray name="details.accommdations">
+              <SectionWrapper title="Accommodations">
+                {/* Description Paragraphs */}
+                <FieldArray name="details.accommdations.description">
                   {({ push, remove }) => (
-                    <Grid container spacing={2}>
-                      {values.details.accommdations?.map((p, pIdx) => (
-                        <Grid item xs={12} key={pIdx}>
+                    <Grid container spacing={2} mb={2}>
+                      {values.details.accommdations.description?.map((desc, idx) => (
+                        <Grid item xs={12} key={idx}>
                           <TextField
                             fullWidth
                             multiline
-                            minRows={3}
-                            label={`Paragraph ${pIdx + 1}`}
-                            value={p}
+                            minRows={2}
+                            label={`Description Paragraph ${idx + 1}`}
+                            value={desc}
                             onChange={(e) =>
-                              setFieldValue(`details.accommdations[${pIdx}]`, e.target.value)
+                              setFieldValue(`details.accommdations.description[${idx}]`, e.target.value)
                             }
                             InputProps={{
                               endAdornment: (
-                                <Button onClick={() => remove(pIdx)} color="error">Remove</Button>
+                                <Button onClick={() => remove(idx)} color="error">
+                                  Remove
+                                </Button>
                               )
                             }}
                           />
                         </Grid>
                       ))}
                       <Grid item xs={12}>
-                        <Button onClick={() => push('')} variant="outlined">Add Paragraph</Button>
+                        <Button variant="outlined" onClick={() => push("")}>
+                          Add Description Paragraph
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  )}
+                </FieldArray>
+
+                {/* Accommodation Details */}
+                <FieldArray name="details.accommdations.details">
+                  {({ push, remove }) => (
+                    <Grid container spacing={2}>
+                      {values.details.accommdations.details?.map((item, index) => (
+                        <React.Fragment key={index}>
+                          <Grid item xs={12} sm={2}>
+                            <TextField
+                              name={`details.accommdations.details[${index}].category`}
+                              label="Category"
+                              fullWidth
+                              value={item.category}
+                              onChange={handleChange}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={2}>
+                            <TextField
+                              name={`details.accommdations.details[${index}].best_stay`}
+                              label="Best Stay"
+                              fullWidth
+                              value={item.best_stay}
+                              onChange={handleChange}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={2}>
+                            <TextField
+                              name={`details.accommdations.details[${index}].price_range`}
+                              label="Price Range"
+                              fullWidth
+                              value={item.price_range}
+                              onChange={handleChange}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={3}>
+                            <TextField
+                              name={`details.accommdations.details[${index}].features`}
+                              label="Features"
+                              fullWidth
+                              value={item.features}
+                              onChange={handleChange}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={2}>
+                            <TextField
+                              name={`details.accommdations.details[${index}].best_for`}
+                              label="Best For"
+                              fullWidth
+                              value={item.best_for}
+                              onChange={handleChange}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={1} display="flex" alignItems="center">
+                            <Button onClick={() => remove(index)} color="error">
+                              Remove
+                            </Button>
+                          </Grid>
+                        </React.Fragment>
+                      ))}
+                      <Grid item xs={12}>
+                        <Button
+                          variant="outlined"
+                          onClick={() =>
+                            push({
+                              category: "",
+                              best_stay: "",
+                              price_range: "",
+                              features: "",
+                              best_for: ""
+                            })
+                          }
+                        >
+                          Add Accommodation Detail
+                        </Button>
                       </Grid>
                     </Grid>
                   )}
                 </FieldArray>
               </SectionWrapper>
+
               <SectionWrapper title="Conclusions">
                 {/* para[] as textareas */}
                 <FieldArray name="details.conclusion">
