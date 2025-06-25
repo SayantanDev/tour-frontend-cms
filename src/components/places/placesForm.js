@@ -33,7 +33,7 @@ const getInitialValues = (data) => {
       header: { h1: '', h2: '', h3: '' },
       overview: [{ tagName: '', tagValue: '' }],
       expect: [''],
-      best_time_to_visit: [{ name: "", description: "" }],
+      best_time_to_visit: { description: [""], details: [{ months: "", weather: "", footfall: "", catagory: "", best_for: "" }] },
       how_to_reach: { description: [""], details: [{ name: "", description: "" }] },
       weather: { description: [""], details: [{ season: "", temperature: "", weather: "", best_activity: "" }] },
       geography: [''],
@@ -407,28 +407,88 @@ const PlacesForm = () => {
                 </FieldArray>
               </SectionWrapper>
               <SectionWrapper title="Best Time to Visit">
-                <FieldArray name="details.best_time_to_visit">
+                {/* Description Paragraphs */}
+                <FieldArray name="details.best_time_to_visit.description">
+                  {({ push, remove }) => (
+                    <Grid container spacing={2} mb={2}>
+                      {values.details.best_time_to_visit.description?.map((desc, idx) => (
+                        <Grid item xs={12} key={idx}>
+                          <TextField
+                            fullWidth
+                            multiline
+                            minRows={2}
+                            label={`Description Paragraph ${idx + 1}`}
+                            value={desc}
+                            onChange={(e) =>
+                              setFieldValue(`details.best_time_to_visit.description[${idx}]`, e.target.value)
+                            }
+                            InputProps={{
+                              endAdornment: (
+                                <Button onClick={() => remove(idx)} color="error">
+                                  Remove
+                                </Button>
+                              )
+                            }}
+                          />
+                        </Grid>
+                      ))}
+                      <Grid item xs={12}>
+                        <Button variant="outlined" onClick={() => push("")}>
+                          Add Description Paragraph
+                        </Button>
+                      </Grid>
+                    </Grid>
+                  )}
+                </FieldArray>
+
+                {/* Monthly Details */}
+                <FieldArray name="details.best_time_to_visit.details">
                   {({ push, remove }) => (
                     <Grid container spacing={2}>
-                      {values.details.best_time_to_visit?.map((item, index) => (
+                      {values.details.best_time_to_visit.details?.map((item, index) => (
                         <React.Fragment key={index}>
-                          <Grid item xs={12} sm={4}>
+                          <Grid item xs={12} sm={3}>
                             <TextField
+                              name={`details.best_time_to_visit.details[${index}].months`}
+                              label="Months"
                               fullWidth
-                              label={`Season Name ${index + 1}`}
-                              name={`details.best_time_to_visit[${index}].name`}
-                              value={item.name}
+                              value={item.months}
                               onChange={handleChange}
                             />
                           </Grid>
-                          <Grid item xs={12} sm={7}>
+                          <Grid item xs={12} sm={2}>
                             <TextField
+                              name={`details.best_time_to_visit.details[${index}].weather`}
+                              label="Weather"
                               fullWidth
-                              multiline
-                              minRows={3}
-                              label="Description"
-                              name={`details.best_time_to_visit[${index}].description`}
-                              value={item.description}
+                              value={item.weather}
+                              onChange={handleChange}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={2}>
+                            <TextField
+                              name={`details.best_time_to_visit.details[${index}].footfall`}
+                              label="Footfall"
+                              fullWidth
+                              value={item.footfall}
+                              onChange={handleChange}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={2}>
+                            <TextField
+                              name={`details.best_time_to_visit.details[${index}].catagory`}
+                              label="Category"
+                              fullWidth
+                              value={item.catagory}
+                              onChange={handleChange}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={2}>
+                            <TextField
+                              name={`details.best_time_to_visit.details[${index}].best_for`}
+                              label="Best For"
+                              fullWidth
+                              value={item.best_for}
                               onChange={handleChange}
                             />
                           </Grid>
@@ -442,15 +502,16 @@ const PlacesForm = () => {
                       <Grid item xs={12}>
                         <Button
                           variant="outlined"
-                          onClick={() => push({ name: "", description: "" })}
+                          onClick={() => push({ months: "", weather: "", footfall: "", catagory: "", best_for: "" })}
                         >
-                          Add Time Info
+                          Add Time Detail
                         </Button>
                       </Grid>
                     </Grid>
                   )}
                 </FieldArray>
               </SectionWrapper>
+
               <SectionWrapper title="How to Reach">
                 {/* Description Paragraphs */}
                 <FieldArray name="details.how_to_reach.description">
@@ -531,8 +592,6 @@ const PlacesForm = () => {
                   )}
                 </FieldArray>
               </SectionWrapper>
-
-
               <SectionWrapper title="Weather Information">
                 {/* Weather Description Paragraphs */}
                 <FieldArray name="details.weather.description">
