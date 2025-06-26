@@ -20,8 +20,10 @@ import { getAllplaces, getSinglePlace, deletePlace } from "../../api/placeApi";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { removeSelectedPlace, setSelectedPlace } from "../../reduxcomponents/slices/placesSlice";
+import useSnackbar from "../../hooks/useSnackbar";
 
 const AllPlaces = () => {
+      const { showSnackbar, SnackbarComponent } = useSnackbar();
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [allPlaces, setAllPlaces] = useState([]);
@@ -80,6 +82,8 @@ const AllPlaces = () => {
             setConfirmOpen(false);
         } catch (err) {
             console.error("Failed to delete place", err);
+        }finally {
+             showSnackbar('Place Deleted successfully', 'success');
         }
     };
 
@@ -164,6 +168,7 @@ const AllPlaces = () => {
                     <Button onClick={confirmDelete} color="error" variant="contained">Delete</Button>
                 </DialogActions>
             </Dialog>
+    <SnackbarComponent />
         </Box>
     );
 };
