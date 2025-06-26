@@ -225,8 +225,10 @@ const PlacesForm = () => {
             justifyContent: 'space-between',
             alignItems: 'center',
           }}>
-            <Typography variant={"h4"}>Create a new Place</Typography>
-            <Button variant="contained" type="submit" form="package-form">Submit</Button>
+            <Typography variant={"h4"}>
+              {selectedPlace ? 'Update Place' : 'Create a New Place'}
+            </Typography>
+            <Button variant="contained" type="submit" form="package-form">{selectedPlace ? 'Update' : 'Create'}</Button>
           </Box>
           <Form id="package-form">
             <Grid container spacing={2} sx={{ p: 2 }}>
