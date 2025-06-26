@@ -13,6 +13,7 @@ import { useSelector } from 'react-redux';
 
 import _ from 'lodash';
 import { insertPlace, updatePlace } from '../../api/placeApi';
+import { useNavigate } from 'react-router-dom';
 
 const getInitialValues = (data) => {
   const newData = {
@@ -178,6 +179,7 @@ const RenderEditableList = ({ name, values, setFieldValue, label }) => {
 };
 
 const PlacesForm = () => {
+  const navigate = useNavigate();
   const { fetchSelectedPlace: selectedPlace } = useSelector((state) => state.place);
   // const getInitialValues = (selectedPlace) => selectedPlace || initialValues;
 
@@ -188,14 +190,19 @@ const PlacesForm = () => {
     try {
       // let res;
       if (selectedPlace && selectedPlace._id) {
+        console.log("updatePlace");
+        
         const res = await updatePlace(values, selectedPlace._id); // You'll need to import and define this API
         if (res) {
           showSnackbar('Package updated successfully', 'success');
 
         }
       } else {
+        console.log("insertPlace");
+        
         const res = await insertPlace(values);
         showSnackbar('You created a new place', 'success');
+        navigate(`/places/view`);
         console.log("places data : ", values);
 
       }
@@ -226,9 +233,9 @@ const PlacesForm = () => {
             alignItems: 'center',
           }}>
             <Typography variant={"h4"}>
-              {selectedPlace ? 'Update Place' : 'Create a New Place'}
+              {selectedPlace && selectedPlace._id ? 'Update Place' : 'Create a New Place'}
             </Typography>
-            <Button variant="contained" type="submit" form="package-form">{selectedPlace ? 'Update' : 'Create'}</Button>
+            <Button variant="contained" type="submit" form="package-form">{selectedPlace && selectedPlace._id ? 'Update' : 'Create'}</Button>
           </Box>
           <Form id="package-form">
             <Grid container spacing={2} sx={{ p: 2 }}>
