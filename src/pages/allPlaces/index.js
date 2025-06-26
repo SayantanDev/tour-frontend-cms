@@ -10,9 +10,13 @@ import {
     Chip,
     Divider,
     TextField,
-    MenuItem
+    MenuItem,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions
 } from "@mui/material";
-import { getAllplaces, getSinglePlace } from "../../api/placeApi";
+import { getAllplaces, getSinglePlace, deletePlace } from "../../api/placeApi";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { removeSelectedPlace, setSelectedPlace } from "../../reduxcomponents/slices/placesSlice";
@@ -26,10 +30,12 @@ const AllPlaces = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedZone, setSelectedZone] = useState("");
 
+    const [deleteId, setDeleteId] = useState(null);
+    const [confirmOpen, setConfirmOpen] = useState(false);
+
     useEffect(() => {
         getAllplaces()
             .then((res) => {
-                console.log("All places:", res);
                 setAllPlaces(res);
                 setFilteredPlaces(res);
             })
@@ -38,10 +44,8 @@ const AllPlaces = () => {
             });
     }, []);
 
-    // Get unique zones for dropdown
     const zones = [...new Set(allPlaces.map(place => place.zone))];
 
-    // Filter logic
     useEffect(() => {
         let filtered = allPlaces;
 
@@ -59,14 +63,24 @@ const AllPlaces = () => {
     }, [searchTerm, selectedZone, allPlaces]);
 
     const handleEdit = async (id) => {
-        console.log("Edit:", id);
         const response = await getSinglePlace(id);
         dispatch(setSelectedPlace(response));
         navigate(`/places/createandedit`);
     };
 
     const handleDelete = (id) => {
-        console.log("Delete:", id);
+        setDeleteId(id);
+        setConfirmOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        try {
+            await deletePlace(deleteId);
+            setAllPlaces(prev => prev.filter(place => place._id !== deleteId));
+            setConfirmOpen(false);
+        } catch (err) {
+            console.error("Failed to delete place", err);
+        }
     };
 
     return (
@@ -85,7 +99,6 @@ const AllPlaces = () => {
                 </Button>
             </Box>
 
-
             {/* Filters */}
             <Box mb={3} display="flex" gap={2} flexWrap="wrap">
                 <TextField
@@ -94,7 +107,6 @@ const AllPlaces = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
-
                 <TextField
                     label="Filter by Zone"
                     variant="outlined"
@@ -140,6 +152,18 @@ const AllPlaces = () => {
                     </Grid>
                 ))}
             </Grid>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+                <DialogTitle>Confirm Delete</DialogTitle>
+                <DialogContent>
+                    Are you sure you want to delete this place?
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
+                    <Button onClick={confirmDelete} color="error" variant="contained">Delete</Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

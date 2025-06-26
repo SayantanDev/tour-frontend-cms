@@ -25,3 +25,9 @@ export async function getSinglePlace(id) {
     const result = await axios.get(ADDUSER_URL);
     return result.data;
 };
+
+export async function deletePlace(id) {
+    const ADDUSER_URL = `${QRY_URL}/delete/${id}`;
+    const result = await axios.delete(ADDUSER_URL);
+    return result.data;
+}
