@@ -6,6 +6,7 @@ import editPackage from "./packagesSlice"
 import notify from "./notificationSlice"
 import configReducer from "./configSlice"
 import placeReducer from "./placesSlice"
+import ctgReducer from "./ctgpackageSlice"
 import { combineReducers } from "redux";
 
 const rootReducer = combineReducers({
@@ -16,7 +17,8 @@ const rootReducer = combineReducers({
 	notification: notify,
 	queries: queriesReducer,
 	config: configReducer,
-	place: placeReducer
+	place: placeReducer,
+	ctgpakage: ctgReducer,
 })
 
 export default rootReducer;

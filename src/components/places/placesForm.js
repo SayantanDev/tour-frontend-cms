@@ -1333,7 +1333,6 @@ const PlacesForm = () => {
                   )}
                 </FieldArray>
               </SectionWrapper>
-
             </Grid>
           </Form>
         </Box>
