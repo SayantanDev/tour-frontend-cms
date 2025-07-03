@@ -25,6 +25,7 @@ const getInitialValues = (data) => {
     description: '',
     price: 0,
     offer_price: 0,
+    category: '',
     popular_destination_covered: [{ name: '', image: '' }],
     popular_attraction_covered: [{ name: '', image: '' }],
     addi_destination_covered: [{ name: '', image: '' }],
@@ -39,7 +40,9 @@ const getInitialValues = (data) => {
       packages: { description: [''], package_ids: [] },
       intro: [''],
       why_choose: { title: '', description: [''], details: [''] },
+      what_to_peek: { title: '', description: [''], details: [''] },
       what_makes: { title: '', description: [''], details: [{ name: '', description: '' }] },
+      activity: { title: '', description: [''], details: [{ name: '', description: [''] }] },
       best_places: {
         title: '',
         description: [''],
@@ -61,7 +64,7 @@ const getInitialValues = (data) => {
       photogenic_spots: {
         title: '',
         description: [''],
-        details: [{ name: '', description: '' }],
+        details: [{ name: '', description: [''] }],
       },
       itinerary: {
         title: '',
@@ -258,7 +261,7 @@ const CtgForm = () => {
   const handleSubmit = async (values) => {
 
     console.log("ctg package values : ", values);
-    
+
 
     // try {
     //   // let res;
@@ -356,6 +359,18 @@ const CtgForm = () => {
                       onChange={handleChange}
                       error={touched.zone && Boolean(errors.zone)}
                       helperText={touched.zone && errors.zone}
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid item xs={3}>
+                    <TextField
+                      label="Category"
+                      name="category"
+                      type="number"
+                      value={values.category}
+                      onChange={handleChange}
+                      error={touched.category && Boolean(errors.category)}
+                      helperText={touched.category && errors.category}
                       fullWidth
                     />
                   </Grid>
@@ -715,6 +730,248 @@ const CtgForm = () => {
                   </FieldArray>
                 </Grid>
               </SectionWrapper>
+              <SectionWrapper title="What to Peek" sx={{ mt: 4 }}>
+                <Grid container spacing={2}>
+
+                  {/* Title */}
+                  <Grid item xs={12}>
+                    <TextField
+                      label="Section Title"
+                      name="details.what_to_peek.title"
+                      value={values.details.what_to_peek.title}
+                      onChange={handleChange}
+                      fullWidth
+                      error={
+                        touched.details?.what_to_peek?.title &&
+                        Boolean(errors.details?.what_to_peek?.title)
+                      }
+                      helperText={
+                        touched.details?.what_to_peek?.title &&
+                        errors.details?.what_to_peek?.title
+                      }
+                    />
+                  </Grid>
+
+                  {/* Description Array */}
+                  <FieldArray name="details.what_to_peek.description">
+                    {({ push, remove }) => (
+                      <>
+                        <Grid item xs={12}><strong>Description</strong></Grid>
+                        {values.details.what_to_peek.description.map((desc, index) => (
+                          <Grid item xs={12} key={`desc-${index}`} sx={{ display: 'flex', gap: 1 }}>
+                            <TextField
+                              label={`Description ${index + 1}`}
+                              name={`details.what_to_peek.description[${index}]`}
+                              value={desc}
+                              onChange={handleChange}
+                              fullWidth
+                            />
+                            <Button
+                              onClick={() => remove(index)}
+                              variant="outlined"
+                              color="error"
+                              disabled={values.details.what_to_peek.description.length === 1}
+                            >
+                              Remove
+                            </Button>
+                          </Grid>
+                        ))}
+                        <Grid item xs={12}>
+                          <Button
+                            variant="outlined"
+                            onClick={() => push('')}
+                            sx={{ mt: 1 }}
+                          >
+                            + Add Description
+                          </Button>
+                        </Grid>
+                      </>
+                    )}
+                  </FieldArray>
+
+                  {/* Details Array */}
+                  <FieldArray name="details.what_to_peek.details">
+                    {({ push, remove }) => (
+                      <>
+                        <Grid item xs={12}><strong>Key Highlights / Peeks</strong></Grid>
+                        {values.details.what_to_peek.details.map((item, index) => (
+                          <Grid item xs={12} key={`item-${index}`} sx={{ display: 'flex', gap: 1 }}>
+                            <TextField
+                              label={`Peek ${index + 1}`}
+                              name={`details.what_to_peek.details[${index}]`}
+                              value={item}
+                              onChange={handleChange}
+                              fullWidth
+                            />
+                            <Button
+                              onClick={() => remove(index)}
+                              variant="outlined"
+                              color="error"
+                              disabled={values.details.what_to_peek.details.length === 1}
+                            >
+                              Remove
+                            </Button>
+                          </Grid>
+                        ))}
+                        <Grid item xs={12}>
+                          <Button
+                            variant="outlined"
+                            onClick={() => push('')}
+                            sx={{ mt: 1 }}
+                          >
+                            + Add Peek
+                          </Button>
+                        </Grid>
+                      </>
+                    )}
+                  </FieldArray>
+
+                </Grid>
+              </SectionWrapper>
+              <SectionWrapper title="Activities" sx={{ mt: 4 }}>
+                <Grid container spacing={2}>
+
+                  {/* Title */}
+                  <Grid item xs={12}>
+                    <TextField
+                      label="Section Title"
+                      name="details.activity.title"
+                      value={values.details.activity.title}
+                      onChange={handleChange}
+                      fullWidth
+                      error={
+                        touched.details?.activity?.title &&
+                        Boolean(errors.details?.activity?.title)
+                      }
+                      helperText={
+                        touched.details?.activity?.title &&
+                        errors.details?.activity?.title
+                      }
+                    />
+                  </Grid>
+
+                  {/* Description Array */}
+                  <FieldArray name="details.activity.description">
+                    {({ push, remove }) => (
+                      <>
+                        <Grid item xs={12}><strong>Section Descriptions</strong></Grid>
+                        {values.details.activity.description.map((desc, index) => (
+                          <Grid item xs={12} key={`desc-${index}`} sx={{ display: 'flex', gap: 1 }}>
+                            <TextField
+                              label={`Description ${index + 1}`}
+                              name={`details.activity.description[${index}]`}
+                              value={desc}
+                              onChange={handleChange}
+                              fullWidth
+                            />
+                            <Button
+                              onClick={() => remove(index)}
+                              variant="outlined"
+                              color="error"
+                              disabled={values.details.activity.description.length === 1}
+                            >
+                              Remove
+                            </Button>
+                          </Grid>
+                        ))}
+                        <Grid item xs={12}>
+                          <Button
+                            variant="outlined"
+                            onClick={() => push('')}
+                            sx={{ mt: 1 }}
+                          >
+                            + Add Description
+                          </Button>
+                        </Grid>
+                      </>
+                    )}
+                  </FieldArray>
+
+                  {/* Activities Details: name + description[] */}
+                  <FieldArray name="details.activity.details">
+                    {({ push, remove }) => (
+                      <>
+                        <Grid item xs={12}><strong>Activities List</strong></Grid>
+                        {values.details.activity.details.map((item, index) => (
+                          <Grid item xs={12} key={`act-${index}`} sx={{ mb: 2 }}>
+                            <Grid container spacing={2}>
+                              {/* Name */}
+                              <Grid item xs={5}>
+                                <TextField
+                                  label="Activity Name"
+                                  name={`details.activity.details[${index}].name`}
+                                  value={item.name}
+                                  onChange={handleChange}
+                                  fullWidth
+                                />
+                              </Grid>
+
+                              {/* Nested Description[] */}
+                              <FieldArray name={`details.activity.details[${index}].description`}>
+                                {({ push, remove }) => (
+                                  <>
+                                    {item.description.map((d, dIndex) => (
+                                      <Grid item xs={6} key={`desc-${index}-${dIndex}`} sx={{ display: 'flex', gap: 1 }}>
+                                        <TextField
+                                          label={`Detail ${dIndex + 1}`}
+                                          name={`details.activity.details[${index}].description[${dIndex}]`}
+                                          value={d}
+                                          onChange={handleChange}
+                                          fullWidth
+                                        />
+                                        <Button
+                                          onClick={() => remove(dIndex)}
+                                          variant="outlined"
+                                          color="error"
+                                          disabled={item.description.length === 1}
+                                        >
+                                          Remove
+                                        </Button>
+                                      </Grid>
+                                    ))}
+                                    <Grid item xs={12}>
+                                      <Button
+                                        variant="text"
+                                        size="small"
+                                        onClick={() => push('')}
+                                      >
+                                        + Add Detail
+                                      </Button>
+                                    </Grid>
+                                  </>
+                                )}
+                              </FieldArray>
+
+                              {/* Remove entire activity */}
+                              <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                <Button
+                                  variant="outlined"
+                                  color="error"
+                                  onClick={() => remove(index)}
+                                >
+                                  Remove Activity
+                                </Button>
+                              </Grid>
+                            </Grid>
+                          </Grid>
+                        ))}
+
+                        {/* Add New Activity */}
+                        <Grid item xs={12}>
+                          <Button
+                            variant="outlined"
+                            onClick={() => push({ name: '', description: [''] })}
+                            sx={{ mt: 1 }}
+                          >
+                            + Add Activity
+                          </Button>
+                        </Grid>
+                      </>
+                    )}
+                  </FieldArray>
+
+                </Grid>
+              </SectionWrapper>
               <SectionWrapper title="Best Places" sx={{ mt: 4 }}>
                 <Grid container spacing={2}>
                   {/* Title */}
@@ -1064,7 +1321,7 @@ const CtgForm = () => {
                   <FieldArray name="details.photogenic_spots.description">
                     {({ push, remove }) => (
                       <>
-                        <Grid item xs={12}><strong>Descriptions</strong></Grid>
+                        <Grid item xs={12}><strong>Section Descriptions</strong></Grid>
                         {values.details.photogenic_spots.description.map((desc, index) => (
                           <Grid item xs={12} key={`desc-${index}`} sx={{ display: 'flex', gap: 1 }}>
                             <TextField
@@ -1093,14 +1350,15 @@ const CtgForm = () => {
                     )}
                   </FieldArray>
 
-                  {/* Photogenic Spots List */}
+                  {/* Photogenic Spots List with Nested Description Arrays */}
                   <FieldArray name="details.photogenic_spots.details">
                     {({ push, remove }) => (
                       <>
                         <Grid item xs={12}><strong>Photogenic Locations</strong></Grid>
                         {values.details.photogenic_spots.details.map((spot, index) => (
-                          <Grid item xs={12} key={`spot-${index}`}>
+                          <Grid item xs={12} key={`spot-${index}`} sx={{ mb: 2 }}>
                             <Grid container spacing={2}>
+                              {/* Spot Name */}
                               <Grid item xs={5}>
                                 <TextField
                                   label="Spot Name"
@@ -1110,23 +1368,51 @@ const CtgForm = () => {
                                   fullWidth
                                 />
                               </Grid>
-                              <Grid item xs={6}>
-                                <TextField
-                                  label="Spot Description"
-                                  name={`details.photogenic_spots.details[${index}].description`}
-                                  value={spot.description}
-                                  onChange={handleChange}
-                                  fullWidth
-                                />
-                              </Grid>
-                              <Grid item xs={1} sx={{ display: 'flex', alignItems: 'center' }}>
+
+                              {/* Description Subarray */}
+                              <FieldArray name={`details.photogenic_spots.details[${index}].description`}>
+                                {({ push, remove }) => (
+                                  <>
+                                    {spot.description.map((d, dIndex) => (
+                                      <Grid item xs={6} key={`desc-${index}-${dIndex}`} sx={{ display: 'flex', gap: 1 }}>
+                                        <TextField
+                                          label={`Description ${dIndex + 1}`}
+                                          name={`details.photogenic_spots.details[${index}].description[${dIndex}]`}
+                                          value={d}
+                                          onChange={handleChange}
+                                          fullWidth
+                                        />
+                                        <Button
+                                          onClick={() => remove(dIndex)}
+                                          color="error"
+                                          variant="outlined"
+                                          disabled={spot.description.length === 1}
+                                        >
+                                          Remove
+                                        </Button>
+                                      </Grid>
+                                    ))}
+                                    <Grid item xs={12}>
+                                      <Button
+                                        variant="text"
+                                        size="small"
+                                        onClick={() => push('')}
+                                      >
+                                        + Add Description to Spot
+                                      </Button>
+                                    </Grid>
+                                  </>
+                                )}
+                              </FieldArray>
+
+                              {/* Remove Entire Spot */}
+                              <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                                 <Button
                                   onClick={() => remove(index)}
                                   color="error"
                                   variant="outlined"
-                                  disabled={values.details.photogenic_spots.details.length === 1}
                                 >
-                                  X
+                                  Remove Spot
                                 </Button>
                               </Grid>
                             </Grid>
@@ -1135,7 +1421,7 @@ const CtgForm = () => {
                         <Grid item xs={12}>
                           <Button
                             variant="outlined"
-                            onClick={() => push({ name: '', description: '' })}
+                            onClick={() => push({ name: '', description: [''] })}
                             sx={{ mt: 1 }}
                           >
                             + Add Spot
