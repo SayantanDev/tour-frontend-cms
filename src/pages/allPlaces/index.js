@@ -14,13 +14,15 @@ import {
     Dialog,
     DialogTitle,
     DialogContent,
-    DialogActions
+    DialogActions,
+    Badge
 } from "@mui/material";
 import { getAllplaces, getSinglePlace, deletePlace } from "../../api/placeApi";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { removeSelectedPlace, setSelectedPlace } from "../../reduxcomponents/slices/placesSlice";
 import useSnackbar from "../../hooks/useSnackbar";
+import CheckIcon from "@mui/icons-material/Check";
 
 const AllPlaces = () => {
     const { showSnackbar, SnackbarComponent } = useSnackbar();
@@ -154,7 +156,23 @@ const AllPlaces = () => {
                             </CardContent>
                             <CardActions sx={{ mt: "auto", justifyContent: "space-between", px: 2, pb: 2 }}>
                                 <Button size="small" variant="outlined" onClick={() => handleEdit(place._id)}>Edit</Button>
-                                <Button size="small" variant="outlined" onClick={() => handleImageUpload(place._id)}>Upload</Button>
+                                <Badge
+                                    badgeContent={place.images.length}
+                                    color="error"
+                                    invisible={place.images.length === 0}
+                                >
+                                    <Button
+                                        size="small"
+                                        variant={place.images.length > 0 ? "contained" : "outlined"}
+                                        color={place.images.length > 0 ? "success" : "primary"}
+                                        startIcon={place.images.length > 0 ? <CheckIcon /> : null}
+                                        onClick={() => handleImageUpload(place._id)}
+                                    >
+                                        Upload
+                                    </Button>
+                                </Badge>
+
+
                                 <Button size="small" color="error" variant="outlined" onClick={() => handleDelete(place._id)}>Delete</Button>
                             </CardActions>
                         </Card>
