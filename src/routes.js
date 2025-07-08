@@ -30,6 +30,7 @@ import PlacesForm from "./components/places/placesForm";
 import CtgForm from "./components/category-packages/ctgForm";
 import AllPlaces from "./pages/allPlaces";
 import CategoryPackage from "./pages/categoryPackage";
+import ImageManagerPage from "./pages/imageManager";
 
 const RootLayoutWithRedirect = withAuthRedirect(RootLayout);
 
@@ -96,6 +97,10 @@ const router = createBrowserRouter(
         <Route
           path="places/view"
           element={<ProtectedRoute Element={AllPlaces} module="places" />}
+        />
+        <Route
+          path="upload/:schema/:id"
+          element={<ProtectedRoute Element={ImageManagerPage} module="places" />}
         />
         <Route
           path="query/view"

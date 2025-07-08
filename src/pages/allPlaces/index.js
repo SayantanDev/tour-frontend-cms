@@ -23,7 +23,7 @@ import { removeSelectedPlace, setSelectedPlace } from "../../reduxcomponents/sli
 import useSnackbar from "../../hooks/useSnackbar";
 
 const AllPlaces = () => {
-      const { showSnackbar, SnackbarComponent } = useSnackbar();
+    const { showSnackbar, SnackbarComponent } = useSnackbar();
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [allPlaces, setAllPlaces] = useState([]);
@@ -75,6 +75,10 @@ const AllPlaces = () => {
         setConfirmOpen(true);
     };
 
+    const handleImageUpload = (id) => {
+        navigate(`/upload/destination/${id}`);
+    }
+
     const confirmDelete = async () => {
         try {
             await deletePlace(deleteId);
@@ -82,8 +86,8 @@ const AllPlaces = () => {
             setConfirmOpen(false);
         } catch (err) {
             console.error("Failed to delete place", err);
-        }finally {
-             showSnackbar('Place Deleted successfully', 'success');
+        } finally {
+            showSnackbar('Place Deleted successfully', 'success');
         }
     };
 
@@ -150,6 +154,7 @@ const AllPlaces = () => {
                             </CardContent>
                             <CardActions sx={{ mt: "auto", justifyContent: "space-between", px: 2, pb: 2 }}>
                                 <Button size="small" variant="outlined" onClick={() => handleEdit(place._id)}>Edit</Button>
+                                <Button size="small" variant="outlined" onClick={() => handleImageUpload(place._id)}>Upload</Button>
                                 <Button size="small" color="error" variant="outlined" onClick={() => handleDelete(place._id)}>Delete</Button>
                             </CardActions>
                         </Card>
@@ -168,8 +173,9 @@ const AllPlaces = () => {
                     <Button onClick={confirmDelete} color="error" variant="contained">Delete</Button>
                 </DialogActions>
             </Dialog>
-    <SnackbarComponent />
+            <SnackbarComponent />
         </Box>
+
     );
 };
 
