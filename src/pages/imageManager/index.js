@@ -90,6 +90,7 @@ const ImageManagerPage = () => {
       <Typography variant="h4" gutterBottom>
         Upload Images for {existingName.toUpperCase()}
       </Typography>
+      <Typography variant="body2" gutterBottom color="green">(note : The first image will be used as the hero image and should be sized at 1920x1080. The others will be used in the gallery and should be sized at 1080x720.)</Typography>
 
       {/* 🔹 Upload Area */}
       <Box sx={{ my: 2 }}>
