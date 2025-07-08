@@ -8,13 +8,14 @@ import {
   CardMedia,
   CardContent,
   IconButton,
+  Tooltip,
 } from "@mui/material";
-import { useParams } from "react-router-dom";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useParams } from "react-router-dom";
 import { getImages, imageUpload, imageDelete } from "../../api/imageUploadApi";
 
 const ImageManagerPage = () => {
-  const { schema, id } = useParams(); // /upload/:schema/:id
+  const { schema, id } = useParams();
 
   const [existingImages, setExistingImages] = useState([]);
   const [existingName, setExistingName] = useState("");
@@ -35,14 +36,24 @@ const ImageManagerPage = () => {
     if (id && schema) fetchImages();
   }, [schema, id]);
 
-  // 🔹 File selection
+  // 🔹 Handle file selection
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     setNewFiles(files);
     setPreviewUrls(files.map((file) => URL.createObjectURL(file)));
   };
 
-  // 🔹 Upload handler
+  // 🔹 Remove a selected (new) image before upload
+  const handleRemovePreview = (index) => {
+    const updatedFiles = [...newFiles];
+    const updatedPreviews = [...previewUrls];
+    updatedFiles.splice(index, 1);
+    updatedPreviews.splice(index, 1);
+    setNewFiles(updatedFiles);
+    setPreviewUrls(updatedPreviews);
+  };
+
+  // 🔹 Handle image upload
   const handleUpload = async () => {
     if (!id || newFiles.length === 0) {
       alert("Please select images.");
@@ -64,11 +75,8 @@ const ImageManagerPage = () => {
     }
   };
 
-  // 🔹 Delete handler
+  // 🔹 Handle delete from Azure + MongoDB
   const handleDelete = async (imageUrl) => {
-    console.log("Delete clicked:", imageUrl);
-
-    // 🔧 Delay confirmation so React doesn't interfere
     setTimeout(async () => {
       const confirm = window.confirm("Are you sure you want to delete this image?");
       if (!confirm) return;
@@ -90,9 +98,11 @@ const ImageManagerPage = () => {
       <Typography variant="h4" gutterBottom>
         Upload Images for {existingName.toUpperCase()}
       </Typography>
-      <Typography variant="body2" gutterBottom color="green">(note : The first image will be used as the hero image and should be sized at 1920x1080. The others will be used in the gallery and should be sized at 1080x720.)</Typography>
+      <Typography variant="body2" gutterBottom color="green">
+        (Note: The first image will be used as the hero image and should be sized at 1920x1080. The others will be used in the gallery and should be sized at 1080x720.)
+      </Typography>
 
-      {/* 🔹 Upload Area */}
+      {/* 🔹 File upload buttons */}
       <Box sx={{ my: 2 }}>
         <Button variant="contained" component="label">
           Select Images
@@ -108,7 +118,7 @@ const ImageManagerPage = () => {
         </Button>
       </Box>
 
-      {/* 🔹 New Previews */}
+      {/* 🔹 Preview new images */}
       {previewUrls.length > 0 && (
         <>
           <Typography variant="h6" gutterBottom>
@@ -117,8 +127,24 @@ const ImageManagerPage = () => {
           <Grid container spacing={2}>
             {previewUrls.map((url, idx) => (
               <Grid item key={idx} xs={6} sm={4} md={3}>
-                <Card>
+                <Card sx={{ position: "relative" }}>
                   <CardMedia component="img" height="140" image={url} />
+                  <Tooltip title="Remove from selection">
+                    <IconButton
+                      size="small"
+                      color="error"
+                      sx={{
+                        position: "absolute",
+                        top: 8,
+                        right: 8,
+                        zIndex: 2,
+                        backgroundColor: "white",
+                      }}
+                      onClick={() => handleRemovePreview(idx)}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                 </Card>
               </Grid>
             ))}
@@ -126,7 +152,7 @@ const ImageManagerPage = () => {
         </>
       )}
 
-      {/* 🔹 Existing Images + Delete */}
+      {/* 🔹 Existing images */}
       {existingImages.length > 0 && (
         <>
           <Typography variant="h6" sx={{ mt: 4 }}>
@@ -141,6 +167,8 @@ const ImageManagerPage = () => {
                     <Typography variant="caption" noWrap>
                       {url.split("/").pop()}
                     </Typography>
+                  </CardContent>
+                  <Tooltip title="Delete from server">
                     <IconButton
                       size="small"
                       color="error"
@@ -149,13 +177,13 @@ const ImageManagerPage = () => {
                         top: 8,
                         right: 8,
                         zIndex: 2,
-                        backgroundColor: "white", // optional for contrast
+                        backgroundColor: "white",
                       }}
                       onClick={() => handleDelete(url)}
                     >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
-                  </CardContent>
+                  </Tooltip>
                 </Card>
               </Grid>
             ))}
