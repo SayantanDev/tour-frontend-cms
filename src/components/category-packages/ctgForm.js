@@ -362,7 +362,6 @@ const CtgForm = () => {
                     <TextField
                       label="Category"
                       name="category"
-                      type="number"
                       value={values.category}
                       onChange={handleChange}
                       error={touched.category && Boolean(errors.category)}
