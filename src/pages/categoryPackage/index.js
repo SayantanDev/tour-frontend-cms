@@ -10,11 +10,14 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import useSnackbar from "../../hooks/useSnackbar";
-import { getAllcatPackage } from "../../api/catPackageAPI";
+import { getAllcatPackage, getSinglecatPackages } from "../../api/catPackageAPI";
+import { useDispatch } from "react-redux";
+import { removeSelectedCtgPackage, setSelectedCtgPakage } from "../../reduxcomponents/slices/ctgpackageSlice";
 
 const CategoryPackage = () => {
     const { showSnackbar, SnackbarComponent } = useSnackbar();
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const [allCatPackage, setAllCatPackage] = useState([]);
 
     useEffect(() => {
@@ -30,7 +33,13 @@ const CategoryPackage = () => {
 
         fetchData();
     }, []);
-
+    const handleEdit = async (id) => {
+        const response = await getSinglecatPackages(id);
+        console.log("getSinglecatPackages : ", response.data);
+        
+        dispatch(setSelectedCtgPakage(response.data));
+        navigate(`/category-packages/createandedit`);
+    };
     return (
         <Box p={3}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
@@ -38,7 +47,9 @@ const CategoryPackage = () => {
                 <Button
                     variant="contained"
                     color="primary"
-                    onClick={() => navigate("/category-packages/createandedit")}
+                    onClick={() => {
+                        dispatch(removeSelectedCtgPackage());
+                        navigate("/category-packages/createandedit")}}
                 >
                     Create New CTG-PKG
                 </Button>
@@ -58,6 +69,7 @@ const CategoryPackage = () => {
                                 <CardContent>
                                     <Typography variant="h6" gutterBottom>{catPackage.name}</Typography>
                                     <Divider sx={{ mb: 1 }} />
+                                    <Button size="small" variant="outlined" onClick={() => handleEdit(catPackage._id)}>Edit</Button>
                                 </CardContent>
                             </Card>
                         </Grid>

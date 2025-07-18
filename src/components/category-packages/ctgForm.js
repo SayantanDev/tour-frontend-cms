@@ -11,7 +11,7 @@ import useSnackbar from '../../hooks/useSnackbar';
 import { useSelector } from 'react-redux';
 
 import _ from 'lodash';
-import { CatPackageCreate } from '../../api/catPackageAPI';
+import { CatPackageCreate, updateCatPackage } from '../../api/catPackageAPI';
 import { useNavigate } from 'react-router-dom';
 
 const getInitialValues = (data) => {
@@ -253,7 +253,9 @@ const RenderEditableList = ({ name, values, setFieldValue, label }) => {
 
 const CtgForm = () => {
   const navigate = useNavigate();
-  const { fetchSelectedCtgPackage: selectedCatPackage } = useSelector((state) => state.place);
+  const { fetchSelectedCtgPackage: selectedCatPackage } = useSelector((state) => state.ctgpakage);
+  console.log("selectedCatPackage : ", selectedCatPackage);
+  
   // const getInitialValues = (selectedCatPackage) => selectedCatPackage || initialValues;
 
   const { showSnackbar, SnackbarComponent } = useSnackbar();
@@ -262,16 +264,13 @@ const CtgForm = () => {
     try {
       let res;
       if (selectedCatPackage && selectedCatPackage._id) {
-        console.log("updatePlace");
 
-        // const res = await updatePlace(values, selectedCatPackage._id); // You'll need to import and define this API
-        // if (res) {
-        //   showSnackbar('Package updated successfully', 'success');
+        const res = await updateCatPackage(selectedCatPackage._id, values); // You'll need to import and define this API
+        if (res) {
+          showSnackbar('Package updated successfully', 'success');
 
-        // }
+        }
       } else {
-        console.log("insPlace", values);
-
         const res = await CatPackageCreate(values);
         showSnackbar('You created a new place', 'success');
         navigate(`/category-packages/view`);
