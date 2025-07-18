@@ -7,12 +7,11 @@ import {
   Checkbox
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
-import { createPackage, updatePackage } from '../../api/packageAPI';
 import useSnackbar from '../../hooks/useSnackbar';
 import { useSelector } from 'react-redux';
 
 import _ from 'lodash';
-import { insertPlace, updatePlace } from '../../api/placeApi';
+import { CatPackageCreate } from '../../api/catPackageAPI';
 import { useNavigate } from 'react-router-dom';
 
 const getInitialValues = (data) => {
@@ -155,6 +154,7 @@ const getInitialValues = (data) => {
 const validationSchema = Yup.object({
   name: Yup.string().required('Name is required'),
   label: Yup.string().required('label is required'),
+  url: Yup.string().required('URL is required'),
 });
 const SectionWrapper = ({ title, children }) => (
   <Grid item xs={12} component={Paper} elevation={2} sx={{ p: 2, mb: 3 }}>
@@ -253,45 +253,41 @@ const RenderEditableList = ({ name, values, setFieldValue, label }) => {
 
 const CtgForm = () => {
   const navigate = useNavigate();
-  const { fetchSelectedPlace: selectedPlace } = useSelector((state) => state.place);
-  // const getInitialValues = (selectedPlace) => selectedPlace || initialValues;
+  const { fetchSelectedCtgPackage: selectedCatPackage } = useSelector((state) => state.place);
+  // const getInitialValues = (selectedCatPackage) => selectedCatPackage || initialValues;
 
   const { showSnackbar, SnackbarComponent } = useSnackbar();
 
   const handleSubmit = async (values) => {
+    try {
+      let res;
+      if (selectedCatPackage && selectedCatPackage._id) {
+        console.log("updatePlace");
 
-    console.log("ctg package values : ", values);
+        // const res = await updatePlace(values, selectedCatPackage._id); // You'll need to import and define this API
+        // if (res) {
+        //   showSnackbar('Package updated successfully', 'success');
 
+        // }
+      } else {
+        console.log("insPlace", values);
 
-    // try {
-    //   // let res;
-    //   if (selectedPlace && selectedPlace._id) {
-    //     console.log("updatePlace");
+        const res = await CatPackageCreate(values);
+        showSnackbar('You created a new place', 'success');
+        navigate(`/category-packages/view`);
+        // console.log("places data : ", values);
 
-    //     const res = await updatePlace(values, selectedPlace._id); // You'll need to import and define this API
-    //     if (res) {
-    //       showSnackbar('Package updated successfully', 'success');
-
-    //     }
-    //   } else {
-    //     console.log("insertPlace");
-
-    //     const res = await insertPlace(values);
-    //     showSnackbar('You created a new place', 'success');
-    //     navigate(`/places/view`);
-    //     console.log("places data : ", values);
-
-    //   }
-    // } catch (error) {
-    //   console.error('Error submitting form:', error);
-    //   showSnackbar('Something went wrong', 'error');
-    // }
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      showSnackbar('Something went wrong', 'error');
+    }
   };
 
 
   return (<>
     <Formik
-      initialValues={getInitialValues(selectedPlace)}
+      initialValues={getInitialValues(selectedCatPackage)}
       enableReinitialize
       onSubmit={handleSubmit}
       validationSchema={validationSchema}
@@ -309,9 +305,9 @@ const CtgForm = () => {
             alignItems: 'center',
           }}>
             <Typography variant={"h4"}>
-              {selectedPlace && selectedPlace._id ? 'Update Ctg-package' : 'Create a New Ctg-package'}
+              {selectedCatPackage && selectedCatPackage._id ? 'Update Ctg-package' : 'Create a New Ctg-package'}
             </Typography>
-            <Button variant="contained" type="submit" form="package-form">{selectedPlace && selectedPlace._id ? 'Update' : 'Create'}</Button>
+            <Button variant="contained" type="submit" form="package-form">{selectedCatPackage && selectedCatPackage._id ? 'Update' : 'Create'}</Button>
           </Box>
           <Form id="package-form">
             <Grid container spacing={2} sx={{ p: 2 }}>
