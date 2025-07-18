@@ -333,6 +333,7 @@ const CtgForm = () => {
                       error={touched.label && Boolean(errors.label)}
                       helperText={touched.label && errors.label}
                       fullWidth
+                      multiline
                     />
                   </Grid>
                   <Grid item xs={3}>
@@ -461,7 +462,7 @@ const CtgForm = () => {
               <SectionWrapper title="Meta Data">
                 <Grid container spacing={2}>
                   <Grid item xs={12}><TextField label="Meta Title" name="meta.title" value={values.meta.title} onChange={handleChange} fullWidth /></Grid>
-                  <Grid item xs={12}><TextField label="Meta Description" name="meta.description" value={values.meta.description} onChange={handleChange} fullWidth /></Grid>
+                  <Grid item xs={12}><TextField label="Meta Description" name="meta.description" value={values.meta.description} onChange={handleChange} fullWidth multiline /></Grid>
                   <Grid item xs={12}>
                     <RenderEditableList name="meta.keywords" values={values.meta.keywords} setFieldValue={setFieldValue} label="Meta Keywords" />
                   </Grid>
@@ -498,6 +499,7 @@ const CtgForm = () => {
                             value={values.details.intro[index]}
                             onChange={handleChange}
                             fullWidth
+                            multiline
                             error={
                               touched.details?.intro?.[index] &&
                               Boolean(errors.details?.intro?.[index])
@@ -562,6 +564,7 @@ const CtgForm = () => {
                               value={desc}
                               onChange={handleChange}
                               fullWidth
+                              multiline
                             />
                             <Button
                               onClick={() => remove(index)}
@@ -633,6 +636,7 @@ const CtgForm = () => {
                       value={values.details.what_makes.title}
                       onChange={handleChange}
                       fullWidth
+                      multiline
                       error={
                         touched.details?.what_makes?.title &&
                         Boolean(errors.details?.what_makes?.title)
@@ -656,6 +660,7 @@ const CtgForm = () => {
                               value={desc}
                               onChange={handleChange}
                               fullWidth
+                              multiline
                             />
                             <Button
                               onClick={() => remove(index)}
@@ -759,6 +764,7 @@ const CtgForm = () => {
                               value={desc}
                               onChange={handleChange}
                               fullWidth
+                              multiline
                             />
                             <Button
                               onClick={() => remove(index)}
@@ -857,6 +863,7 @@ const CtgForm = () => {
                               value={desc}
                               onChange={handleChange}
                               fullWidth
+                              multiline
                             />
                             <Button
                               onClick={() => remove(index)}
@@ -991,6 +998,7 @@ const CtgForm = () => {
                               value={desc}
                               onChange={handleChange}
                               fullWidth
+                              multiline
                             />
                             <Button
                               onClick={() => remove(index)}
@@ -1067,6 +1075,7 @@ const CtgForm = () => {
                                       setFieldValue("details.best_places.details.data", updatedRows);
                                     }}
                                     fullWidth
+                                    multiline
                                   />
                                 </Grid>
                               ))}
@@ -1129,6 +1138,7 @@ const CtgForm = () => {
                               value={desc}
                               onChange={handleChange}
                               fullWidth
+                              multiline
                             />
                             <Button
                               onClick={() => remove(index)}
@@ -1236,6 +1246,7 @@ const CtgForm = () => {
                               value={desc}
                               onChange={handleChange}
                               fullWidth
+                              multiline
                             />
                             <Button
                               onClick={() => remove(index)}
@@ -1324,6 +1335,7 @@ const CtgForm = () => {
                               value={desc}
                               onChange={handleChange}
                               fullWidth
+                              multiline
                             />
                             <Button
                               onClick={() => remove(index)}
@@ -1375,6 +1387,7 @@ const CtgForm = () => {
                                           value={d}
                                           onChange={handleChange}
                                           fullWidth
+                                          multiline
                                         />
                                         <Button
                                           onClick={() => remove(dIndex)}
@@ -1452,6 +1465,7 @@ const CtgForm = () => {
                               value={desc}
                               onChange={handleChange}
                               fullWidth
+                              multiline
                             />
                             <Button
                               onClick={() => remove(index)}
@@ -1528,6 +1542,7 @@ const CtgForm = () => {
                                       setFieldValue("details.itinerary.details.data", updated);
                                     }}
                                     fullWidth
+                                    multiline
                                   />
                                 </Grid>
                               ))}
@@ -1649,6 +1664,7 @@ const CtgForm = () => {
                               value={desc}
                               onChange={handleChange}
                               fullWidth
+                              multiline
                             />
                             <Button
                               onClick={() => remove(index)}
@@ -1756,6 +1772,7 @@ const CtgForm = () => {
                               value={desc}
                               onChange={handleChange}
                               fullWidth
+                              multiline
                             />
                             <Button
                               onClick={() => remove(index)}
@@ -1832,6 +1849,7 @@ const CtgForm = () => {
                                       setFieldValue("details.food_to_try.details.data", updated);
                                     }}
                                     fullWidth
+                                    multiline
                                   />
                                 </Grid>
                               ))}
@@ -1891,6 +1909,7 @@ const CtgForm = () => {
                               value={desc}
                               onChange={handleChange}
                               fullWidth
+                              multiline
                             />
                             <Button
                               onClick={() => remove(index)}
@@ -1967,6 +1986,7 @@ const CtgForm = () => {
                                       setFieldValue("details.best_time_to_visit.details.data", updated);
                                     }}
                                     fullWidth
+                                    multiline
                                   />
                                 </Grid>
                               ))}
@@ -2715,6 +2735,7 @@ const CtgForm = () => {
                       label="Section Title"
                       name="details.stay_cautious_about.title"
                       value={values.details.stay_cautious_about.title}
+                      multiline
                       onChange={handleChange}
                       fullWidth
                       error={
@@ -2737,6 +2758,7 @@ const CtgForm = () => {
                           <Grid item xs={12} key={`desc-${index}`} sx={{ display: 'flex', gap: 1 }}>
                             <TextField
                               label={`Description ${index + 1}`}
+                              multiline
                               name={`details.stay_cautious_about.description[${index}]`}
                               value={desc}
                               onChange={handleChange}
@@ -2859,6 +2881,7 @@ const CtgForm = () => {
                             <TextField
                               name={`details.faqs[${index}].question`}
                               label={`Question ${index + 1}`}
+                              multiline
                               fullWidth
                               value={faq.question}
                               onChange={handleChange}
