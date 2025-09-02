@@ -1,22 +1,25 @@
 import React, { useEffect, useState } from "react";
 import {
-    Typography,
-    Grid,
-    Card,
-    CardContent,
-    CardActions,
-    Button,
-    Box,
-    Chip,
-    Divider,
-    TextField,
-    MenuItem,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Badge
+  Typography,
+  Grid,
+  Card,
+  CardContent,
+  CardActions,
+  Button,
+  Box,
+  Chip,
+  Divider,
+  TextField,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Badge,
+  IconButton,
+  Menu
 } from "@mui/material";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { getAllplaces, getSinglePlace, deletePlace } from "../../api/placeApi";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -25,176 +28,229 @@ import useSnackbar from "../../hooks/useSnackbar";
 import CheckIcon from "@mui/icons-material/Check";
 
 const AllPlaces = () => {
-    const { showSnackbar, SnackbarComponent } = useSnackbar();
-    const navigate = useNavigate();
-    const dispatch = useDispatch();
-    const [allPlaces, setAllPlaces] = useState([]);
-    const [filteredPlaces, setFilteredPlaces] = useState([]);
+  const { showSnackbar, SnackbarComponent } = useSnackbar();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const [allPlaces, setAllPlaces] = useState([]);
+  const [filteredPlaces, setFilteredPlaces] = useState([]);
 
-    const [searchTerm, setSearchTerm] = useState("");
-    const [selectedZone, setSelectedZone] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedZone, setSelectedZone] = useState("");
 
-    const [deleteId, setDeleteId] = useState(null);
-    const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
-    useEffect(() => {
-        getAllplaces()
-            .then((res) => {
-                setAllPlaces(res);
-                setFilteredPlaces(res);
-            })
-            .catch((err) => {
-                console.error("Failed to fetch places", err);
-            });
-    }, []);
+  // menu state
+  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+  const [menuPlaceId, setMenuPlaceId] = useState(null);
+  const menuOpen = Boolean(menuAnchorEl);
 
-    const zones = [...new Set(allPlaces.map(place => place.zone))];
+  useEffect(() => {
+    getAllplaces()
+      .then((res) => {
+        setAllPlaces(res);
+        setFilteredPlaces(res);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch places", err);
+      });
+  }, []);
 
-    useEffect(() => {
-        let filtered = allPlaces;
+  const zones = [...new Set(allPlaces.map((place) => place.zone))];
 
-        if (searchTerm) {
-            filtered = filtered.filter((place) =>
-                place.name.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-        }
+  useEffect(() => {
+    let filtered = allPlaces;
 
-        if (selectedZone) {
-            filtered = filtered.filter((place) => place.zone === selectedZone);
-        }
-
-        setFilteredPlaces(filtered);
-    }, [searchTerm, selectedZone, allPlaces]);
-
-    const handleEdit = async (id) => {
-        const response = await getSinglePlace(id);
-        dispatch(setSelectedPlace(response));
-        navigate(`/places/createandedit`);
-    };
-
-    const handleDelete = (id) => {
-        setDeleteId(id);
-        setConfirmOpen(true);
-    };
-
-    const handleImageUpload = (id) => {
-        navigate(`/upload/destination/${id}`);
+    if (searchTerm) {
+      filtered = filtered.filter((place) =>
+        place.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
 
-    const confirmDelete = async () => {
-        try {
-            await deletePlace(deleteId);
-            setAllPlaces(prev => prev.filter(place => place._id !== deleteId));
-            setConfirmOpen(false);
-        } catch (err) {
-            console.error("Failed to delete place", err);
-        } finally {
-            showSnackbar('Place Deleted successfully', 'success');
-        }
-    };
+    if (selectedZone) {
+      filtered = filtered.filter((place) => place.zone === selectedZone);
+    }
 
-    return (
-        <Box p={3}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
-                <Typography variant="h5">All Places</Typography>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => {
-                        dispatch(removeSelectedPlace());
-                        navigate("/places/createandedit");
-                    }}
+    setFilteredPlaces(filtered);
+  }, [searchTerm, selectedZone, allPlaces]);
+
+  const handleEdit = async (id) => {
+    const response = await getSinglePlace(id);
+    dispatch(setSelectedPlace(response));
+    navigate(`/places/createandedit`);
+  };
+
+  const handleDelete = (id) => {
+    setDeleteId(id);
+    setConfirmOpen(true);
+  };
+
+  const handleImageUpload = (id) => {
+    navigate(`/upload/destination/${id}`);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await deletePlace(deleteId);
+      setAllPlaces((prev) => prev.filter((place) => place._id !== deleteId));
+      setConfirmOpen(false);
+      showSnackbar("Place Deleted successfully", "success");
+    } catch (err) {
+      console.error("Failed to delete place", err);
+      showSnackbar("Failed to delete place", "error");
+    }
+  };
+
+  // menu handlers
+  const handleMenuOpen = (e, placeId) => {
+    setMenuAnchorEl(e.currentTarget);
+    setMenuPlaceId(placeId);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setMenuPlaceId(null);
+  };
+
+  const handleAddPackages = () => {
+    if (menuPlaceId) {
+      // adjust route as per your project structure
+      navigate(`/upload/packages/${menuPlaceId}`);
+    }
+    handleMenuClose();
+  };
+
+  return (
+    <Box p={3}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
+        <Typography variant="h5">All Places</Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => {
+            dispatch(removeSelectedPlace());
+            navigate("/places/createandedit");
+          }}
+        >
+          Create New Place
+        </Button>
+      </Box>
+
+      {/* Filters */}
+      <Box mb={3} display="flex" gap={2} flexWrap="wrap">
+        <TextField
+          label="Search by Name"
+          variant="outlined"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <TextField
+          label="Filter by Zone"
+          variant="outlined"
+          select
+          value={selectedZone}
+          onChange={(e) => setSelectedZone(e.target.value)}
+          sx={{ minWidth: 200 }}
+        >
+          <MenuItem value="">All Zones</MenuItem>
+          {zones.map((zone, index) => (
+            <MenuItem key={index} value={zone}>
+              {zone}
+            </MenuItem>
+          ))}
+        </TextField>
+      </Box>
+
+      {/* Cards */}
+      <Grid container spacing={3}>
+        {filteredPlaces.map((place) => (
+          <Grid item xs={12} sm={6} md={4} key={place._id}>
+            <Card
+              variant="outlined"
+              sx={{ height: "100%", display: "flex", flexDirection: "column", position: "relative" }}
+            >
+              {/* Top-right menu button */}
+              <Box sx={{ position: "absolute", top: 4, right: 4 }}>
+                <IconButton
+                  aria-label="more options"
+                  size="small"
+                  onClick={(e) => handleMenuOpen(e, place._id)}
                 >
-                    Create New Place
+                  <MoreVertIcon fontSize="small" />
+                </IconButton>
+              </Box>
+
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  {place.name}
+                </Typography>
+                <Divider sx={{ mb: 1 }} />
+                <Typography variant="body2" color="text.secondary">
+                  Zone: {place.zone}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Temp: {place.min_temperature}°C - {place.max_temperature}°C
+                </Typography>
+                <Typography variant="body2" mt={1} noWrap>
+                  Description: {place.description}
+                </Typography>
+                <Box mt={1}>
+                  <Chip size="small" label={`Price: ₹${place.price}`} sx={{ mr: 1 }} />
+                  {place.is_active && <Chip size="small" label="Active" color="success" />}
+                </Box>
+              </CardContent>
+
+              <CardActions sx={{ mt: "auto", justifyContent: "space-between", px: 2, pb: 2 }}>
+                <Button size="small" variant="outlined" onClick={() => handleEdit(place._id)}>
+                  Edit
                 </Button>
-            </Box>
 
-            {/* Filters */}
-            <Box mb={3} display="flex" gap={2} flexWrap="wrap">
-                <TextField
-                    label="Search by Name"
-                    variant="outlined"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <TextField
-                    label="Filter by Zone"
-                    variant="outlined"
-                    select
-                    value={selectedZone}
-                    onChange={(e) => setSelectedZone(e.target.value)}
-                    sx={{ minWidth: 200 }}
-                >
-                    <MenuItem value="">All Zones</MenuItem>
-                    {zones.map((zone, index) => (
-                        <MenuItem key={index} value={zone}>
-                            {zone}
-                        </MenuItem>
-                    ))}
-                </TextField>
-            </Box>
+                <Badge badgeContent={place.images.length} color="error" invisible={place.images.length === 0}>
+                  <Button
+                    size="small"
+                    variant={place.images.length > 0 ? "contained" : "outlined"}
+                    color={place.images.length > 0 ? "success" : "primary"}
+                    startIcon={place.images.length > 0 ? <CheckIcon /> : null}
+                    onClick={() => handleImageUpload(place._id)}
+                  >
+                    Upload
+                  </Button>
+                </Badge>
 
-            {/* Cards */}
-            <Grid container spacing={3}>
-                {filteredPlaces.map((place) => (
-                    <Grid item xs={12} sm={6} md={4} key={place._id}>
-                        <Card variant="outlined" sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-                            <CardContent>
-                                <Typography variant="h6" gutterBottom>{place.name}</Typography>
-                                <Divider sx={{ mb: 1 }} />
-                                <Typography variant="body2" color="text.secondary">Zone: {place.zone}</Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                    Temp: {place.min_temperature}°C - {place.max_temperature}°C
-                                </Typography>
-                                <Typography variant="body2" mt={1} noWrap>
-                                    Description: {place.description}
-                                </Typography>
-                                <Box mt={1}>
-                                    <Chip size="small" label={`Price: ₹${place.price}`} sx={{ mr: 1 }} />
-                                    {place.is_active && <Chip size="small" label="Active" color="success" />}
-                                </Box>
-                            </CardContent>
-                            <CardActions sx={{ mt: "auto", justifyContent: "space-between", px: 2, pb: 2 }}>
-                                <Button size="small" variant="outlined" onClick={() => handleEdit(place._id)}>Edit</Button>
-                                <Badge
-                                    badgeContent={place.images.length}
-                                    color="error"
-                                    invisible={place.images.length === 0}
-                                >
-                                    <Button
-                                        size="small"
-                                        variant={place.images.length > 0 ? "contained" : "outlined"}
-                                        color={place.images.length > 0 ? "success" : "primary"}
-                                        startIcon={place.images.length > 0 ? <CheckIcon /> : null}
-                                        onClick={() => handleImageUpload(place._id)}
-                                    >
-                                        Upload
-                                    </Button>
-                                </Badge>
+                <Button size="small" color="error" variant="outlined" onClick={() => handleDelete(place._id)}>
+                  Delete
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
 
+      {/* Per-card menu */}
+      <Menu
+        anchorEl={menuAnchorEl}
+        open={menuOpen}
+        onClose={handleMenuClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <MenuItem onClick={handleAddPackages}>Add Packages</MenuItem>
+      </Menu>
 
-                                <Button size="small" color="error" variant="outlined" onClick={() => handleDelete(place._id)}>Delete</Button>
-                            </CardActions>
-                        </Card>
-                    </Grid>
-                ))}
-            </Grid>
-
-            {/* Delete Confirmation Dialog */}
-            <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-                <DialogTitle>Confirm Delete</DialogTitle>
-                <DialogContent>
-                    Are you sure you want to delete this place?
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
-                    <Button onClick={confirmDelete} color="error" variant="contained">Delete</Button>
-                </DialogActions>
-            </Dialog>
-            <SnackbarComponent />
-        </Box>
-
-    );
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>Are you sure you want to delete this place?</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
+          <Button onClick={confirmDelete} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <SnackbarComponent />
+    </Box>
+  );
 };
 
 export default AllPlaces;

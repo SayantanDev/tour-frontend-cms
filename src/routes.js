@@ -31,6 +31,7 @@ import CtgForm from "./components/category-packages/ctgForm";
 import AllPlaces from "./pages/allPlaces";
 import CategoryPackage from "./pages/categoryPackage";
 import ImageManagerPage from "./pages/imageManager";
+import packageUploadInPlaces from "./pages/packageUpload/inPlaces";
 
 const RootLayoutWithRedirect = withAuthRedirect(RootLayout);
 
@@ -101,6 +102,10 @@ const router = createBrowserRouter(
         <Route
           path="upload/:schema/:id"
           element={<ProtectedRoute Element={ImageManagerPage} module="places" />}
+        />
+        <Route
+          path="upload/packages/:id"
+          element={<ProtectedRoute Element={packageUploadInPlaces} module="places" />}
         />
         <Route
           path="query/view"

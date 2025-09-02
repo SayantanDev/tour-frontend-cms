@@ -1,18 +1,47 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
     Container, Typography, Button, IconButton, TextField, Box, Autocomplete,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-    TablePagination
+    TablePagination, Chip, Switch, CircularProgress, Tooltip
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
 import PackageDialog from './PackageDialog';
-import { getAllPackages, getSinglePackages } from '../../api/packageAPI';
+import { getAllPackages, getSinglePackages, verifyPackage } from '../../api/packageAPI';
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { removeSelectedPackage, setSelectedPackage } from "../../reduxcomponents/slices/packagesSlice";
 
+// --------- helpers ----------
+const formatDate = (iso) => {
+    if (!iso) return "—";
+    try {
+        const d = new Date(iso);
+        return d.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+    } catch {
+        return iso;
+    }
+};
+
+const safeCost = (pkg) => {
+    if (pkg?.type === 'Trek') {
+        return pkg?.details?.cost?.singleCost ?? "N/A";
+    }
+    const mc = pkg?.details?.cost?.multipleCost;
+    if (Array.isArray(mc) && mc.length) {
+        const first = mc[0];
+        if (first?.Budget != null) return first.Budget;
+        if (first?.budget != null) return first.budget;
+        const anyPrice = Object.values(first || {}).find(v => typeof v === 'number' || typeof v === 'string');
+        return anyPrice ?? "N/A";
+    }
+    return "N/A";
+};
+
+const safeDuration = (pkg) => pkg?.details?.header?.h2 ?? "—";
+
+// ========== Component ==========
 const AllPackages = () => {
     const [allPackages, setAllPackages] = useState([]);
     const [filteredPackages, setFilteredPackages] = useState([]);
@@ -25,48 +54,99 @@ const AllPackages = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
 
+    // NEW: filters
+    const [filterVerified, setFilterVerified] = useState('All'); // 'All' | 'Verified' | 'Not Verified'
+    const [filterDateField, setFilterDateField] = useState('created'); // 'created' | 'updated'
+    const [filterDateFrom, setFilterDateFrom] = useState(''); // YYYY-MM-DD
+    const [filterDateTo, setFilterDateTo] = useState('');     // YYYY-MM-DD
+
+    // track which rows are updating "verified"
+    const [toggleLoading, setToggleLoading] = useState({});
+
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
+    // initial fetch
     useEffect(() => {
         getAllPackages()
             .then((res) => {
-                setAllPackages(res.data);
+                setAllPackages(res.data || []);
             })
             .catch((err) => {
                 console.error('Failed to fetch packages', err);
             });
     }, []);
 
-    const uniqueLocations = [...new Set(allPackages.map(pkg => pkg.location))];
-    const uniqueTypes = [...new Set(allPackages.map(pkg => pkg.type))];
+    const uniqueLocations = useMemo(
+        () => [...new Set(allPackages.map(pkg => pkg.location).filter(Boolean))],
+        [allPackages]
+    );
+    const uniqueTypes = useMemo(
+        () => [...new Set(allPackages.map(pkg => pkg.type).filter(Boolean))],
+        [allPackages]
+    );
 
+    // filtering + mapping to rows
     useEffect(() => {
         let filtered = [...allPackages];
 
         if (filterLocation) {
-            filtered = filtered.filter(pkg => pkg.location?.toLowerCase() === filterLocation.toLowerCase());
+            filtered = filtered.filter(pkg => (pkg.location || "").toLowerCase() === filterLocation.toLowerCase());
         }
         if (filterType) {
-            filtered = filtered.filter(pkg => pkg.type?.toLowerCase() === filterType.toLowerCase());
+            filtered = filtered.filter(pkg => (pkg.type || "").toLowerCase() === filterType.toLowerCase());
         }
         if (searchLabel) {
-            filtered = filtered.filter(pkg => pkg.label?.toLowerCase().includes(searchLabel.toLowerCase()));
+            const q = searchLabel.toLowerCase();
+            filtered = filtered.filter(pkg => (pkg.label || "").toLowerCase().includes(q));
+        }
+
+        // Verified filter
+        if (filterVerified !== 'All') {
+            const want = filterVerified === 'Verified';
+            filtered = filtered.filter(pkg => Boolean(pkg?.verified) === want);
+        }
+
+        // Date-wise filter
+        if (filterDateFrom || filterDateTo) {
+            const key = filterDateField === 'created' ? 'created_at' : 'updated_at';
+            const fromTime = filterDateFrom ? new Date(`${filterDateFrom}T00:00:00`).getTime() : null;
+            const toTime = filterDateTo ? new Date(`${filterDateTo}T23:59:59`).getTime() : null;
+
+            filtered = filtered.filter(pkg => {
+                const t = pkg?.[key] ? new Date(pkg[key]).getTime() : null;
+                if (!t) return false; // if no date and a range is set, exclude
+                if (fromTime && t < fromTime) return false;
+                if (toTime && t > toTime) return false;
+                return true;
+            });
         }
 
         const rows = filtered.map(pkg => ({
+            raw: pkg,
             id: pkg._id,
-            title: pkg.label,
-            type: pkg.type,
-            duration: pkg?.details?.header?.h2,
-            cost: pkg?.type === 'Trek'
-                ? pkg?.details?.cost?.singleCost
-                : pkg?.details?.cost?.multipleCost?.[0]?.Budget || 'N/A',
+            title: pkg.label || "Untitled",
+            type: pkg.type || "—",
+            verified: Boolean(pkg.verified),
+            created_at: pkg.created_at,
+            updated_at: pkg.updated_at,
+            duration: safeDuration(pkg),
+            cost: safeCost(pkg),
         }));
 
         setFilteredPackages(rows);
-    }, [allPackages, filterLocation, filterType, searchLabel]);
+    }, [
+        allPackages,
+        filterLocation,
+        filterType,
+        searchLabel,
+        filterVerified,
+        filterDateField,
+        filterDateFrom,
+        filterDateTo
+    ]);
 
+    // actions
     const handleView = (id) => {
         navigate(`/packages/view/${id}`);
     };
@@ -86,19 +166,44 @@ const AllPackages = () => {
         navigate(`/packages/createandedit`);
     };
 
-    const handleChangePage = (_, newPage) => {
-        setPage(newPage);
-    };
-
-    const handleChangeRowsPerPage = (event) => {
-        setRowsPerPage(+event.target.value);
-        setPage(0);
-    };
+    const handleChangePage = (_, newPage) => setPage(newPage);
+    const handleChangeRowsPerPage = (event) => { setRowsPerPage(+event.target.value); setPage(0); };
 
     const paginatedRows = filteredPackages.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
+    const handleToggleVerified = async (row, nextVal) => {
+        const id = row.id;
+        setToggleLoading(prev => ({ ...prev, [id]: true }));
+
+        // optimistic UI
+        setAllPackages(prev =>
+            prev.map(p => (p._id === id ? { ...p, verified: nextVal } : p))
+        );
+
+        try {
+            const objD = {
+                "verified": nextVal
+            }
+            
+            
+            await verifyPackage(id, objD); // <-- backend update
+            // reflect updated_at immediately
+            setAllPackages(prev =>
+                prev.map(p => (p._id === id ? { ...p, updated_at: new Date().toISOString() } : p))
+            );
+        } catch (err) {
+            console.error("Failed to update verified", err);
+            // revert on error
+            setAllPackages(prev =>
+                prev.map(p => (p._id === id ? { ...p, verified: !nextVal } : p))
+            );
+        } finally {
+            setToggleLoading(prev => ({ ...prev, [id]: false }));
+        }
+    };
+
     return (
-        <Container>
+        <Container maxWidth="xl" sx={{ py: 2 }}>
             <Typography variant="h6" sx={{ mb: 2 }}>All Packages</Typography>
 
             {/* Filters */}
@@ -124,6 +229,56 @@ const AllPackages = () => {
                     renderInput={(params) => <TextField {...params} label="Type" size="small" />}
                     sx={{ width: 200 }}
                 />
+
+                {/* NEW: Verified filter */}
+                <TextField
+                    label="Verified"
+                    size="small"
+                    select
+                    value={filterVerified}
+                    onChange={(e) => setFilterVerified(e.target.value)}
+                    sx={{ width: 160 }}
+                    SelectProps={{ native: true }}
+                >
+                    <option value="All">All</option>
+                    <option value="Verified">Verified</option>
+                    <option value="Not Verified">Not Verified</option>
+                </TextField>
+
+                {/* NEW: Date field selector */}
+                <TextField
+                    label="Date Field"
+                    size="small"
+                    select
+                    value={filterDateField}
+                    onChange={(e) => setFilterDateField(e.target.value)}
+                    sx={{ width: 160 }}
+                    SelectProps={{ native: true }}
+                >
+                    <option value="created">Created At</option>
+                    <option value="updated">Updated At</option>
+                </TextField>
+
+                {/* NEW: From / To dates */}
+                <TextField
+                    label="From"
+                    size="small"
+                    type="date"
+                    value={filterDateFrom}
+                    onChange={(e) => setFilterDateFrom(e.target.value)}
+                    sx={{ width: 170 }}
+                    InputLabelProps={{ shrink: true }}
+                />
+                <TextField
+                    label="To"
+                    size="small"
+                    type="date"
+                    value={filterDateTo}
+                    onChange={(e) => setFilterDateTo(e.target.value)}
+                    sx={{ width: 170 }}
+                    InputLabelProps={{ shrink: true }}
+                />
+
                 <Button
                     variant="contained"
                     size="small"
@@ -144,17 +299,57 @@ const AllPackages = () => {
                                 <TableCell>Type</TableCell>
                                 <TableCell>Duration</TableCell>
                                 <TableCell>Cost</TableCell>
+                                <TableCell>Verified</TableCell>
+                                <TableCell>Created At</TableCell>
+                                <TableCell>Updated At</TableCell>
                                 <TableCell align="center">Action</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {paginatedRows.map((row) => (
-                                <TableRow key={row.id}>
+                                <TableRow key={row.id} hover>
                                     <TableCell>{row.title}</TableCell>
                                     <TableCell>{row.type}</TableCell>
                                     <TableCell>{row.duration}</TableCell>
                                     <TableCell>{row.cost}</TableCell>
-                                    <TableCell align="center">
+
+                                    {/* Verified toggle */}
+                                    <TableCell>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <Switch
+                                                size="small"
+                                                checked={row.verified}
+                                                onChange={(e) => handleToggleVerified(row, e.target.checked)}
+                                                disabled={toggleLoading[row.id]}
+                                                inputProps={{ 'aria-label': 'Toggle verified' }}
+                                            />
+                                            {toggleLoading[row.id] ? (
+                                                <CircularProgress size={16} />
+                                            ) : (
+                                                <Chip
+                                                    size="small"
+                                                    label={row.verified ? "Verified" : "Not Verified"}
+                                                    color={row.verified ? "success" : "default"}
+                                                    variant={row.verified ? "filled" : "outlined"}
+                                                />
+                                            )}
+                                        </Box>
+                                    </TableCell>
+
+                                    {/* Dates */}
+                                    <TableCell>
+                                        <Tooltip title={row.created_at || ""}>
+                                            <span>{formatDate(row.created_at)}</span>
+                                        </Tooltip>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Tooltip title={row.updated_at || ""}>
+                                            <span>{formatDate(row.updated_at)}</span>
+                                        </Tooltip>
+                                    </TableCell>
+
+                                    {/* Actions */}
+                                    <TableCell align="center" width={"160px"}>
                                         <IconButton color="warning" onClick={() => handleView(row.id)}>
                                             <VisibilityIcon />
                                         </IconButton>
@@ -169,7 +364,7 @@ const AllPackages = () => {
                             ))}
                             {paginatedRows.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={5} align="center">
+                                    <TableCell colSpan={8} align="center">
                                         No packages found.
                                     </TableCell>
                                 </TableRow>

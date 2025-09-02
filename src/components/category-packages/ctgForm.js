@@ -2,11 +2,8 @@ import React from 'react';
 import { Formik, FieldArray, Form } from 'formik';
 import * as Yup from 'yup';
 import {
-  Box, Button, Grid, TextField, Typography, Switch, FormControlLabel, Paper, Divider, IconButton, Chip, Stack,
-  MenuItem,
-  Checkbox
-} from '@mui/material';
-import { Edit, Delete } from '@mui/icons-material';
+  Box, Button, Grid, TextField, Typography, Switch, FormControlLabel, Paper, Divider, Chip, Stack} from '@mui/material';
+import { Delete } from '@mui/icons-material';
 import useSnackbar from '../../hooks/useSnackbar';
 import { useSelector } from 'react-redux';
 
@@ -262,7 +259,7 @@ const CtgForm = () => {
 
   const handleSubmit = async (values) => {
     try {
-      let res;
+      // let res;
       if (selectedCatPackage && selectedCatPackage._id) {
 
         const res = await updateCatPackage(selectedCatPackage._id, values); // You'll need to import and define this API
@@ -271,7 +268,7 @@ const CtgForm = () => {
 
         }
       } else {
-        const res = await CatPackageCreate(values);
+         await CatPackageCreate(values);
         showSnackbar('You created a new place', 'success');
         navigate(`/category-packages/view`);
         // console.log("places data : ", values);
@@ -282,8 +279,6 @@ const CtgForm = () => {
       showSnackbar('Something went wrong', 'error');
     }
   };
-
-
   return (<>
     <Formik
       initialValues={getInitialValues(selectedCatPackage)}

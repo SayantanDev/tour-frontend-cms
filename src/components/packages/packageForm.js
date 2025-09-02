@@ -175,7 +175,7 @@ const PackageForm = () => {
 
         }
       } else {
-        const res = await createPackage(values);
+         await createPackage(values);
         showSnackbar('You created a new package', 'success');
       }
     } catch (error) {
@@ -204,8 +204,8 @@ const PackageForm = () => {
             justifyContent: 'space-between',
             alignItems: 'center',
           }}>
-            <Typography variant={"h4"}>Create a new Package</Typography>
-            <Button variant="contained" type="submit" form="package-form">Submit</Button>
+            <Typography variant={"h4"}>{selectedPackage && selectedPackage._id ? 'Update ' : 'Create a new '}Package</Typography>
+            <Button variant="contained" type="submit" form="package-form">{selectedPackage && selectedPackage._id ? 'Update ' : 'Create'}</Button>
           </Box>
           <Form id="package-form">
             <Grid container spacing={2} sx={{ p: 2 }}>

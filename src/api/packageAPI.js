@@ -33,3 +33,9 @@ export function deletePackage(pkgId) {
     const DELETEPKG__URL = `${PKG_URL}/deletePackage/${pkgId}`;
     return axios.delete(DELETEPKG__URL);
 };
+
+export function verifyPackage(id, obj) {
+    const UPDATEPKG__URL = `${PKG_URL}/verify/${id}`;
+    return axios.put(UPDATEPKG__URL, obj);
+    
+}
