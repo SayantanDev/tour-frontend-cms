@@ -31,3 +31,9 @@ export async function deletePlace(id) {
     const result = await axios.delete(ADDUSER_URL);
     return result.data;
 }
+
+export async function updatePlaceRanking(payload,id) {
+    const ADDUSER_URL = `${QRY_URL}/update/ranking/${id}`;
+    const result = await axios.put(ADDUSER_URL,payload);
+    return result.data;
+}

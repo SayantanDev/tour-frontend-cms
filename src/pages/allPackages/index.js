@@ -227,7 +227,7 @@ const AllPackages = () => {
       // revert on error
       setAllPackages(prevSnapshot);
     } finally {
-      setRankingLoading(prev => ({ ...prev, [id]: false }));
+      setRankingLoading(prev => ({ ...prev, [id]: false })); 
     }
   };
 

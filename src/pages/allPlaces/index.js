@@ -17,7 +17,9 @@ import {
   DialogActions,
   Badge,
   IconButton,
-  Menu
+  Menu,
+  Select,
+  CircularProgress
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { getAllplaces, getSinglePlace, deletePlace } from "../../api/placeApi";
@@ -26,6 +28,8 @@ import { useDispatch } from "react-redux";
 import { removeSelectedPlace, setSelectedPlace } from "../../reduxcomponents/slices/placesSlice";
 import useSnackbar from "../../hooks/useSnackbar";
 import CheckIcon from "@mui/icons-material/Check";
+import { handleChangeRanking } from "../allPackages/rankingUtil"; // adjust path
+
 
 const AllPlaces = () => {
   const { showSnackbar, SnackbarComponent } = useSnackbar();
@@ -33,12 +37,15 @@ const AllPlaces = () => {
   const dispatch = useDispatch();
   const [allPlaces, setAllPlaces] = useState([]);
   const [filteredPlaces, setFilteredPlaces] = useState([]);
+  const [rankingLoading, setRankingLoading] = useState({});
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedZone, setSelectedZone] = useState("");
 
   const [deleteId, setDeleteId] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  
 
   // menu state
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
@@ -50,6 +57,7 @@ const AllPlaces = () => {
       .then((res) => {
         setAllPlaces(res);
         setFilteredPlaces(res);
+        console.log('my data is',res);
       })
       .catch((err) => {
         console.error("Failed to fetch places", err);
@@ -120,6 +128,9 @@ const AllPlaces = () => {
     handleMenuClose();
   };
 
+
+  
+
   return (
     <Box p={3}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
@@ -159,7 +170,12 @@ const AllPlaces = () => {
             </MenuItem>
           ))}
         </TextField>
-      </Box>
+
+        
+         
+        
+        
+    </Box>
 
       {/* Cards */}
       <Grid container spacing={3}>
@@ -181,9 +197,12 @@ const AllPlaces = () => {
               </Box>
 
               <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  {place.name}
-                </Typography>
+                
+                  <Typography variant="h6" gutterBottom>
+                  {place.name}  {place.ranking>= 1 && <Chip size="small" label={place.ranking} color="success" variant="outlined"/>}
+                  </Typography>
+                  
+                
                 <Divider sx={{ mb: 1 }} />
                 <Typography variant="body2" color="text.secondary">
                   Zone: {place.zone}
@@ -216,6 +235,31 @@ const AllPlaces = () => {
                     Upload
                   </Button>
                 </Badge>
+
+                
+                  {/* NEW: Ranking selector */}
+                                    
+                  
+                    <Select
+                      size="small"
+                      value={place.ranking ?? 0}
+                      onChange={(e) => handleChangeRanking(place, e.target.value,allPlaces,
+                        setAllPlaces,
+                        rankingLoading,
+                        setRankingLoading)}
+                      disabled={rankingLoading[place.id]}
+                      sx={{ minWidth: 80 ,
+                        height: 32,
+                        "& .MuiSelect-select": { paddingY: 0.5 },
+                      }}
+                    >
+                      {Array.from({ length: 11 }).map((_, i) => (
+                        <MenuItem key={i} value={i}>{i}</MenuItem>
+                      ))}
+                    </Select>
+                  
+                                    
+                
 
                 <Button size="small" color="error" variant="outlined" onClick={() => handleDelete(place._id)}>
                   Delete
