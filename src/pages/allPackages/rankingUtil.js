@@ -1,5 +1,5 @@
 // rankingUtils.js
-import { updatePackageRanking } from "../../api/packageAPI"; // adjust if using different API for places
+import { updatePlaceRanking } from "../../api/placeApi";
 
 /**
  * Handles changing ranking for a row (package or place)
@@ -20,7 +20,9 @@ export const handleChangeRanking = async (
 ) => {
   const id = row._id;
   const newRanking = Number(nextVal);
-
+  console.log("newRanking : ", newRanking);
+  
+  
   setRankingLoading(prev => ({ ...prev, [id]: true }));
 
   const prevSnapshot = allItems;
@@ -29,7 +31,8 @@ export const handleChangeRanking = async (
   );
 
   try {
-    await updatePackageRanking(id, { ranking: newRanking });
+    await updatePlaceRanking(id, { ranking: newRanking });
+    
     setAllItems(prev =>
       prev.map(item => (item._id === id ? { ...item, updated_at: new Date().toISOString() } : item))
     );

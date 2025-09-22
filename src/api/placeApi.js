@@ -32,7 +32,7 @@ export async function deletePlace(id) {
     return result.data;
 }
 
-export async function updatePlaceRanking(payload,id) {
+export async function updatePlaceRanking(id,payload) {
     const ADDUSER_URL = `${QRY_URL}/update/ranking/${id}`;
     const result = await axios.put(ADDUSER_URL,payload);
     return result.data;
