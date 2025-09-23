@@ -7,6 +7,7 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
+import DriveFolderUploadIcon from '@mui/icons-material/DriveFolderUpload';
 import PackageDialog from './PackageDialog';
 import { getAllPackages, getSinglePackages, verifyPackage, updatePackageRanking } from '../../api/packageAPI';
 import { useNavigate } from "react-router-dom";
@@ -231,6 +232,10 @@ const AllPackages = () => {
     }
   };
 
+  const handleImageUpload = (id) => {
+    navigate(`/upload/package/${id}`);  
+  };
+
   return (
     <Container maxWidth="xl" sx={{ py: 2 }}>
       <Typography variant="h6" sx={{ mb: 2 }}>All Packages</Typography>
@@ -397,16 +402,28 @@ const AllPackages = () => {
                   </TableCell>
 
                   {/* Actions */}
-                  <TableCell align="center" width={"160px"}>
-                    <IconButton color="warning" onClick={() => handleView(row.id)}>
+                  <TableCell align="center" width={"200px"}>
+                    <Tooltip title="Image Upload">
+                      <IconButton color="success" onClick={() => handleImageUpload(row.id)}>
+                      <DriveFolderUploadIcon />
+                    </IconButton>
+                    </Tooltip>
+                    <Tooltip title="FullView">
+                      <IconButton color="warning" onClick={() => handleView(row.id)}>
                       <VisibilityIcon />
                     </IconButton>
-                    <IconButton color="primary" onClick={() => handleEdit(row.id)}>
+                    </Tooltip>
+                    <Tooltip title="Edit">
+                      <IconButton color="primary" onClick={() => handleEdit(row.id)}>
                       <EditIcon />
                     </IconButton>
-                    <IconButton color="error">
+                    </Tooltip>
+                    <Tooltip title="Location">
+                      <IconButton color="error">
                       <LocationOffIcon />
                     </IconButton>
+                    </Tooltip>
+                    
                   </TableCell>
                 </TableRow>
               ))}

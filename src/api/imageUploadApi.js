@@ -7,6 +7,7 @@ export async function getImages(schema, id) {
     const ADDUSER_URL = `${QRY_URL}/get/${schema}/${id}`;
     const result = await axios.get(ADDUSER_URL);
     return result.data;
+    
 };
 
 export async function imageUpload(schema,id,payload) {

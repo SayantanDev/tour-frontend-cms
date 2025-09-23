@@ -107,7 +107,7 @@ const AllPlaces = () => {
   };
 
   const handleImageUpload = (id) => {
-    navigate(`/upload/destination/${id}`);
+    navigate(`/upload/destination/${id}`);  
   };
 
   const confirmDelete = async () => {
