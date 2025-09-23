@@ -20,7 +20,7 @@ export const handleChangeRanking = async (
 ) => {
   const id = row._id;
   const newRanking = Number(nextVal);
-  console.log("newRanking : ", newRanking);
+  //console.log("newRanking : ", newRanking);
   
   
   setRankingLoading(prev => ({ ...prev, [id]: true }));

@@ -19,7 +19,8 @@ import {
   IconButton,
   Menu,
   Select,
-  CircularProgress
+  CircularProgress,
+  Checkbox
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { getAllplaces, getSinglePlace, deletePlace } from "../../api/placeApi";
@@ -41,11 +42,13 @@ const AllPlaces = () => {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedZone, setSelectedZone] = useState("");
+  const [rankingFilter, setRankingFilter] = useState(false);
 
   const [deleteId, setDeleteId] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   
+  const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
   // menu state
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
@@ -77,8 +80,20 @@ const AllPlaces = () => {
       filtered = filtered.filter((place) => place.zone === selectedZone);
     }
 
+ 
+    //filtered = [...filtered].sort((a,b) => a.ranking - b.ranking);
+    if (rankingFilter) {
+      filtered.sort((a,b) => {
+        if(a.ranking === 0 && b.ranking === 0) return 0;
+        if(a.ranking === 0) return 1;
+        if(b.ranking === 0) return -1;
+        return a.ranking - b.ranking;
+
+      });
+    }
+
     setFilteredPlaces(filtered);
-  }, [searchTerm, selectedZone, allPlaces]);
+  }, [searchTerm, selectedZone,  rankingFilter, allPlaces]);
 
   const handleEdit = async (id) => {
     const response = await getSinglePlace(id);
@@ -146,35 +161,39 @@ const AllPlaces = () => {
       </Box>
 
       {/* Filters */}
-      <Box mb={3} display="flex" gap={2} flexWrap="wrap">
-        <TextField
-          label="Search by Name"
-          variant="outlined"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <TextField
-          label="Filter by Zone"
-          variant="outlined"
-          select
-          value={selectedZone}
-          onChange={(e) => setSelectedZone(e.target.value)}
-          sx={{ minWidth: 200 }}
-        >
-          <MenuItem value="">All Zones</MenuItem>
-          {zones.map((zone, index) => (
-            <MenuItem key={index} value={zone}>
-              {zone}
-            </MenuItem>
-          ))}
-        </TextField>
-
-        
-         
-        
-        
-    </Box>
-
+      <Box mb={3} display="flex" justifyContent="space-between" alignItems="center"  flexWrap="wrap">
+        <Box mb={3} display="flex" gap={2} flexWrap="wrap">
+          <TextField
+            label="Search by Name"
+            variant="outlined"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <TextField
+            label="Filter by Zone"
+            variant="outlined"
+            select
+            value={selectedZone}
+            onChange={(e) => setSelectedZone(e.target.value)}
+            sx={{ minWidth: 200 }}
+          >
+            <MenuItem value="">All Zones</MenuItem>
+            {zones.map((zone, index) => (
+              <MenuItem key={index} value={zone}>
+                {zone}
+              </MenuItem>
+            ))}
+          </TextField>
+          <Typography>
+            Ranking
+           <Checkbox {...label} disabled={selectedZone ? false : true}
+           checked={rankingFilter}
+           onChange={(e) => setRankingFilter(e.target.checked)}
+           />
+          </Typography>
+        </Box>
+        <Chip label={filteredPlaces.length}  size="medium" color="primary" sx={{minWidth: 100, p:2}}></Chip>
+      </Box>
       {/* Cards */}
       <Grid container spacing={3}>
         {filteredPlaces.map((place) => (
