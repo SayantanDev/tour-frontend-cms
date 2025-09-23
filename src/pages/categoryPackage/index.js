@@ -40,6 +40,9 @@ const CategoryPackage = () => {
         dispatch(setSelectedCtgPakage(response.data));
         navigate(`/category-packages/createandedit`);
     };
+    const handleImageUpload = (id) => {
+    navigate(`/upload/category/${id}`);  
+  };
     return (
         <Box p={3}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
@@ -70,6 +73,7 @@ const CategoryPackage = () => {
                                     <Typography variant="h6" gutterBottom>{catPackage.name}</Typography>
                                     <Divider sx={{ mb: 1 }} />
                                     <Button size="small" variant="outlined" onClick={() => handleEdit(catPackage._id)}>Edit</Button>
+                                    <Button size="small" variant="outlined" sx={{ m: 1 }} onClick={() => handleImageUpload(catPackage._id)}>Upload</Button>
                                 </CardContent>
                             </Card>
                         </Grid>
