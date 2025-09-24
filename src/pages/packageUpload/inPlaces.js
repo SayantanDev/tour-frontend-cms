@@ -2,9 +2,10 @@ import { Button, Card, CardContent, Divider, Grid, List, ListItem, Table, TableB
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getAllPackages, getPackagesByLocation } from "../../api/packageAPI";
-import { getSinglePlace } from "../../api/placeApi";
+import { getSinglePlace, UpdatePlacesPacakges } from "../../api/placeApi";
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { object } from "yup";
 
 
 const PackageUploadInPlaces = () => {
@@ -19,34 +20,55 @@ const PackageUploadInPlaces = () => {
   const fetchData = async () => {
     const singleData = await getSinglePlace(id);
     setsingleData(singleData.data);
-    console.log("this is my data", singleData);
+    // console.log("this is my data", singleData);
 
     if (singleData.zone) {
       const locationData = await getPackagesByLocation(singleData.zone);
-      console.log("this is my location", locationData.data);
+      // console.log("this is my location", locationData.data);
       setLocationData(locationData.data);
     }
+
+    const allPackages = await getAllPackages();
+    setPackageData(allPackages.data);
+
   };
   fetchData();
 }, [id]);
 
 const handleAdd = (packageId) => {
-  setLogicArr([...logicArr,packageId]);
-  const fetchData = async () => {
-    const packageData = await getAllPackages();
-    setPackageData(packageData.data);
-    console.log("package data",packageData.data);
-  //   if(packageData.data.map((info) => {
-      
-  //   }))
-  // }
-  fetchData();
+  setLogicArr((prev) => [...prev, packageId]);
+  console.log(packageId);
+  const obj = {
+    "add": [packageId],
+  }
   
-}
+  if(obj) {
+    const sendData = async () => {
+      await UpdatePlacesPacakges(id,obj);
+    }
+    sendData();
+  }
+  console.log(obj);
+  
+};
 
 const handleRemove = (packageId) => {
   setLogicArr((prev) => prev.filter((id) => id !== packageId));
+  const obj = {
+    "remove": [packageId],
+  }
+
+  if(obj) {
+    const sendData = async () => {
+      await UpdatePlacesPacakges(id,obj);
+    }
+    sendData();
+  }
+  console.log(obj);
+  
 }
+
+const finalPackages = packageData.filter((pkg) => logicArr.includes(pkg._id));
 
 
 
@@ -92,15 +114,29 @@ console.log(logicArr);
             </CardContent>
           </Card>
         </Grid>
+
         <Divider orientation="vertical" variant="middle" flexItem  />
 
         <Grid item xs={5}>
-          <Card sx={{width: "100%"}}>
-            <Typography variant="h5">Final Packages</Typography>
+          <Card sx={{width: "100%",mb:4, display:'flex',flexDirection:"column", alignItems:"center"}}>
+            <Typography variant="h5" fontWeight="bold"><ul>Final Packages</ul></Typography>
             <CardContent sx={{ flexGrow: 1 }}>
-              <List>
-                <ListItem></ListItem>
-              </List>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Package Name</TableCell>
+                    <TableCell>Duration</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {finalPackages.map((pkg) => (
+                    <TableRow>
+                      <TableCell>{pkg.label}</TableCell>
+                      <TableCell>{pkg.duration - 1}N {pkg.duration}D</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </Grid>
@@ -109,6 +145,5 @@ console.log(logicArr);
   );
 };
 
-}
 
 export default PackageUploadInPlaces;

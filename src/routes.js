@@ -31,7 +31,6 @@ import CtgForm from "./components/category-packages/ctgForm";
 import AllPlaces from "./pages/allPlaces";
 import CategoryPackage from "./pages/categoryPackage";
 import ImageManagerPage from "./pages/imageManager";
-import packageUploadInPlaces from "./pages/packageUpload/inPlaces";
 import PackageUploadInPlaces from "./pages/packageUpload/inPlaces";
 
 const RootLayoutWithRedirect = withAuthRedirect(RootLayout);
