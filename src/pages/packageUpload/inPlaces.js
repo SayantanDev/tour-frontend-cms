@@ -15,12 +15,14 @@ const PackageUploadInPlaces = () => {
   const [locationData, setLocationData] = useState([]);
   const [logicArr, setLogicArr] = useState([]);
   const [packageData, setPackageData] = useState([]);
+  const [packageIds, setPackageIds] = useState([]);
 
  useEffect(() => {
   const fetchData = async () => {
-    const singleData = await getSinglePlace(id);
-    setsingleData(singleData.data);
-    // console.log("this is my data", singleData);
+    const res = await getSinglePlace(id);
+    setsingleData(res);
+    setPackageIds(res.details.packages.package_ids);
+    console.log("this is my data", res);
 
     if (singleData.zone) {
       const locationData = await getPackagesByLocation(singleData.zone);
@@ -29,7 +31,9 @@ const PackageUploadInPlaces = () => {
     }
 
     const allPackages = await getAllPackages();
-    setPackageData(allPackages.data);
+    setPackageData(allPackages);
+    console.log("this is packages",packageData);
+    
 
   };
   fetchData();
@@ -42,33 +46,31 @@ const handleAdd = async (packageId) => {
     "add": [packageId],
   }
   
-  if(packageId) {
-    // const sendData = async () => {
-      await UpdatePlacesPacakges(id,obj);
-    // }
-    // sendData();
-  }
-  console.log(obj);
+  // if(packageId) {
+  //   // const sendData = async () => {
+  //     await UpdatePlacesPacakges(id,obj);
+  //   // }
+  //   // sendData();
+  // }
+  // console.log(obj);
   
 };
 
-const handleRemove = (packageId) => {
+const handleRemove = async (packageId) => {
   setLogicArr((prev) => prev.filter((id) => id !== packageId));
   const obj = {
     "remove": [packageId],
   }
 
-  if(obj) {
-    const sendData = async () => {
-      await UpdatePlacesPacakges(id,obj);
-    }
-    sendData();
+  if(packageId) {
+   
+  //   await UpdatePlacesPacakges(id,obj);
   }
   console.log(obj);
   
 }
 
-const finalPackages = packageData.filter((pkg) => logicArr.includes(pkg._id));
+const finalPackages = packageData.filter((pkg) => packageIds.includes(pkg._id));
 
 
 
@@ -129,12 +131,12 @@ console.log(logicArr);
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {finalPackages.map((pkg) => (
+                  {/* {finalPackages.map((pkg) => (
                     <TableRow>
                       <TableCell>{pkg.label}</TableCell>
                       <TableCell>{pkg.duration - 1}N {pkg.duration}D</TableCell>
                     </TableRow>
-                  ))}
+                  ))} */}
                 </TableBody>
               </Table>
             </CardContent>
