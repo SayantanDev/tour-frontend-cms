@@ -35,18 +35,18 @@ const PackageUploadInPlaces = () => {
   fetchData();
 }, [id]);
 
-const handleAdd = (packageId) => {
+const handleAdd = async (packageId) => {
   setLogicArr((prev) => [...prev, packageId]);
   console.log(packageId);
   const obj = {
     "add": [packageId],
   }
   
-  if(obj) {
-    const sendData = async () => {
+  if(packageId) {
+    // const sendData = async () => {
       await UpdatePlacesPacakges(id,obj);
-    }
-    sendData();
+    // }
+    // sendData();
   }
   console.log(obj);
   

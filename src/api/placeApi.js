@@ -39,7 +39,7 @@ export async function updatePlaceRanking(id,payload) {
 }
 
 export async function UpdatePlacesPacakges(id,payload) {
-    const ADDUSER_URL = `${QRY_URL}/update/packages/${id}`;
+    const ADDUSER_URL = `${QRY_URL}/packages/${id}`;
     const result = await axios.patch(ADDUSER_URL,payload);
     return result.data;
 }
