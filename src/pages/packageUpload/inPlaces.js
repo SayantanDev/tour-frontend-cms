@@ -26,7 +26,7 @@ const PackageUploadInPlaces = () => {
 
     if (singleData.zone) {
       const locationData = await getPackagesByLocation(singleData.zone);
-      // console.log("this is my location", locationData.data);
+      console.log("this is my location", locationData.data);
       setLocationData(locationData.data);
     }
 
