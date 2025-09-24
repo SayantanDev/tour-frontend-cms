@@ -32,6 +32,7 @@ import AllPlaces from "./pages/allPlaces";
 import CategoryPackage from "./pages/categoryPackage";
 import ImageManagerPage from "./pages/imageManager";
 import packageUploadInPlaces from "./pages/packageUpload/inPlaces";
+import PackageUploadInPlaces from "./pages/packageUpload/inPlaces";
 
 const RootLayoutWithRedirect = withAuthRedirect(RootLayout);
 
@@ -99,13 +100,13 @@ const router = createBrowserRouter(
           path="places/view"
           element={<ProtectedRoute Element={AllPlaces} module="places" />}
         />
-        <Route
+        <Route 
           path="upload/:schema/:id"
           element={<ProtectedRoute Element={ImageManagerPage} module="places" />}
         />
         <Route
           path="upload/packages/:id"
-          element={<ProtectedRoute Element={packageUploadInPlaces} module="places" />}
+          element={<ProtectedRoute Element={PackageUploadInPlaces} module="places" />}
         />
         <Route
           path="query/view"

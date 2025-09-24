@@ -45,3 +45,8 @@ export function updatePackageRanking(id, obj) {
     return axios.put(UPDATEPKG__URL, obj);
     
 }
+
+export function getPackagesByLocation(location) {
+    const UPDATEPKG__URL = `${PKG_URL}/getpackagesbylocation/${location}`;
+    return axios.get(UPDATEPKG__URL);
+}
