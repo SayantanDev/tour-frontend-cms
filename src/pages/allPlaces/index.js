@@ -60,6 +60,8 @@ const AllPlaces = () => {
       .then((res) => {
         setAllPlaces(res);
         setFilteredPlaces(res);
+        console.log(res);
+        
       }).catch((err) => {
         console.error("Failed to fetch places", err);
       });

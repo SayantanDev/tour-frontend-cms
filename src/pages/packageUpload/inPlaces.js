@@ -1,4 +1,4 @@
-import { Button, Card, CardContent, Divider, Grid, List, ListItem, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, Divider, Grid, List, ListItem, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getAllPackages, getPackagesByLocation } from "../../api/packageAPI";
@@ -11,9 +11,9 @@ const PackageUploadInPlaces = () => {
   const { id } = useParams();
   const [singleData, setsingleData] = useState({});
   const [locationData, setLocationData] = useState([]);
-  const [logicArr, setLogicArr] = useState([]);
   const [pkgData, setPkgData] = useState([]);
   const [packageIds, setPackageIds] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
  useEffect(() => {
   const fetchData = async () => {
@@ -22,15 +22,15 @@ const PackageUploadInPlaces = () => {
     setPackageIds(res.details.packages.package_ids);
     console.log("this is my data", res);
 
-    if (singleData.zone) {
-      const locationData = await getPackagesByLocation(singleData.zone);
+    if (res.zone) {
+      const locationData = await getPackagesByLocation(res.zone);
       console.log("this is my location", locationData.data);
       setLocationData(locationData.data);
     }
 
     const allPackages = await getAllPackages();
     setPkgData(allPackages.data);
-    console.log("this is packages",allPackages);
+    console.log("this is packages",allPackages.data);
     
 
   };
@@ -38,7 +38,7 @@ const PackageUploadInPlaces = () => {
 }, [id]);
 
 const handleAdd = async (packageId) => {
-  setLogicArr((prev) => [...prev, packageId]);
+  setPackageIds((prev) => [...prev, packageId]);
   console.log(packageId);
   const obj = {
     "add": [packageId],
@@ -55,14 +55,14 @@ const handleAdd = async (packageId) => {
 };
 
 const handleRemove = async (packageId) => {
-  setLogicArr((prev) => prev.filter((id) => id !== packageId));
+  setPackageIds((prev) => prev.filter((id) => id !== packageId));
   const obj = {
     "remove": [packageId],
   }
 
   if(packageId) {
    
-  //   await UpdatePlacesPacakges(id,obj);
+    await UpdatePlacesPacakges(id,obj);
   }
   console.log(obj);
   
@@ -72,19 +72,32 @@ const finalPackages = pkgData.filter((singlePackage) => packageIds.includes(sing
 
 console.log("finalPackages : ", finalPackages);
 
+const filterPackage = locationData.filter((data) => {
+  // data.label.toLowerCase();
+})
 
-
-
-console.log(logicArr);
+console.log(filterPackage);
 
 
 
   return (
     <>
+     <Box display="flex" justifyContent="center">
+      <Typography variant="h3" fontWeight="bold" m={4} sx={{ transform: "translateX(-40px)" }}>
+        {singleData.name}
+      </Typography>
+     </Box>
       <Grid container gap={5} alignItems="stretch">
         <Grid item xs={5}>
-          <Card sx={{width: "100%",mb:4, display:'flex',flexDirection:"column", alignItems:"center"}}> 
-            <Typography variant="h5" fontWeight='bold'><ul>Preferred Packages</ul></Typography>
+          <Card sx={{width: "100%",mb:4, display:'flex',flexDirection:"column",alignItems:"center"}}> 
+            
+            <Typography variant="h5" fontWeight="bold" ><ul>Preferred Packages</ul></Typography>
+            <TextField
+              label="Search by Package"
+              variant="outlined"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
             <CardContent sx={{ flexGrow: 1 }}>
               <Table>
                 <TableHead>
@@ -96,12 +109,12 @@ console.log(logicArr);
                 </TableHead>
                 <TableBody>
                   
-                  {locationData.map((singlePackage) => (
+                  {filterPackage.map((singlePackage) => (
                     <TableRow key={singlePackage._id}>
                       <TableCell>{singlePackage.label}</TableCell>
                       <TableCell>{singlePackage.duration -1}N {singlePackage.duration}D</TableCell>
                       <TableCell>
-                        {logicArr.includes(singlePackage._id) ? <Button variant="contained" color="error" onClick={() => handleRemove(singlePackage._id)}><DeleteIcon/></Button> : 
+                        {packageIds.includes(singlePackage._id) ? <Button variant="contained" color="error" onClick={() => handleRemove(singlePackage._id)}><DeleteIcon/></Button> : 
                         <Button variant="contained" color="success" onClick={() => handleAdd(singlePackage._id)}><AddIcon /></Button>
                         }
                       </TableCell>
@@ -122,6 +135,7 @@ console.log(logicArr);
 
         <Grid item xs={5}>
           <Card sx={{width: "100%",mb:4, display:'flex',flexDirection:"column", alignItems:"center"}}>
+
             <Typography variant="h5" fontWeight="bold"><ul>Final Packages</ul></Typography>
             <CardContent sx={{ flexGrow: 1 }}>
               <Table>
