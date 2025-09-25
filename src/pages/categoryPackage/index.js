@@ -6,13 +6,17 @@ import {
     CardContent,
     Divider,
     Button,
-    Box
+    Box,
+    IconButton,
+    Menu,
+    MenuItem
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import useSnackbar from "../../hooks/useSnackbar";
 import { getAllcatPackage, getSinglecatPackages } from "../../api/catPackageAPI";
 import { useDispatch } from "react-redux";
 import { removeSelectedCtgPackage, setSelectedCtgPakage } from "../../reduxcomponents/slices/ctgpackageSlice";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 const CategoryPackage = () => {
     const { showSnackbar, SnackbarComponent } = useSnackbar();
@@ -20,11 +24,37 @@ const CategoryPackage = () => {
     const dispatch = useDispatch();
     const [allCatPackage, setAllCatPackage] = useState([]);
 
+    const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+    const [menuPlaceId, setMenuPlaceId] = useState(null);
+    const menuOpen = Boolean(menuAnchorEl);
+
+
+  const handleMenuOpen = (e, placeId) => {
+    setMenuAnchorEl(e.currentTarget);
+    setMenuPlaceId(placeId);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setMenuPlaceId(null);
+  };
+
+  const handleAddPackages = () => {
+    if (menuPlaceId) {
+      // adjust route as per your project structure
+      navigate(`/upload/categorypackages/${menuPlaceId}`);
+    }
+    handleMenuClose();
+  };
+
+
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const res = await getAllcatPackage();
                 setAllCatPackage(res?.data || []); // Assuming res.data contains the packages
+                console.log("my data",res.data);
+                
             } catch (error) {
                 console.error("Failed to fetch packages:", error);
                 showSnackbar("Failed to load category packages", "error");
@@ -68,7 +98,17 @@ const CategoryPackage = () => {
                 ) : (
                     allCatPackage.map((catPackage) => (
                         <Grid item xs={12} sm={6} md={4} key={catPackage._id}>
-                            <Card variant="outlined" sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+                            <Card variant="outlined" sx={{ height: "100%", display: "flex", flexDirection: "column", position: "relative" }}>
+                                <Box sx={{ position: "absolute", top: 4, right: 4 }}>
+                                    <IconButton
+                                    aria-label="more options"
+                                    size="small"
+                                     onClick={(e) => handleMenuOpen(e, catPackage._id)}
+                                    >
+                                    <MoreVertIcon fontSize="small" />
+                                    </IconButton>
+                                </Box>
+
                                 <CardContent>
                                     <Typography variant="h6" gutterBottom>{catPackage.name}</Typography>
                                     <Divider sx={{ mb: 1 }} />
@@ -80,6 +120,17 @@ const CategoryPackage = () => {
                     ))
                 )}
             </Grid>
+
+            <Menu
+                    anchorEl={menuAnchorEl}
+                    open={menuOpen}
+                    onClose={handleMenuClose}
+                    anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                    transformOrigin={{ vertical: "top", horizontal: "right" }}
+                  >
+                    <MenuItem onClick={handleAddPackages}>Add Packages</MenuItem>
+                  </Menu>
+            
 
             <SnackbarComponent />
         </Box>

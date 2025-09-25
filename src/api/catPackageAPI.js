@@ -21,3 +21,8 @@ export function CatPackageCreate(obj) {
     const ADDPKG_URL = `${PKG_URL}/create`;
     return axios.post(ADDPKG_URL, obj);
 };
+export async function UpdateCatPacakgesbyPkgs(id,payload) {
+    const ADDUSER_URL = `${PKG_URL}/packages/${id}`;
+    const result = await axios.patch(ADDUSER_URL,payload);
+    return result.data;
+}

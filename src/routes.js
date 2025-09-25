@@ -32,6 +32,7 @@ import AllPlaces from "./pages/allPlaces";
 import CategoryPackage from "./pages/categoryPackage";
 import ImageManagerPage from "./pages/imageManager";
 import PackageUploadInPlaces from "./pages/packageUpload/inPlaces";
+import CategoryPackageUploadInPlaces from "./pages/packageUpload/inCategoryPackage";
 
 const RootLayoutWithRedirect = withAuthRedirect(RootLayout);
 
@@ -90,6 +91,10 @@ const router = createBrowserRouter(
         <Route
           path="category-packages/view"
           element={<ProtectedRoute Element={CategoryPackage} module="packages" />}
+        />
+        <Route
+          path="upload/categorypackages/:id"
+          element={<ProtectedRoute Element={CategoryPackageUploadInPlaces} module="places" />}
         />
         <Route
           path="places/createandedit"

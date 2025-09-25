@@ -186,7 +186,11 @@ const AllPlaces = () => {
               </MenuItem>
             ))}
           </TextField>
-          <Typography>
+          <Typography color={selectedZone ? "textPrimary" : "text.disabled"}
+            display="flex"
+            alignItems="center"
+            gap={1}
+          >
             Ranking
            <Checkbox {...label} disabled={selectedZone ? false : true}
            checked={rankingFilter}
