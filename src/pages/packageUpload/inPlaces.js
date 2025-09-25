@@ -97,25 +97,31 @@ const filteredDestinationPkgs = finalPackages.filter((data) => {
      </Box>
       <Grid container gap={5} alignItems="stretch">
         <Grid item xs={5}>
-          <Card sx={{width: "100%",mb:4, display:'flex',flexDirection:"column",alignItems:"center"}}> 
+          <Card sx={{width: "100%",mb:4, display:'flex',flexDirection:"column",alignItems:"stretch"}}> 
             
-            <Typography variant="h5" fontWeight="bold" ><ul>Preferred Packages</ul></Typography>
+            <Typography variant="h5" fontWeight="bold" align="center" sx={{ mt: 2, mb: 2 }}>Preferred Packages</Typography>
             
            
-            <TextField
-              label="Search Packages"
-              variant="outlined"
-              size="small"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-            />
+              
+                <TextField
+                  sx={{mx:2}}
+                  label="Search Packages"
+                  variant="outlined"
+                  size="small"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                  
+                />
+              
+                
+             
             <CardContent sx={{ flexGrow: 1 }}>
               <Table>
                 <TableHead>
@@ -152,10 +158,11 @@ const filteredDestinationPkgs = finalPackages.filter((data) => {
         <Divider orientation="vertical" variant="middle" flexItem  />
 
         <Grid item xs={5}>
-          <Card sx={{width: "100%",mb:4, display:'flex',flexDirection:"column", alignItems:"center"}}>
+          <Card sx={{width: "100%",mb:4, display:'flex',flexDirection:"column", alignItems:"stretch"}}>
 
-            <Typography variant="h5" fontWeight="bold"><ul>Destination Packages</ul></Typography>
+            <Typography variant="h5" fontWeight="bold" align="center" sx={{ mt: 2, mb: 2 }}>Updated Packages</Typography>
             <TextField
+              sx={{mx:2}}
               label="Search Packages"
               variant="outlined"
               size="small"
@@ -175,6 +182,7 @@ const filteredDestinationPkgs = finalPackages.filter((data) => {
                   <TableRow>
                     <TableCell>Package Name</TableCell>
                     <TableCell>Duration</TableCell>
+                    <TableCell>Action</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
