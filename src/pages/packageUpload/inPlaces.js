@@ -1,10 +1,11 @@
-import { Box, Button, Card, CardContent, Divider, Grid, List, ListItem, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, Divider, Grid, InputAdornment, List, ListItem, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getAllPackages, getPackagesByLocation } from "../../api/packageAPI";
 import { getSinglePlace, UpdatePlacesPacakges } from "../../api/placeApi";
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
 
 const PackageUploadInPlaces = () => {
 
@@ -14,6 +15,7 @@ const PackageUploadInPlaces = () => {
   const [pkgData, setPkgData] = useState([]);
   const [packageIds, setPackageIds] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchInfo, setSearchInfo] = useState("");
 
  useEffect(() => {
   const fetchData = async () => {
@@ -73,10 +75,16 @@ const finalPackages = pkgData.filter((singlePackage) => packageIds.includes(sing
 console.log("finalPackages : ", finalPackages);
 
 const filterPackage = locationData.filter((data) => {
-  // data.label.toLowerCase();
-})
+   return data.label.toLowerCase().includes(searchTerm.toLowerCase())
+});
+
 
 console.log(filterPackage);
+
+const filteredDestinationPkgs = finalPackages.filter((data) => {
+   return data.label.toLowerCase().includes(searchInfo.toLowerCase())
+});
+
 
 
 
@@ -92,11 +100,21 @@ console.log(filterPackage);
           <Card sx={{width: "100%",mb:4, display:'flex',flexDirection:"column",alignItems:"center"}}> 
             
             <Typography variant="h5" fontWeight="bold" ><ul>Preferred Packages</ul></Typography>
+            
+           
             <TextField
-              label="Search by Package"
+              label="Search Packages"
               variant="outlined"
+              size="small"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" />
+                </InputAdornment>
+              ),
+            }}
             />
             <CardContent sx={{ flexGrow: 1 }}>
               <Table>
@@ -136,7 +154,21 @@ console.log(filterPackage);
         <Grid item xs={5}>
           <Card sx={{width: "100%",mb:4, display:'flex',flexDirection:"column", alignItems:"center"}}>
 
-            <Typography variant="h5" fontWeight="bold"><ul>Final Packages</ul></Typography>
+            <Typography variant="h5" fontWeight="bold"><ul>Destination Packages</ul></Typography>
+            <TextField
+              label="Search Packages"
+              variant="outlined"
+              size="small"
+              value={searchInfo}
+              onChange={(e) => setSearchInfo(e.target.value)}
+              InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" />
+                </InputAdornment>
+              ),
+            }}
+            />
             <CardContent sx={{ flexGrow: 1 }}>
               <Table>
                 <TableHead>
@@ -146,10 +178,11 @@ console.log(filterPackage);
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {finalPackages.map((pkg) => (
+                  {filteredDestinationPkgs.map((pkg) => (
                     <TableRow>
                       <TableCell>{pkg.label}</TableCell>
                       <TableCell>{pkg.duration - 1}N {pkg.duration}D</TableCell>
+                      <TableCell><Button variant="contained" color="error" onClick={() => handleRemove(pkg._id)}><DeleteIcon/></Button></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
