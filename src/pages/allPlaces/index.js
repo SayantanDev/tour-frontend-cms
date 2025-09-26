@@ -19,8 +19,9 @@ import {
   IconButton,
   Menu,
   Select,
-  CircularProgress,
-  Checkbox
+  Checkbox,
+  Pagination,
+  TablePagination
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { getAllplaces, getSinglePlace, deletePlace } from "../../api/placeApi";
@@ -39,6 +40,11 @@ const AllPlaces = () => {
   const [allPlaces, setAllPlaces] = useState([]);
   const [filteredPlaces, setFilteredPlaces] = useState([]);
   const [rankingLoading, setRankingLoading] = useState({});
+
+
+  const [page, setPage] = useState(0); // current page (starts at 0 = first page)
+  const [rowsPerPage, setRowsPerPage] = useState(9); // how many rows per page
+
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedZone, setSelectedZone] = useState("");
@@ -143,7 +149,10 @@ const AllPlaces = () => {
     handleMenuClose();
   };
 
+  // const handleChangePage = (_, newPage) => setPage(newPage);
+  // const handleChangeRowsPerPage = (event) => { setRowsPerPage(+event.target.value); setPage(0); }; 
 
+  const paginatedRows = filteredPlaces.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
   
 
   return (
@@ -198,11 +207,11 @@ const AllPlaces = () => {
            />
           </Typography>
         </Box>
-        <Chip label={filteredPlaces.length}  size="medium" color="primary" sx={{minWidth: 100, p:2}}></Chip>
+        <Chip label={paginatedRows.length}  size="medium" color="primary" sx={{minWidth: 100, p:2}}></Chip>
       </Box>
       {/* Cards */}
       <Grid container spacing={3}>
-        {filteredPlaces.map((place) => (
+        {paginatedRows.map((place) => (
           <Grid item xs={12} sm={6} md={4} key={place._id}>
             <Card
               variant="outlined"
@@ -292,6 +301,34 @@ const AllPlaces = () => {
           </Grid>
         ))}
       </Grid>
+
+      <Box display='flex' justifyContent="flex-end" mt={2}>
+
+        <Box display="flex" alignItems="center" mb={2}>
+          <Typography variant="body2" mr={1}>Rows per page:</Typography>
+          <Select
+            value={rowsPerPage}
+            onChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0); // reset to first page when rows per page changes
+            }}
+            size="small"
+          >
+            {[9, 18, 27].map((option) => (
+              <MenuItem key={option} value={option}>{option}</MenuItem>
+            ))}
+          </Select>
+        </Box>      
+              
+        <Pagination
+          component="div"
+          count={Math.ceil(filteredPlaces.length / rowsPerPage)}
+          page={page + 1}                     
+          onChange={(_, value) => setPage(value - 1)} 
+          color="primary"
+          shape="rounded"
+        />
+      </Box>
 
       {/* Per-card menu */}
       <Menu
