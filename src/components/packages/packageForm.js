@@ -3,7 +3,10 @@ import { Formik, FieldArray, Form } from 'formik';
 import * as Yup from 'yup';
 import {
   Box, Button, Grid, TextField, Typography, Switch, FormControlLabel, Paper, Divider, IconButton, Chip, Stack,
-  MenuItem
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import { createPackage, updatePackage } from '../../api/packageAPI';
@@ -175,7 +178,7 @@ const PackageForm = () => {
 
         }
       } else {
-         await createPackage(values);
+        await createPackage(values);
         showSnackbar('You created a new package', 'success');
       }
     } catch (error) {
@@ -183,6 +186,27 @@ const PackageForm = () => {
       showSnackbar('Something went wrong', 'error');
     }
   };
+
+  const Region_obj = [
+  {label: "None",
+    val: "",
+  },
+  {label: "Sikkim",
+    val: "sikkim",
+  },
+  {label: "Darjeeling",
+    val: "darjeeling",
+  },
+  {label: "North Sikkim",
+    val: "north-sikkim",
+  },
+  {label: "Meghalaya",
+    val: "meghalaya",
+  },
+  {label: "Arunachal Pradesh",
+    val: "arunachal-pradesh",
+  }
+]
 
 
   return (<>
@@ -217,15 +241,19 @@ const PackageForm = () => {
                   {/* <Grid item xs={3}><FormControlLabel control={<Switch name="disabled" checked={values.disabled} onChange={handleChange} />} label="Disabled" /></Grid> */}
                   <Grid item xs={3}><FormControlLabel control={<Switch name="isActive" checked={values.isActive} onChange={handleChange} />} label="Is Active" /></Grid>
                   <Grid item xs={3}>
-                    <TextField
-                      label="Location"
-                      name="location"
-                      value={values.location}
-                      onChange={handleChange}
-                      error={touched.location && Boolean(errors.location)}
-                      helperText={touched.location && errors.location}
-                      fullWidth
-                    />
+                    <FormControl fullWidth>
+                      <InputLabel id="demo-simple-select-label">Location</InputLabel>
+                      <Select
+                        labelId="demo-simple-select-label"
+                        id="demo-simple-select"
+                        value={values.zone}
+                        label="Location"
+                        onChange={handleChange}
+                        name='location'
+                      >
+                        {Region_obj.map((obj) => <MenuItem key={obj.val} value={obj.val}>{obj.label}</MenuItem>)}
+                      </Select>
+                    </FormControl>
                   </Grid>
                   <Grid item xs={3}>
                     <TextField

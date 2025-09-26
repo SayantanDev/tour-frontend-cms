@@ -2,7 +2,12 @@ import React from 'react';
 import { Formik, FieldArray, Form } from 'formik';
 import * as Yup from 'yup';
 import {
-  Box, Button, Grid, TextField, Typography, Switch, FormControlLabel, Paper, Divider, Chip, Stack} from '@mui/material';
+  Box, Button, Grid, TextField, Typography, Switch, FormControlLabel, Paper, Divider, Chip, Stack,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
+} from '@mui/material';
 import { Delete } from '@mui/icons-material';
 import useSnackbar from '../../hooks/useSnackbar';
 import { useSelector } from 'react-redux';
@@ -22,6 +27,7 @@ const getInitialValues = (data) => {
     price: 0,
     offer_price: 0,
     category: '',
+    package_usage_type: '',
     popular_destination_covered: [{ name: '', image: '' }],
     popular_attraction_covered: [{ name: '', image: '' }],
     addi_destination_covered: [{ name: '', image: '' }],
@@ -148,6 +154,57 @@ const getInitialValues = (data) => {
   return data ? _.merge({}, newData, data) : newData;
 };
 
+const package_usage_types_obj = [
+  {label: "None",
+    val: "",
+  },
+  {label: "Home page attraction",
+    val: "home-page-attraction",
+  },
+  {label: "Attraction",
+    val: "attraction",
+  },
+  {label: "Tour Category",
+    val: "tour-category",
+  },
+  {label: "Home Page Tour Category",
+    val: "home-page-tour-category",
+  },
+  {label: "Trek Category",
+    val: "trek-category",
+  },
+  {label: "Home Page Trek Category",
+    val: "home-page-trek-category",
+  },
+  {label: "Places Category",
+    val: "places-category",
+  },
+  {label: "Home Page Places Category",
+    val: "home-page-places-category",
+  },
+]
+
+const Region_obj = [
+  {label: "None",
+    val: "",
+  },
+  {label: "Sikkim",
+    val: "sikkim",
+  },
+  {label: "Darjeeling",
+    val: "darjeeling",
+  },
+  {label: "North Sikkim",
+    val: "north-sikkim",
+  },
+  {label: "Meghalaya",
+    val: "meghalaya",
+  },
+  {label: "Arunachal Pradesh",
+    val: "arunachal-pradesh",
+  }
+]
+
 const validationSchema = Yup.object({
   name: Yup.string().required('Name is required'),
   label: Yup.string().required('label is required'),
@@ -251,8 +308,8 @@ const RenderEditableList = ({ name, values, setFieldValue, label }) => {
 const CtgForm = () => {
   const navigate = useNavigate();
   const { fetchSelectedCtgPackage: selectedCatPackage } = useSelector((state) => state.ctgpakage);
-  console.log("selectedCatPackage : ", selectedCatPackage);
-  
+  // console.log("selectedCatPackage : ", selectedCatPackage);
+
   // const getInitialValues = (selectedCatPackage) => selectedCatPackage || initialValues;
 
   const { showSnackbar, SnackbarComponent } = useSnackbar();
@@ -262,13 +319,12 @@ const CtgForm = () => {
       // let res;
       if (selectedCatPackage && selectedCatPackage._id) {
 
-        const res = await updateCatPackage(selectedCatPackage._id, values); // You'll need to import and define this API
+        const res = await  updateCatPackage(selectedCatPackage._id, values); // You'll need to import and define this API
         if (res) {
           showSnackbar('Package updated successfully', 'success');
-
         }
       } else {
-         await CatPackageCreate(values);
+        await CatPackageCreate(values);
         showSnackbar('You created a new place', 'success');
         navigate(`/category-packages/view`);
         // console.log("places data : ", values);
@@ -343,15 +399,19 @@ const CtgForm = () => {
                     />
                   </Grid>
                   <Grid item xs={3}>
-                    <TextField
-                      label="Region"
-                      name="zone"
-                      value={values.zone}
-                      onChange={handleChange}
-                      error={touched.zone && Boolean(errors.zone)}
-                      helperText={touched.zone && errors.zone}
-                      fullWidth
-                    />
+                    <FormControl fullWidth>
+                      <InputLabel id="demo-simple-select-label">Region</InputLabel>
+                      <Select
+                        labelId="demo-simple-select-label"
+                        id="demo-simple-select"
+                        value={values.zone}
+                        label="Region"
+                        onChange={handleChange}
+                        name='zone'
+                      >
+                        {Region_obj.map((obj) => <MenuItem key={obj.val} value={obj.val}>{obj.label}</MenuItem>)}
+                      </Select>
+                    </FormControl>
                   </Grid>
                   <Grid item xs={3}>
                     <TextField
@@ -387,6 +447,21 @@ const CtgForm = () => {
                       helperText={touched.offer_price && errors.offer_price}
                       fullWidth
                     />
+                  </Grid>
+                  <Grid item xs={3}>
+                    <FormControl fullWidth>
+                      <InputLabel id="demo-simple-select-label">Package Usage Type</InputLabel>
+                      <Select
+                        labelId="demo-simple-select-label"
+                        id="demo-simple-select"
+                        value={values.package_usage_type}
+                        label="Package Usage Type"
+                        onChange={handleChange}
+                        name='package_usage_type'
+                      >
+                        {package_usage_types_obj.map((obj) => <MenuItem key={obj.val} value={obj.val}>{obj.label}</MenuItem>)}
+                      </Select>
+                    </FormControl>
                   </Grid>
                   <Grid item xs={12}>
                     <TextField

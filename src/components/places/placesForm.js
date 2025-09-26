@@ -4,7 +4,10 @@ import * as Yup from 'yup';
 import {
   Box, Button, Grid, TextField, Typography, Switch, FormControlLabel, Paper, Divider, IconButton, Chip, Stack,
   MenuItem,
-  Checkbox
+  Checkbox,
+  FormControl,
+  InputLabel,
+  Select
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
 import { createPackage, updatePackage } from '../../api/packageAPI';
@@ -190,8 +193,8 @@ const PlacesForm = () => {
     try {
       // let res;
       if (selectedPlace && selectedPlace._id) {
-        console.log("updatePlace");
-        
+        console.log("updatePlace",values);
+
         const res = await updatePlace(values, selectedPlace._id); // You'll need to import and define this API
         if (res) {
           showSnackbar('Package updated successfully', 'success');
@@ -199,7 +202,7 @@ const PlacesForm = () => {
         }
       } else {
         console.log("insertPlace");
-        
+
         const res = await insertPlace(values);
         showSnackbar('You created a new place', 'success');
         navigate(`/places/view`);
@@ -211,6 +214,27 @@ const PlacesForm = () => {
       showSnackbar('Something went wrong', 'error');
     }
   };
+
+  const Region_obj = [
+  {label: "None",
+    val: "",
+  },
+  {label: "Sikkim",
+    val: "sikkim",
+  },
+  {label: "Darjeeling",
+    val: "darjeeling",
+  },
+  {label: "North Sikkim",
+    val: "north-sikkim",
+  },
+  {label: "Meghalaya",
+    val: "meghalaya",
+  },
+  {label: "Arunachal Pradesh",
+    val: "arunachal-pradesh",
+  }
+]
 
 
   return (<>
@@ -245,15 +269,19 @@ const PlacesForm = () => {
                   {/* <Grid item xs={3}><FormControlLabel control={<Switch name="disabled" checked={values.disabled} onChange={handleChange} />} label="Disabled" /></Grid> */}
                   <Grid item xs={3}><FormControlLabel control={<Switch name="isActive" checked={values.isActive} onChange={handleChange} />} label="Is Active" /></Grid>
                   <Grid item xs={3}>
-                    <TextField
-                      label="Rigion"
-                      name="zone"
-                      value={values.zone}
-                      onChange={handleChange}
-                      error={touched.zone && Boolean(errors.zone)}
-                      helperText={touched.zone && errors.zone}
-                      fullWidth
-                    />
+                    <FormControl fullWidth>
+                      <InputLabel id="demo-simple-select-label">Region</InputLabel>
+                      <Select
+                        labelId="demo-simple-select-label"
+                        id="demo-simple-select"
+                        value={values.zone}
+                        label="Region"
+                        onChange={handleChange}
+                        name='zone'
+                      >
+                        {Region_obj.map((obj) => <MenuItem key={obj.val} value={obj.val}>{obj.label}</MenuItem>)}
+                      </Select>
+                    </FormControl>
                   </Grid>
                   <Grid item xs={3}>
                     <TextField
