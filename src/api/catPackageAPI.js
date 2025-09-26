@@ -26,3 +26,8 @@ export async function UpdateCatPacakgesbyPkgs(id,payload) {
     const result = await axios.patch(ADDUSER_URL,payload);
     return result.data;
 }
+export async function DeleteCatPackages(id) {
+    const ADDUSER_URL = `${PKG_URL}/delete/${id}`;
+    const result = await axios.delete(ADDUSER_URL);
+    return result.data;
+}

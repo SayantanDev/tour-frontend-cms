@@ -9,14 +9,19 @@ import {
     Box,
     IconButton,
     Menu,
-    MenuItem
+    MenuItem,
+    Dialog,
+    DialogTitle,
+    DialogActions,
+    DialogContent
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import useSnackbar from "../../hooks/useSnackbar";
-import { getAllcatPackage, getSinglecatPackages } from "../../api/catPackageAPI";
+import { DeleteCatPackages, getAllcatPackage, getSinglecatPackages } from "../../api/catPackageAPI";
 import { useDispatch } from "react-redux";
 import { removeSelectedCtgPackage, setSelectedCtgPakage } from "../../reduxcomponents/slices/ctgpackageSlice";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+
 
 const CategoryPackage = () => {
     const { showSnackbar, SnackbarComponent } = useSnackbar();
@@ -28,24 +33,28 @@ const CategoryPackage = () => {
     const [menuPlaceId, setMenuPlaceId] = useState(null);
     const menuOpen = Boolean(menuAnchorEl);
 
+    const [deleteId, setDeleteId] = useState(null);
+    const [confirmOpen, setConfirmOpen] = useState(false);
 
-  const handleMenuOpen = (e, placeId) => {
-    setMenuAnchorEl(e.currentTarget);
-    setMenuPlaceId(placeId);
-  };
 
-  const handleMenuClose = () => {
-    setMenuAnchorEl(null);
-    setMenuPlaceId(null);
-  };
 
-  const handleAddPackages = () => {
-    if (menuPlaceId) {
-      // adjust route as per your project structure
-      navigate(`/upload/categorypackages/${menuPlaceId}`);
-    }
-    handleMenuClose();
-  };
+    const handleMenuOpen = (e, placeId) => {
+        setMenuAnchorEl(e.currentTarget);
+        setMenuPlaceId(placeId);
+    };
+
+    const handleMenuClose = () => {
+        setMenuAnchorEl(null);
+        setMenuPlaceId(null);
+    };
+
+    const handleAddPackages = () => {
+        if (menuPlaceId) {
+            // adjust route as per your project structure
+            navigate(`/upload/categorypackages/${menuPlaceId}`);
+        }
+        handleMenuClose();
+    };
 
 
     useEffect(() => {
@@ -53,8 +62,8 @@ const CategoryPackage = () => {
             try {
                 const res = await getAllcatPackage();
                 setAllCatPackage(res?.data || []); // Assuming res.data contains the packages
-                console.log("my data",res.data);
-                
+                console.log("my data", res.data);
+
             } catch (error) {
                 console.error("Failed to fetch packages:", error);
                 showSnackbar("Failed to load category packages", "error");
@@ -63,16 +72,39 @@ const CategoryPackage = () => {
 
         fetchData();
     }, []);
+
+    const handleDelete = async (id) => {
+
+        setDeleteId(id);
+        setConfirmOpen(true);
+    }
+
+
+    const confirmDelete = async () => {
+        try {
+            await DeleteCatPackages(deleteId);
+            setAllCatPackage(allCatPackage.filter((pkg) => pkg._id !== deleteId));
+            setConfirmOpen(false);
+            showSnackbar("Category Package Deleted successfully", "success");
+        } catch (err) {
+            console.error("Failed to delete package", err);
+            showSnackbar("Failed to delete package", "error");
+        }
+    };
+
     const handleEdit = async (id) => {
         const response = await getSinglecatPackages(id);
         console.log("getSinglecatPackages : ", response.data);
-        
+
         dispatch(setSelectedCtgPakage(response.data));
         navigate(`/category-packages/createandedit`);
     };
     const handleImageUpload = (id) => {
-    navigate(`/upload/category/${id}`);  
-  };
+        navigate(`/upload/category/${id}`);
+    };
+
+    const packageToDelete = allCatPackage.find(pkg => pkg._id === deleteId);
+
     return (
         <Box p={3}>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
@@ -82,7 +114,8 @@ const CategoryPackage = () => {
                     color="primary"
                     onClick={() => {
                         dispatch(removeSelectedCtgPackage());
-                        navigate("/category-packages/createandedit")}}
+                        navigate("/category-packages/createandedit")
+                    }}
                 >
                     Create New CTG-PKG
                 </Button>
@@ -101,11 +134,11 @@ const CategoryPackage = () => {
                             <Card variant="outlined" sx={{ height: "100%", display: "flex", flexDirection: "column", position: "relative" }}>
                                 <Box sx={{ position: "absolute", top: 4, right: 4 }}>
                                     <IconButton
-                                    aria-label="more options"
-                                    size="small"
-                                     onClick={(e) => handleMenuOpen(e, catPackage._id)}
+                                        aria-label="more options"
+                                        size="small"
+                                        onClick={(e) => handleMenuOpen(e, catPackage._id)}
                                     >
-                                    <MoreVertIcon fontSize="small" />
+                                        <MoreVertIcon fontSize="small" />
                                     </IconButton>
                                 </Box>
 
@@ -114,6 +147,7 @@ const CategoryPackage = () => {
                                     <Divider sx={{ mb: 1 }} />
                                     <Button size="small" variant="outlined" onClick={() => handleEdit(catPackage._id)}>Edit</Button>
                                     <Button size="small" variant="outlined" sx={{ m: 1 }} onClick={() => handleImageUpload(catPackage._id)}>Upload</Button>
+                                    <Button size="small" color="error" variant="outlined" sx={{ m: 1 }} onClick={() => handleDelete(catPackage._id)}>Delete</Button>
                                 </CardContent>
                             </Card>
                         </Grid>
@@ -122,15 +156,27 @@ const CategoryPackage = () => {
             </Grid>
 
             <Menu
-                    anchorEl={menuAnchorEl}
-                    open={menuOpen}
-                    onClose={handleMenuClose}
-                    anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                    transformOrigin={{ vertical: "top", horizontal: "right" }}
-                  >
-                    <MenuItem onClick={handleAddPackages}>Add Packages</MenuItem>
-                  </Menu>
+                anchorEl={menuAnchorEl}
+                open={menuOpen}
+                onClose={handleMenuClose}
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                transformOrigin={{ vertical: "top", horizontal: "right" }}
+            >
+                <MenuItem onClick={handleAddPackages}>Add Packages</MenuItem>
+            </Menu>
             
+
+            <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+                    <DialogTitle>Confirm Delete</DialogTitle>
+                    <DialogContent>Are you sure you want to delete{" "}
+                      <strong>{packageToDelete?.name || "this package"}</strong>?</DialogContent>
+                    <DialogActions>
+                      <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
+                      <Button onClick={confirmDelete} color="error" variant="contained">
+                        Delete
+                      </Button>
+                    </DialogActions>
+                  </Dialog>
 
             <SnackbarComponent />
         </Box>
