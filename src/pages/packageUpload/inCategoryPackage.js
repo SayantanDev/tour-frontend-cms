@@ -11,7 +11,6 @@ import { getSinglecatPackages, UpdateCatPacakgesbyPkgs} from '../../api/catPacka
 
 function CategoryPackageUploadInPlaces() {
   const { id } = useParams();
-  // const id = "6879ecd003b2d42cd73086b3";
   const [singleData, setsingleData] = useState({});
   const [locationData, setLocationData] = useState([]);
   const [pkgData, setPkgData] = useState([]);
@@ -24,18 +23,17 @@ function CategoryPackageUploadInPlaces() {
     const res = await getSinglecatPackages(id);
     setsingleData(res.data);
     setPackageIds(res.data.details.packages.package_ids);
-    console.log("this is my data", res.data);
+    
     
 
     if (res.data.zone) {
-      const locationData = await getPackagesByLocation("Sikkim");
-      console.log("this is my location", locationData);
+      const locationData = await getPackagesByLocation(res.data.zone);
       setLocationData(locationData.data);
     }
 
     const allPackages = await getAllPackages();
     setPkgData(allPackages.data);
-    console.log("this is packages",allPackages.data);
+    
     
 
   };
@@ -44,18 +42,14 @@ function CategoryPackageUploadInPlaces() {
 
 const handleAdd = async (packageId) => {
   setPackageIds((prev) => [...prev, packageId]);
-  console.log(packageId);
   const obj = {
     "add": [packageId],
   }
   
   if(packageId) {
-    // const sendData = async () => {
       await UpdateCatPacakgesbyPkgs(id,obj);
-    // }
-    // sendData();
+    
   }
-  console.log(obj);
   
 };
 
@@ -69,26 +63,19 @@ const handleRemove = async (packageId) => {
    
     await UpdateCatPacakgesbyPkgs(id,obj);
   }
-  console.log(obj);
+  
   
 }
 
 const finalPackages = pkgData.filter((singlePackage) => packageIds.includes(singlePackage._id));
 
-// console.log("finalPackages : ", finalPackages);
-
 const filterPackage = locationData.filter((data) => {
    return data.label.toLowerCase().includes(searchTerm.toLowerCase())
 });
 
-
-// console.log(filterPackage);
-
 const filteredDestinationPkgs = finalPackages.filter((data) => {
    return data.label.toLowerCase().includes(searchInfo.toLowerCase())
 });
-
-console.log("my filteredDestinationPkgs",filteredDestinationPkgs);
 
 
 

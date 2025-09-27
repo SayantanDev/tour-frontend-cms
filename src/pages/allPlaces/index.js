@@ -53,7 +53,7 @@ const AllPlaces = () => {
   const [deleteId, setDeleteId] = useState(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  
+
   const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
   // menu state
@@ -67,7 +67,7 @@ const AllPlaces = () => {
         setAllPlaces(res);
         setFilteredPlaces(res);
         console.log(res);
-        
+
       }).catch((err) => {
         console.error("Failed to fetch places", err);
       });
@@ -88,20 +88,20 @@ const AllPlaces = () => {
       filtered = filtered.filter((place) => place.zone === selectedZone);
     }
 
- 
+
     //filtered = [...filtered].sort((a,b) => a.ranking - b.ranking);
     if (rankingFilter) {
-      filtered.sort((a,b) => {
-        if(a.ranking === 0 && b.ranking === 0) return 0;
-        if(a.ranking === 0) return 1;
-        if(b.ranking === 0) return -1;
+      filtered.sort((a, b) => {
+        if (a.ranking === 0 && b.ranking === 0) return 0;
+        if (a.ranking === 0) return 1;
+        if (b.ranking === 0) return -1;
         return a.ranking - b.ranking;
 
       });
     }
 
     setFilteredPlaces(filtered);
-  }, [searchTerm, selectedZone,  rankingFilter, allPlaces]);
+  }, [searchTerm, selectedZone, rankingFilter, allPlaces]);
 
   const handleEdit = async (id) => {
     const response = await getSinglePlace(id);
@@ -115,7 +115,7 @@ const AllPlaces = () => {
   };
 
   const handleImageUpload = (id) => {
-    navigate(`/upload/destination/${id}`);  
+    navigate(`/upload/destination/${id}`);
   };
 
   const confirmDelete = async () => {
@@ -153,7 +153,9 @@ const AllPlaces = () => {
   // const handleChangeRowsPerPage = (event) => { setRowsPerPage(+event.target.value); setPage(0); }; 
 
   const paginatedRows = filteredPlaces.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-  
+
+
+  const packageToDelete = paginatedRows.find(pkg => pkg._id === deleteId);
 
   return (
     <Box p={3}>
@@ -172,7 +174,7 @@ const AllPlaces = () => {
       </Box>
 
       {/* Filters */}
-      <Box mb={3} display="flex" justifyContent="space-between" alignItems="center"  flexWrap="wrap">
+      <Box mb={3} display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap">
         <Box mb={3} display="flex" gap={2} flexWrap="wrap">
           <TextField
             label="Search by Name"
@@ -201,13 +203,13 @@ const AllPlaces = () => {
             gap={1}
           >
             Ranking
-           <Checkbox {...label} disabled={selectedZone ? false : true}
-           checked={rankingFilter}
-           onChange={(e) => setRankingFilter(e.target.checked)}
-           />
+            <Checkbox {...label} disabled={selectedZone ? false : true}
+              checked={rankingFilter}
+              onChange={(e) => setRankingFilter(e.target.checked)}
+            />
           </Typography>
         </Box>
-        <Chip label={paginatedRows.length}  size="medium" color="primary" sx={{minWidth: 100, p:2}}></Chip>
+        <Chip label={paginatedRows.length} size="medium" color="primary" sx={{ minWidth: 100, p: 2 }}></Chip>
       </Box>
       {/* Cards */}
       <Grid container spacing={3}>
@@ -229,12 +231,12 @@ const AllPlaces = () => {
               </Box>
 
               <CardContent>
-                
-                  <Typography variant="h6" gutterBottom>
-                  {place.name}  {place.ranking>= 1 && <Chip size="small" label={place.ranking} color="success" variant="outlined"/>}
-                  </Typography>
-                  
-                
+
+                <Typography variant="h6" gutterBottom>
+                  {place.name}  {place.ranking >= 1 && <Chip size="small" label={place.ranking} color="success" variant="outlined" />}
+                </Typography>
+
+
                 <Divider sx={{ mb: 1 }} />
                 <Typography variant="body2" color="text.secondary">
                   Zone: {place.zone}
@@ -268,30 +270,31 @@ const AllPlaces = () => {
                   </Button>
                 </Badge>
 
-                
-                  {/* NEW: Ranking selector */}
-                                    
-                  
-                    <Select
-                      size="small"
-                      value={place.ranking ?? 0}
-                      onChange={(e) => handleChangeRanking(place, e.target.value,allPlaces,
-                        setAllPlaces,
-                        rankingLoading,
-                        setRankingLoading)}
-                      disabled={rankingLoading[place.id]}
-                      sx={{ minWidth: 80 ,
-                        height: 32,
-                        "& .MuiSelect-select": { paddingY: 0.5 },
-                      }}
-                    >
-                      {Array.from({ length: 11 }).map((_, i) => (
-                        <MenuItem key={i} value={i}>{i}</MenuItem>
-                      ))}
-                    </Select>
-                  
-                                    
-                
+
+                {/* NEW: Ranking selector */}
+
+
+                <Select
+                  size="small"
+                  value={place.ranking ?? 0}
+                  onChange={(e) => handleChangeRanking(place, e.target.value, allPlaces,
+                    setAllPlaces,
+                    rankingLoading,
+                    setRankingLoading)}
+                  disabled={rankingLoading[place.id]}
+                  sx={{
+                    minWidth: 80,
+                    height: 32,
+                    "& .MuiSelect-select": { paddingY: 0.5 },
+                  }}
+                >
+                  {Array.from({ length: 11 }).map((_, i) => (
+                    <MenuItem key={i} value={i}>{i}</MenuItem>
+                  ))}
+                </Select>
+
+
+
 
                 <Button size="small" color="error" variant="outlined" onClick={() => handleDelete(place._id)}>
                   Delete
@@ -318,13 +321,13 @@ const AllPlaces = () => {
               <MenuItem key={option} value={option}>{option}</MenuItem>
             ))}
           </Select>
-        </Box>      
-              
+        </Box>
+
         <Pagination
           component="div"
           count={Math.ceil(filteredPlaces.length / rowsPerPage)}
-          page={page + 1}                     
-          onChange={(_, value) => setPage(value - 1)} 
+          page={page + 1}
+          onChange={(_, value) => setPage(value - 1)}
           color="primary"
           shape="rounded"
         />
@@ -344,7 +347,8 @@ const AllPlaces = () => {
       {/* Delete Confirmation Dialog */}
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
         <DialogTitle>Confirm Delete</DialogTitle>
-        <DialogContent>Are you sure you want to delete this place?</DialogContent>
+        <DialogContent>Are you sure you want to delete{" "}
+          <strong>{packageToDelete?.name || "this package"}</strong>?</DialogContent>
         <DialogActions>
           <Button onClick={() => setConfirmOpen(false)}>Cancel</Button>
           <Button onClick={confirmDelete} color="error" variant="contained">
