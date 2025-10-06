@@ -13,6 +13,7 @@ import { getAllPackages, getSinglePackages, verifyPackage, updatePackageRanking 
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { removeSelectedPackage, setSelectedPackage } from "../../reduxcomponents/slices/packagesSlice";
+import usePermissions from "../../hooks/UsePermissions";
 
 // --------- helpers ----------
 const formatDate = (iso) => {
@@ -67,8 +68,10 @@ const AllPackages = () => {
   // NEW: track which rows are updating "ranking"
   const [rankingLoading, setRankingLoading] = useState({});
 
+  // Hooks
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const getPermission = usePermissions();
 
   // initial fetch
   useEffect(() => {
@@ -312,7 +315,7 @@ const AllPackages = () => {
           sx={{ width: 170 }}
           InputLabelProps={{ shrink: true }}
         />
-
+        {getPermission('create') && 
         <Button
           variant="contained"
           size="small"
@@ -321,6 +324,8 @@ const AllPackages = () => {
         >
           Add New Package
         </Button>
+        }
+        
       </Box>
 
       {/* Table */}

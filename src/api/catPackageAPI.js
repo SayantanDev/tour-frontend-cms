@@ -31,3 +31,8 @@ export async function DeleteCatPackages(id) {
     const result = await axios.delete(ADDUSER_URL);
     return result.data;
 }
+export function updateCatPackageRanking(id, obj) {
+    const UPDATEPKG__URL = `${PKG_URL}/update/ranking/${id}`;
+    return axios.put(UPDATEPKG__URL, obj);
+    
+}

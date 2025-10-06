@@ -246,7 +246,7 @@ const PackageForm = () => {
                       <Select
                         labelId="demo-simple-select-label"
                         id="demo-simple-select"
-                        value={values.zone}
+                        value={values.zone} 
                         label="Location"
                         onChange={handleChange}
                         name='location'

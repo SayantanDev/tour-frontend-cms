@@ -104,7 +104,7 @@ const router = createBrowserRouter(
           path="places/view"
           element={<ProtectedRoute Element={AllPlaces} module="places" />}
         />
-        <Route 
+        <Route
           path="upload/:schema/:id"
           element={<ProtectedRoute Element={ImageManagerPage} module="places" />}
         />
