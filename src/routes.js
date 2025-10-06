@@ -70,7 +70,7 @@ const router = createBrowserRouter(
         />
         <Route
           path="hotels"
-          element={<ProtectedRoute Element={Hotels} module="hotels" />}
+          element={<ProtectedRoute Element={Hotels} module="hotel" />}
         />
         <Route
           path="Vehicles"

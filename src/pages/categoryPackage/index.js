@@ -34,11 +34,13 @@ import {
     setSelectedCtgPakage
 } from "../../reduxcomponents/slices/ctgpackageSlice";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import usePermissions from "../../hooks/UsePermissions";
 
 const CategoryPackage = () => {
     const { showSnackbar, SnackbarComponent } = useSnackbar();
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const fetchPermission = usePermissions();
 
     // keep raw API data separate
     const [allCatPackageRaw, setAllCatPackageRaw] = useState([]);
@@ -194,16 +196,18 @@ const CategoryPackage = () => {
                 gap={2}
             >
                 <Typography variant="h5">All Category Packages</Typography>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => {
-                        dispatch(removeSelectedCtgPackage());
-                        navigate("/category-packages/createandedit");
-                    }}
-                >
-                    Create New CTG-PKG
-                </Button>
+                {fetchPermission('ctg-packages', 'create') &&
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => {
+                            dispatch(removeSelectedCtgPackage());
+                            navigate("/category-packages/createandedit");
+                        }}
+                    >
+                        Create New CTG-PKG
+                    </Button>
+                }
             </Box>
 
             {/* Filters */}
@@ -315,51 +319,56 @@ const CategoryPackage = () => {
                                     </Box>
 
                                     <CardActions>
-                                        <Button
-                                            size="small"
-                                            variant="outlined"
-                                            onClick={() => handleEdit(catPackage._id)}
-                                        >
-                                            Edit
-                                        </Button>
-                                        <Button
-                                            size="small"
-                                            variant="outlined"
-                                            sx={{ m: 1 }}
-                                            onClick={() => handleImageUpload(catPackage._id)}
-                                        >
-                                            Upload
-                                        </Button>
-                                        <Button
-                                            size="small"
-                                            color="error"
-                                            variant="outlined"
-                                            sx={{ m: 1 }}
-                                            onClick={() => handleDelete(catPackage._id)}
-                                        >
-                                            Delete
-                                        </Button>
-                                        <Select
-                                            size="small"
-                                            sx={{
-                                                m: 1,
-                                                minWidth: 80,
-                                                "& .MuiSelect-select": {
-                                                    py: 0.6,
-                                                    px: 1.5
+                                        {fetchPermission('ctg-packages', 'alter') &&
+                                            <Button
+                                                size="small"
+                                                variant="outlined"
+                                                onClick={() => handleEdit(catPackage._id)}
+                                            >
+                                                Edit
+                                            </Button>}
+                                        {fetchPermission('ctg-packages', 'alter-image') &&
+                                            <Button
+                                                size="small"
+                                                variant="outlined"
+                                                sx={{ m: 1 }}
+                                                onClick={() => handleImageUpload(catPackage._id)}
+                                            >
+                                                Upload
+                                            </Button>}
+                                        {fetchPermission('ctg-packages', 'delete') &&
+                                            <Button
+                                                size="small"
+                                                color="error"
+                                                variant="outlined"
+                                                sx={{ m: 1 }}
+                                                onClick={() => handleDelete(catPackage._id)}
+                                            >
+                                                Delete
+                                            </Button>}
+                                        {fetchPermission('ctg-packages', 'alter-ranking') &&
+                                            <Select
+                                                size="small"
+                                                sx={{
+                                                    m: 1,
+                                                    minWidth: 80,
+                                                    "& .MuiSelect-select": {
+                                                        py: 0.6,
+                                                        px: 1.5
+                                                    }
+                                                }}
+                                                onChange={(e) =>
+                                                    handleChangeRanking(catPackage, e.target.value)
                                                 }
-                                            }}
-                                            onChange={(e) =>
-                                                handleChangeRanking(catPackage, e.target.value)
-                                            }
-                                            value={catPackage.ranking ?? 0}
-                                        >
-                                            {Array.from({ length: 11 }).map((_, i) => (
-                                                <MenuItem key={i} value={i}>
-                                                    {i}
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
+                                                value={catPackage.ranking ?? 0}
+                                            >
+                                                {Array.from({ length: 11 }).map((_, i) => (
+                                                    <MenuItem key={i} value={i}>
+                                                        {i}
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        }
                                     </CardActions>
                                 </CardContent>
                             </Card>

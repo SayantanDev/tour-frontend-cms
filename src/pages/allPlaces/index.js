@@ -30,11 +30,13 @@ import { removeSelectedPlace, setSelectedPlace } from "../../reduxcomponents/sli
 import useSnackbar from "../../hooks/useSnackbar";
 import CheckIcon from "@mui/icons-material/Check";
 import { handleChangeRanking } from "../allPackages/rankingUtil"; // adjust path
+import usePermissions from "../../hooks/UsePermissions";
 
 const AllPlaces = () => {
   const { showSnackbar, SnackbarComponent } = useSnackbar();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const getPermission = usePermissions();
   const [allPlaces, setAllPlaces] = useState([]);
   const [filteredPlaces, setFilteredPlaces] = useState([]);
   const [rankingLoading, setRankingLoading] = useState({});
@@ -148,16 +150,18 @@ const AllPlaces = () => {
       <Box flex="1" p={3}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
           <Typography variant="h5">All Places</Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => {
-              dispatch(removeSelectedPlace());
-              navigate("/places/createandedit");
-            }}
-          >
-            Create New Place
-          </Button>
+          {getPermission('places', 'create') &&
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => {
+                dispatch(removeSelectedPlace());
+                navigate("/places/createandedit");
+              }}
+            >
+              Create New Place
+            </Button>
+          }
         </Box>
 
         {/* Filters */}
@@ -203,7 +207,7 @@ const AllPlaces = () => {
 
         {/* Cards */}
         {paginatedRows.length === 0 ? <Typography>No Data Found</Typography> :
-          <Grid container spacing={3}>
+          <Grid container spacing={3}> 
             {paginatedRows.map((place) => (
               <Grid item xs={12} sm={6} md={4} key={place._id}>
                 <Card
@@ -246,52 +250,62 @@ const AllPlaces = () => {
                   </CardContent>
 
                   <CardActions sx={{ mt: "auto", justifyContent: "space-between", px: 2, pb: 2 }}>
-                    <Button size="small" variant="outlined" onClick={() => handleEdit(place._id)}>
-                      Edit
-                    </Button>
-
-                    <Badge badgeContent={place.images.length} color="error" invisible={place.images.length === 0}>
-                      <Button
-                        size="small"
-                        variant={place.images.length > 0 ? "contained" : "outlined"}
-                        color={place.images.length > 0 ? "success" : "primary"}
-                        startIcon={place.images.length > 0 ? <CheckIcon /> : null}
-                        onClick={() => handleImageUpload(place._id)}
-                      >
-                        Upload
+                    {getPermission('places', 'alter') &&
+                      <Button size="small" variant="outlined" onClick={() => handleEdit(place._id)}>
+                        Edit
                       </Button>
-                    </Badge>
+                    }
 
-                    <Select
-                      size="small"
-                      value={place.ranking ?? 0}
-                      onChange={(e) =>
-                        handleChangeRanking(
-                          place,
-                          e.target.value,
-                          allPlaces,
-                          setAllPlaces,
-                          rankingLoading,
-                          setRankingLoading
-                        )
-                      }
-                      disabled={rankingLoading[place.id]}
-                      sx={{
-                        minWidth: 80,
-                        height: 32,
-                        "& .MuiSelect-select": { paddingY: 0.5 },
-                      }}
-                    >
-                      {Array.from({ length: 11 }).map((_, i) => (
-                        <MenuItem key={i} value={i}>
-                          {i}
-                        </MenuItem>
-                      ))}
-                    </Select>
+                    {getPermission('places', 'alter-image') &&
+                      <Badge badgeContent={place.images.length} color="error" invisible={place.images.length === 0}>
+                        <Button
+                          size="small"
+                          variant={place.images.length > 0 ? "contained" : "outlined"}
+                          color={place.images.length > 0 ? "success" : "primary"}
+                          startIcon={place.images.length > 0 ? <CheckIcon /> : null}
+                          onClick={() => handleImageUpload(place._id)}
+                        >
+                          Upload
+                        </Button>
+                      </Badge>
+                    }
 
-                    <Button size="small" color="error" variant="outlined" onClick={() => handleDelete(place._id)}>
-                      Delete
-                    </Button>
+                    {getPermission('places', 'alter-ranking') &&
+
+                      <Select
+                        size="small"
+                        value={place.ranking ?? 0}
+                        onChange={(e) =>
+                          handleChangeRanking(
+                            place,
+                            e.target.value,
+                            allPlaces,
+                            setAllPlaces,
+                            rankingLoading,
+                            setRankingLoading
+                          )
+                        }
+                        disabled={rankingLoading[place.id]}
+                        sx={{
+                          minWidth: 80,
+                          height: 32,
+                          "& .MuiSelect-select": { paddingY: 0.5 },
+                        }}
+                      >
+                        {Array.from({ length: 11 }).map((_, i) => (
+                          <MenuItem key={i} value={i}>
+                            {i}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    }
+
+                    {getPermission('places', 'delete') &&
+
+                      <Button size="small" color="error" variant="outlined" onClick={() => handleDelete(place._id)}>
+                        Delete
+                      </Button>
+                    }
                   </CardActions>
                 </Card>
               </Grid>
@@ -336,15 +350,17 @@ const AllPlaces = () => {
       }
 
       {/* Per-card menu */}
-      <Menu
-        anchorEl={menuAnchorEl}
-        open={menuOpen}
-        onClose={handleMenuClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        transformOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <MenuItem onClick={handleAddPackages}>Add Packages</MenuItem>
-      </Menu>
+      {getPermission('places', 'add-packages') &&
+        <Menu
+          anchorEl={menuAnchorEl}
+          open={menuOpen}
+          onClose={handleMenuClose}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          transformOrigin={{ vertical: "top", horizontal: "right" }}
+        >
+          <MenuItem onClick={handleAddPackages}>Add Packages</MenuItem>
+        </Menu>
+      }
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>

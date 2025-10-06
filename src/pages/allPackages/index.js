@@ -231,12 +231,12 @@ const AllPackages = () => {
       // revert on error
       setAllPackages(prevSnapshot);
     } finally {
-      setRankingLoading(prev => ({ ...prev, [id]: false })); 
+      setRankingLoading(prev => ({ ...prev, [id]: false }));
     }
   };
 
   const handleImageUpload = (id) => {
-    navigate(`/upload/package/${id}`);  
+    navigate(`/upload/package/${id}`);
   };
 
   return (
@@ -315,17 +315,17 @@ const AllPackages = () => {
           sx={{ width: 170 }}
           InputLabelProps={{ shrink: true }}
         />
-        {getPermission('create') && 
-        <Button
-          variant="contained"
-          size="small"
-          color="primary"
-          onClick={createNewPackage}
-        >
-          Add New Package
-        </Button>
+        {getPermission('packages', 'create') &&
+          <Button
+            variant="contained"
+            size="small"
+            color="primary"
+            onClick={createNewPackage}
+          >
+            Add New Package
+          </Button>
         }
-        
+
       </Box>
 
       {/* Table */}
@@ -356,13 +356,14 @@ const AllPackages = () => {
                   {/* Verified toggle */}
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Switch
-                        size="small"
-                        checked={row.verified}
-                        onChange={(e) => handleToggleVerified(row, e.target.checked)}
-                        disabled={toggleLoading[row.id]}
-                        inputProps={{ 'aria-label': 'Toggle verified' }}
-                      />
+                      {getPermission('packages', 'alter-verify') &&
+                        <Switch
+                          size="small"
+                          checked={row.verified}
+                          onChange={(e) => handleToggleVerified(row, e.target.checked)}
+                          disabled={toggleLoading[row.id]}
+                          inputProps={{ 'aria-label': 'Toggle verified' }}
+                        />}
                       {toggleLoading[row.id] ? (
                         <CircularProgress size={16} />
                       ) : (
@@ -379,20 +380,30 @@ const AllPackages = () => {
                   {/* NEW: Ranking selector */}
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Select
-                        size="small"
-                        value={row.ranking ?? 0}
-                        onChange={(e) => handleChangeRanking(row, e.target.value)}
-                        disabled={rankingLoading[row.id]}
-                        sx={{ minWidth: 80 }}
-                      >
-                        {Array.from({ length: 11 }).map((_, i) => (
-                          <MenuItem key={i} value={i}>{i}</MenuItem>
-                        ))}
-                      </Select>
+                      {getPermission('packages', 'alter-ranking') ? (
+                        // ✅ When permission exists → show editable Select
+                        <Select
+                          size="small"
+                          value={row.ranking ?? 0}
+                          onChange={(e) => handleChangeRanking(row, e.target.value)}
+                          disabled={rankingLoading[row.id]}
+                          sx={{ minWidth: 80 }}
+                        >
+                          {Array.from({ length: 11 }).map((_, i) => (
+                            <MenuItem key={i} value={i}>
+                              {i}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      ) : (
+                        // 🚫 When no permission → show static value in a box
+                        <Typography>{row.ranking ?? 0}</Typography>
+                      )}
+
                       {rankingLoading[row.id] && <CircularProgress size={16} />}
                     </Box>
                   </TableCell>
+
 
                   {/* Dates */}
                   <TableCell>
@@ -408,27 +419,30 @@ const AllPackages = () => {
 
                   {/* Actions */}
                   <TableCell align="center" width={"200px"}>
-                    <Tooltip title="Image Upload">
-                      <IconButton color="success" onClick={() => handleImageUpload(row.id)}>
-                      <DriveFolderUploadIcon />
-                    </IconButton>
-                    </Tooltip>
-                    <Tooltip title="FullView">
-                      <IconButton color="warning" onClick={() => handleView(row.id)}>
-                      <VisibilityIcon />
-                    </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Edit">
-                      <IconButton color="primary" onClick={() => handleEdit(row.id)}>
-                      <EditIcon />
-                    </IconButton>
-                    </Tooltip>
+                    {getPermission('packages', 'alter-image') &&
+                      <Tooltip title="Image Upload">
+                        <IconButton color="success" onClick={() => handleImageUpload(row.id)}>
+                          <DriveFolderUploadIcon />
+                        </IconButton>
+                      </Tooltip>}
+                    {getPermission('packages', 'view') &&
+                      <Tooltip title="FullView">
+                        <IconButton color="warning" onClick={() => handleView(row.id)}>
+                          <VisibilityIcon />
+                        </IconButton>
+                      </Tooltip>}
+                    {getPermission('packages', 'alter') &&
+                      <Tooltip title="Edit">
+                        <IconButton color="primary" onClick={() => handleEdit(row.id)}>
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>}
                     <Tooltip title="Location">
                       <IconButton color="error">
-                      <LocationOffIcon />
-                    </IconButton>
+                        <LocationOffIcon />
+                      </IconButton>
                     </Tooltip>
-                    
+
                   </TableCell>
                 </TableRow>
               ))}
