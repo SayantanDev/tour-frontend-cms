@@ -33,6 +33,7 @@ import CategoryPackage from "./pages/categoryPackage";
 import ImageManagerPage from "./pages/imageManager";
 import PackageUploadInPlaces from "./pages/packageUpload/inPlaces";
 import CategoryPackageUploadInPlaces from "./pages/packageUpload/inCategoryPackage";
+import AllPermissions from "./pages/allPermissions";
 
 const RootLayoutWithRedirect = withAuthRedirect(RootLayout);
 
@@ -127,6 +128,10 @@ const router = createBrowserRouter(
         <Route
           path="users"
           element={<ProtectedRoute Element={Users} module="user" />}
+        />
+        <Route
+          path="permission"
+          element={<ProtectedRoute Element={AllPermissions} module="permission" />}
         />
         <Route path="not-authorized" element={<NotAuthorized />} />
       </Route>

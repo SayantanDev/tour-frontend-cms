@@ -40,7 +40,6 @@ const userPermissionData = [
       { module: "logout", value: ["view"] },
       { module: "places", value: ["view"] },
       { module: "hotel", value: ["view","alter"] },
-
     ],
   },
 ];
