@@ -207,7 +207,7 @@ const AllPlaces = () => {
 
         {/* Cards */}
         {paginatedRows.length === 0 ? <Typography>No Data Found</Typography> :
-          <Grid container spacing={3}> 
+          <Grid container spacing={3}>  
             {paginatedRows.map((place) => (
               <Grid item xs={12} sm={6} md={4} key={place._id}>
                 <Card

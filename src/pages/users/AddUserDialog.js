@@ -14,7 +14,7 @@ const AddUserDialog = ({ open, userFormData, handleAddUserSubmit, handleChange, 
                     <TextField
                         label="Full Name"
                         name="fullName"
-                        value={userFormData.fullName}
+                        value={userFormData.fullName}o
                         onChange={handleChange}
                         fullWidth
                         size="small"
