@@ -60,7 +60,7 @@ const Query = () => {
   const fetchQuery = async () => {
     try {
       const response = await getAllQueries();
-      const sortedData = response.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      const sortedData = response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       // setQuery(sortedData);
       setFilteredQuery(sortedData);
     } catch (error) {
@@ -402,6 +402,7 @@ const Query = () => {
                     </>
                   )}
                 </TableCell>
+                {checkPermission("operation", "change-request") && (
                 <TableCell>
                   <Tooltip title="View Rejected Changes">
                     <IconButton onClick={() => openRejectedChangeModal(row.operation_id)}>
@@ -415,7 +416,7 @@ const Query = () => {
                     </IconButton>
                   </Tooltip>
                 </TableCell>
-
+                )}
               </TableRow>
             ))}
           </TableBody>
