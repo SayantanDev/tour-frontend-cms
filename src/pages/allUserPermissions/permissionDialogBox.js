@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -10,6 +9,7 @@ import {
   FormControlLabel,
   Typography,
   Box,
+  TextField,
 } from "@mui/material";
 
 const PermissionDialogBox = ({
@@ -20,7 +20,13 @@ const PermissionDialogBox = ({
   permissionDialogData,
   handleModuleToggle,
   handleValueChange,
+  handleSearchChange,
+  searchTerm,
+  filteredPermissions
 }) => {
+
+
+
   return (
     <Dialog fullWidth open={open} onClose={handleClose}>
       {/* ======= DIALOG TITLE ======= */}
@@ -31,8 +37,19 @@ const PermissionDialogBox = ({
       {/* ======= DIALOG CONTENT ======= */}
       <DialogContent>
         <form>
+          <Box sx={{ mb: 3, mt: 2 }}>
+            <TextField
+              label="Search by Module Name"
+              variant="outlined"
+              size="small"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              fullWidth
+              sx={{ maxWidth: 400 }}
+            />
+          </Box>
           <Grid container spacing={2}>
-            {permissionDialogData.map((module, index) => (
+            {filteredPermissions.map((module, index) => (
               <Grid item xs={12} key={index}>
                 <Box
                   sx={{
@@ -43,6 +60,7 @@ const PermissionDialogBox = ({
                     backgroundColor: module.enabled ? "#f9f9f9" : "#fff",
                   }}
                 >
+
                   {/* ======= MODULE NAME ======= */}
                   <FormControlLabel
                     control={

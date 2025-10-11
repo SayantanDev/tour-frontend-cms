@@ -1,8 +1,10 @@
 import {
+  Alert,
   Box,
   Button,
   Container,
   IconButton,
+  Snackbar,
   Table,
   TableBody,
   TableCell,
@@ -31,6 +33,9 @@ const AllUserPermissions = () => {
   const [selectedRole, setSelectedRole] = useState(null);
   const [permissionDialogData, setPermissionDialogData] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
+  const [filteredPermissions, setFilteredPermissions] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -71,6 +76,9 @@ const AllUserPermissions = () => {
     setSelectedId(id);
     setSelectedRole(role);
 
+    console.log(filteredPermissions);
+
+
 
     const currentUser = allUserPermissions.find((user) => user._id === id);
     const savedPermission = currentUser?.permission || [];
@@ -94,6 +102,8 @@ const AllUserPermissions = () => {
 
     setPermissionDialogData(permissionData);
     setOpenDialog(true);
+    setFilteredPermissions(permissionData);
+    setSearchTerm("");
   };
 
   const handleCloseDialog = () => {
@@ -105,7 +115,7 @@ const AllUserPermissions = () => {
   const handleSavePermissions = async () => {
     try {
       if (!selectedId) return;
-      const updatedPermissionArr = permissionDialogData.filter((mod) => mod.enabled).map((mod) => ({
+      const updatedPermissionArr = filteredPermissions.filter((mod) => mod.enabled).map((mod) => ({
         module: mod.module,
         value: Object.keys(mod.values).filter((key) => mod.values[key]),
       }));
@@ -142,7 +152,7 @@ const AllUserPermissions = () => {
 
   // ===================== HANDLE CHECKBOX LOGIC =====================
   const handleModuleToggle = (moduleName) => {
-    setPermissionDialogData((prev) =>
+    setFilteredPermissions((prev) =>
       prev.map((m) =>
         m.module === moduleName ? { ...m, enabled: !m.enabled } : m
       )
@@ -150,7 +160,7 @@ const AllUserPermissions = () => {
   };
 
   const handleValueChange = (moduleName, valueName) => {
-    setPermissionDialogData((prev) =>
+    setFilteredPermissions((prev) =>
       prev.map((m) =>
         m.module === moduleName
           ? {
@@ -165,11 +175,15 @@ const AllUserPermissions = () => {
     );
   };
 
+
+  //Delete Permissions
+
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this permission?'))
       return;
     try {
       await deleteUserPermission(id);
+      await fetchUserPermissions();
       setSnackbar({
         open: true,
         message: 'Permission deleted!',
@@ -186,7 +200,23 @@ const AllUserPermissions = () => {
     }
   };
 
-  const effectiveUserPermissions = allUserPermissions.filter((data) => data.role !== 'Admin' )
+  const effectiveUserPermissions = allUserPermissions.filter((data) => data.role !== 'Admin')
+
+
+
+  const handleSearchChange = (e) => {
+    const term = e.target.value.toLowerCase();
+    setSearchTerm(term);
+    if (term === '') {
+      setFilteredPermissions(permissionDialogData);
+    } else {
+      const filtered = permissionDialogData.filter((p) =>
+        p.module.toLowerCase().includes(term)
+      );
+      setFilteredPermissions(filtered);
+    }
+  };
+
 
 
   // ===================== RENDER =====================
@@ -247,12 +277,39 @@ const AllUserPermissions = () => {
       <PermissionDialogBox
         open={openDialog}
         handleClose={handleCloseDialog}
+        handleSearchChange={handleSearchChange}
         handleSavePermissions={handleSavePermissions}
         selectedRole={selectedRole}
         permissionDialogData={permissionDialogData}
         handleModuleToggle={handleModuleToggle}
         handleValueChange={handleValueChange}
+        searchTerm={searchTerm}
+        filteredPermissions={filteredPermissions}
       />
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() =>
+          setSnackbar((prev) => ({
+            ...prev,
+            open: false,
+          }))
+        }
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() =>
+            setSnackbar((prev) => ({
+              ...prev,
+              open: false,
+            }))
+          }
+          severity={snackbar.severity}
+          variant="filled"
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
