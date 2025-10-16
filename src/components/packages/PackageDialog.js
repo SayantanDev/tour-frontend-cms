@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, Box, IconButton, Button, Grid } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import SandakphuCreateEditForm from './SandakphuCreateEditForm';
-import SikkimCreateEditForm from './SikkimCreateEditForm';
-import DarjeelingCreateEditForm from './DarjeelingCreateEditForm';
+import SandakphuCreateEditForm from '../../pages/allPackages/SandakphuCreateEditForm';
+import SikkimCreateEditForm from '../../pages/allPackages/SikkimCreateEditForm';
+import DarjeelingCreateEditForm from '../../pages/allPackages/DarjeelingCreateEditForm';
 import { addPackage } from '../../api/packageAPI';
 
 const initialData = {
@@ -25,47 +25,47 @@ const initialData = {
         shortItinerary: [
             {
                 tagName: "Day 1",
-                tagValue: "NJP/Bagdogra to Yuksom" 
+                tagValue: "NJP/Bagdogra to Yuksom"
             },
             {
                 tagName: "Day 2",
-                tagValue: "Yuksom to Sachen" 
+                tagValue: "Yuksom to Sachen"
             },
             {
                 tagName: "Day 3",
-                tagValue: "Sachen to Tshoka" 
+                tagValue: "Sachen to Tshoka"
             },
             {
                 tagName: "Day 4",
-                tagValue: "Tshoka to Dzongri" 
+                tagValue: "Tshoka to Dzongri"
             },
             {
                 tagName: "Day 5",
-                tagValue: "Dzongri to Dzongri top (Acclimatization)" 
+                tagValue: "Dzongri to Dzongri top (Acclimatization)"
             },
             {
                 tagName: "Day 6",
-                tagValue: "Dzongri to Thansing" 
+                tagValue: "Dzongri to Thansing"
             },
             {
                 tagName: "Day 7",
-                tagValue: "Thansing to Lamuney" 
+                tagValue: "Thansing to Lamuney"
             },
             {
                 tagName: "Day 8",
-                tagValue: "Lamuney to Goecha La via Samiti Lake and back to Thansing" 
+                tagValue: "Lamuney to Goecha La via Samiti Lake and back to Thansing"
             },
             {
                 tagName: "Day 9",
-                tagValue: "Thansing to Tshoka" 
+                tagValue: "Thansing to Tshoka"
             },
             {
                 tagName: "Day 10",
-                tagValue: "Tshoka to Yuksom" 
+                tagValue: "Tshoka to Yuksom"
             },
             {
                 tagName: "Day 11",
-                tagValue: "Yuksom to NJP/Bagdogra drop" 
+                tagValue: "Yuksom to NJP/Bagdogra drop"
             }
         ],
         itinerary: [
@@ -237,21 +237,21 @@ const initialData = {
 };
 
 const CustomDialog = ({ open, singleRowData, newD, handleClose }) => {
-    const [ pkgImage, setPkgImage ] = useState(null);
-    const [ currentLoc, setCurrentLoc ] = useState('sandakphu');
-    const [ sandakphuFormData, setSandakphuFormData ] = useState(initialData);
+    const [pkgImage, setPkgImage] = useState(null);
+    const [currentLoc, setCurrentLoc] = useState('sandakphu');
+    const [sandakphuFormData, setSandakphuFormData] = useState(initialData);
 
     const handleSandakphuChange = (e) => {
         const { name, value } = e.target;
         setSandakphuFormData((prevData) => ({
-          ...prevData,
-          [name]: value,
+            ...prevData,
+            [name]: value,
         }));
     };
     const handleSandakDtlChange = (val) => {
         setSandakphuFormData((prevData) => ({
-          ...prevData,
-          'details': val,
+            ...prevData,
+            'details': val,
         }));
     };
 
@@ -260,7 +260,7 @@ const CustomDialog = ({ open, singleRowData, newD, handleClose }) => {
             setPkgImage(event.target.files[0]);
         }
     };
-      
+
     const handleSandakphuSubmit = (e) => {
         e.preventDefault();
         const formData = new FormData();
@@ -272,16 +272,16 @@ const CustomDialog = ({ open, singleRowData, newD, handleClose }) => {
                 formData.append(key, sandakphuFormData[key]);
             }
         }
-        
+
         addPackage(formData)
             .then((res) => {
                 handleClose();
             })
-            .catch((err) => {});
+            .catch((err) => { });
     };
     return (
-        <Dialog 
-            open={open} 
+        <Dialog
+            open={open}
             onClose={handleClose}
             maxWidth="lg"
             fullWidth
@@ -295,28 +295,28 @@ const CustomDialog = ({ open, singleRowData, newD, handleClose }) => {
             <DialogTitle>
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                     <span>Create New Package</span>
-                    <Button 
-                        variant="contained" 
-                        size="small" 
-                        color={currentLoc==='sandakphu'? "info" : "error"} 
+                    <Button
+                        variant="contained"
+                        size="small"
+                        color={currentLoc === 'sandakphu' ? "info" : "error"}
                         sx={{ m: 1 }}
                         onClick={() => setCurrentLoc('sandakphu')}
                     >
                         Sandakphu
                     </Button>
-                    <Button 
-                        variant="contained" 
-                        size="small" 
-                        color={currentLoc==='darjeeling'? "info" : "error"} 
+                    <Button
+                        variant="contained"
+                        size="small"
+                        color={currentLoc === 'darjeeling' ? "info" : "error"}
                         sx={{ m: 1 }}
                         onClick={() => setCurrentLoc('darjeeling')}
                     >
                         Darjeeling
                     </Button>
-                    <Button 
-                        variant="contained" 
-                        size="small" 
-                        color={currentLoc==='sikkim'? "info" : "error"} 
+                    <Button
+                        variant="contained"
+                        size="small"
+                        color={currentLoc === 'sikkim' ? "info" : "error"}
                         sx={{ m: 1 }}
                         onClick={() => setCurrentLoc('sikkim')}
                     >
@@ -327,12 +327,12 @@ const CustomDialog = ({ open, singleRowData, newD, handleClose }) => {
                     </IconButton>
                 </Box>
             </DialogTitle>
-            
+
             <DialogContent>
                 {/* ====================================== */}
                 <Grid container spacing={2} style={{ padding: '10px' }}>
-                    {currentLoc==='sandakphu' && 
-                        <SandakphuCreateEditForm 
+                    {currentLoc === 'sandakphu' &&
+                        <SandakphuCreateEditForm
                             sandakphuFormData={sandakphuFormData}
                             handleSandakphuChange={handleSandakphuChange}
                             handleSandakDtlChange={handleSandakDtlChange}
@@ -341,13 +341,13 @@ const CustomDialog = ({ open, singleRowData, newD, handleClose }) => {
                             handleClose={handleClose}
                         />
                     }
-                    {currentLoc==='sikkim' && <SikkimCreateEditForm />}
-                    {currentLoc==='darjeeling' && <DarjeelingCreateEditForm />}
-                    
+                    {currentLoc === 'sikkim' && <SikkimCreateEditForm />}
+                    {currentLoc === 'darjeeling' && <DarjeelingCreateEditForm />}
+
                 </Grid>
                 {/* ====================================== */}
             </DialogContent>
-            
+
         </Dialog>
     );
 };

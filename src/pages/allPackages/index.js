@@ -2,19 +2,21 @@ import React, { useEffect, useState, useMemo } from "react";
 import {
   Container, Typography, Button, IconButton, TextField, Box, Autocomplete,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-  TablePagination, Chip, Switch, CircularProgress, Tooltip, Select, MenuItem
+  TablePagination, Chip, Switch, CircularProgress, Tooltip, Select, MenuItem,
+  Checkbox
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
 import DriveFolderUploadIcon from '@mui/icons-material/DriveFolderUpload';
-import PackageDialog from './PackageDialog';
+import PackageDialog from '../../components/packages/PackageDialog';
 import { getAllPackages, getSinglePackages, verifyPackage, updatePackageRanking } from '../../api/packageAPI';
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { removeSelectedPackage, setSelectedPackage } from "../../reduxcomponents/slices/packagesSlice";
 import usePermissions from "../../hooks/UsePermissions";
-
+import PaymentsIcon from '@mui/icons-material/Payments';
+import CostDialogbox from "../../components/packages/costDialogbox";
 // --------- helpers ----------
 const formatDate = (iso) => {
   if (!iso) return "—";
@@ -62,11 +64,47 @@ const AllPackages = () => {
   const [filterDateFrom, setFilterDateFrom] = useState(''); // YYYY-MM-DD
   const [filterDateTo, setFilterDateTo] = useState('');     // YYYY-MM-DD
 
+  const [rankingFilter, setRankingFilter] = useState(false);
+
   // track which rows are updating "verified"
   const [toggleLoading, setToggleLoading] = useState({});
 
   // NEW: track which rows are updating "ranking"
   const [rankingLoading, setRankingLoading] = useState({});
+  const [selectedId, setSelectedId] = useState(null);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [costDialogdata, setCostDialogData] = useState({
+    singleCost: null,
+    multipleCost: [],
+    daysCost: [],
+    valueCost: [],
+  });
+  const [openConfirm, setOpenConfirm] = useState({ isVisible: false, section: "", target: "" });
+  
+
+  const handleOpenConfirm = (section, target) => {
+    setOpenConfirm({ isVisible: true, section, target });
+    console.log(section, target);
+  }
+
+  const handleCloseConfirm = () => setOpenConfirm({ isVisible: false, section: "", target: "" });
+
+
+  const handleConfirmDelete = () => {
+
+    const { section, target } = openConfirm;
+
+    const updated = { ...costDialogdata };
+    if (section === "multiple") {
+      updated.multipleCost = updated.multipleCost.filter((d) => d.Persons !== target);
+    } else if (section === "days") {
+      updated.daysCost = updated.daysCost.filter((d) => d.Days !== target);
+    } else if (section === "value") {
+      updated.valueCost = updated.valueCost.filter((d) => d.Type !== target);
+    }
+    setCostDialogData(updated);
+    handleCloseConfirm();  
+  }
 
   // Hooks
   const navigate = useNavigate();
@@ -129,6 +167,16 @@ const AllPackages = () => {
       });
     }
 
+    if (rankingFilter) {
+      filtered.sort((a, b) => {
+        if (a.ranking === 0 && b.ranking === 0) return 0;
+        if (a.ranking === 0) return 1;
+        if (b.ranking === 0) return -1;
+        return a.ranking - b.ranking;
+      });
+    }
+
+
     const rows = filtered.map(pkg => ({
       raw: pkg,
       id: pkg._id,
@@ -151,8 +199,11 @@ const AllPackages = () => {
     filterVerified,
     filterDateField,
     filterDateFrom,
-    filterDateTo
+    filterDateTo,
+    rankingFilter
   ]);
+
+  console.log(filteredPackages);
 
   // actions
   const handleView = (id) => {
@@ -178,6 +229,8 @@ const AllPackages = () => {
   const handleChangeRowsPerPage = (event) => { setRowsPerPage(+event.target.value); setPage(0); };
 
   const paginatedRows = filteredPackages.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  console.log(paginatedRows);
+
 
   const handleToggleVerified = async (row, nextVal) => {
     const id = row.id;
@@ -235,9 +288,65 @@ const AllPackages = () => {
     }
   };
 
+
+
   const handleImageUpload = (id) => {
     navigate(`/upload/package/${id}`);
   };
+
+
+  const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
+
+
+  const handleOpenDialog = (id) => {
+
+    setSelectedId(id);
+    console.log(id);
+
+
+
+
+    // have to check this portion
+    const currentUser = paginatedRows.find((user) => user.id === id);
+
+
+
+    const costData = {
+      singleCost: currentUser.raw.details.cost.singleCost,
+      multipleCost: currentUser.raw.details.cost.multipleCost.map((cost) => ({
+        Persons: cost.pax,
+        Pricing: cost.pricing.map((price) => ({
+          Category: price.catagory,
+          Price: price.price,
+        }))
+      })),
+      daysCost: currentUser.raw.details.cost.daysCost.map((days) => ({
+        Days: days.days,
+        Pricing: days.pricing.map((dat) => ({
+          Category: dat.catagory,
+          Price: dat.price,
+        }))
+      })),
+      valueCost: currentUser.raw.details.cost.valueCost.map((val) => ({
+        Type: val.type,
+        Price: val.price,
+      })),
+
+    }
+
+
+
+
+    setCostDialogData(costData);
+    console.log(costData);
+
+    setOpenDialog(true);
+  };
+
+  const handleCloseDialog = (id) => {
+    setOpenDialog(false);
+    setSelectedId(null);
+  }
 
   return (
     <Container maxWidth="xl" sx={{ py: 2 }}>
@@ -326,6 +435,21 @@ const AllPackages = () => {
           </Button>
         }
 
+        <Typography
+          color={filterLocation ? "textPrimary" : "text.disabled"}
+          display="flex"
+          alignItems="center"
+          gap={1}
+        >
+          Ranking
+          <Checkbox
+            {...label}
+            disabled={!filterLocation}
+            checked={rankingFilter}
+            onChange={(e) => setRankingFilter(e.target.checked)}
+          />
+        </Typography>
+
       </Box>
 
       {/* Table */}
@@ -337,11 +461,11 @@ const AllPackages = () => {
                 <TableCell>Title</TableCell>
                 <TableCell>Type</TableCell>
                 <TableCell>Duration</TableCell>
-                <TableCell>Cost</TableCell>
                 <TableCell>Verified</TableCell>
                 <TableCell>Ranking</TableCell> {/* NEW */}
                 <TableCell>Created At</TableCell>
                 <TableCell>Updated At</TableCell>
+                <TableCell>Cost</TableCell>
                 <TableCell align="center">Action</TableCell>
               </TableRow>
             </TableHead>
@@ -351,7 +475,6 @@ const AllPackages = () => {
                   <TableCell>{row.title}</TableCell>
                   <TableCell>{row.type}</TableCell>
                   <TableCell>{row.duration}</TableCell>
-                  <TableCell>{row.cost}</TableCell>
 
                   {/* Verified toggle */}
                   <TableCell>
@@ -416,6 +539,9 @@ const AllPackages = () => {
                       <span>{formatDate(row.updated_at)}</span>
                     </Tooltip>
                   </TableCell>
+                  <TableCell><PaymentsIcon color="primary"
+                    onClick={() => handleOpenDialog(row.id)} />
+                  </TableCell>
 
                   {/* Actions */}
                   <TableCell align="center" width={"200px"}>
@@ -477,6 +603,16 @@ const AllPackages = () => {
           setNewD(false);
           setDialogOpen(false);
         }}
+      />
+      <CostDialogbox
+        open={openDialog}
+        openConfirm={openConfirm}
+        handleClose={handleCloseDialog}
+        costDialogdata={costDialogdata}
+        setCostDialogData={setCostDialogData}
+        handleOpenConfirm={handleOpenConfirm}
+        handleCloseConfirm={handleCloseConfirm}
+        handleConfirmDelete={handleConfirmDelete}
       />
     </Container>
   );

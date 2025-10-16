@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Container, Typography, IconButton, Tooltip, Box, Chip, MenuItem,
-  Modal, Paper, TextField, Button, Table, TableBody, Stack,
+  Modal, Paper, TextField, Button, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, TablePagination, Select, Checkbox
 } from "@mui/material";
 import { getAllQueries, updateQueries } from "../../api/queriesAPI";
@@ -138,24 +138,6 @@ const Query = () => {
   const handleOpenDeleteDialog = (queryId) => {
     setQueryToDelete(queryId);
     setDeleteDialogOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    try {
-      // const res = await deleteQuery(queryToDelete); // make sure deleteQuery API is defined
-      // if (res.success) {
-      //   showSnackbar("Query deleted successfully", "success");
-      //   fetchQuery(); // refresh table
-      // } else {
-      //   showSnackbar("Delete failed", "error");
-      // }
-    } catch (error) {
-      console.error("Delete failed", error);
-      showSnackbar("Something went wrong", "error");
-    } finally {
-      setDeleteDialogOpen(false);
-      setQueryToDelete(null);
-    }
   };
 
   const openUserModal = (row) => {

@@ -1,4 +1,4 @@
-import { Box, Button, Card, CardContent, Divider, Grid, InputAdornment, List, ListItem, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, Divider, Grid, InputAdornment, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getAllPackages, getPackagesByLocation } from "../../api/packageAPI";

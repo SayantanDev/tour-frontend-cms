@@ -1,7 +1,6 @@
 import {
   Alert,
   Box,
-  Button,
   Container,
   IconButton,
   Snackbar,
@@ -76,7 +75,7 @@ const AllUserPermissions = () => {
     setSelectedId(id);
     setSelectedRole(role);
 
-    console.log(filteredPermissions);
+    console.log(allUserPermissions);
 
 
 

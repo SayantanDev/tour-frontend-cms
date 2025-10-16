@@ -29,7 +29,7 @@ const PermissionDialogBox = ({
 
   return (
     <Dialog fullWidth open={open} onClose={handleClose}>
-      {/* ======= DIALOG TITLE ======= */}
+      {/* ======= DIALOG TITLE ======= */ }
       <DialogTitle>
         {selectedRole ? `Manage Permissions for "${selectedRole}"` : "Manage Permissions"}
       </DialogTitle>
