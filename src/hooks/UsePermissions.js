@@ -9,8 +9,8 @@ const userPermissionData = [
     permissions: [
       { module: "inquiry", value: ["view", "create", "alter", "delete"] },
       { module: "user", value: ["view", "create", "alter", "delete"] },
-      { module: "queries", value: ["view", "create", "alter", "delete","assuser"] },
-      { module: "operation", value: ["view", "create", "alter", "delete","change-request","verify"] },
+      { module: "queries", value: ["view", "create", "alter", "delete", "assuser"] },
+      { module: "operation", value: ["view", "create", "alter", "delete", "change-request", "verify"] },
     ],
   },
   {
@@ -35,9 +35,11 @@ const userPermissionData = [
     role: "EsoOperator",
     permissions: [
       { module: "dashboard", value: ["view"] },
-      { module: "packages", value: ["view","create","alter"] },
+      { module: "packages", value: ["view", "create", "alter"] },
+      { module: "ctg-packages", value: ["view", "create", "alter", "delete"] },
       { module: "logout", value: ["view"] },
-
+      { module: "places", value: ["view"] },
+      { module: "hotel", value: ["view", "alter"] },
     ],
   },
 ];
@@ -59,4 +61,3 @@ const usePermissions = () => {
 };
 
 export default usePermissions;
- 

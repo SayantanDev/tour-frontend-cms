@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import {
     Typography, Card, CardContent, CardActions, Button, Grid, Drawer, TextField,
-    Box, Divider, IconButton, Chip, Stack, FormControl, InputLabel, Select, MenuItem, Tooltip
+    Box, Divider, IconButton, Chip, Stack, FormControl, InputLabel, Select, MenuItem
 } from "@mui/material";
-import { Visibility, Edit, Delete } from "@mui/icons-material";
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -12,6 +11,7 @@ import * as Yup from 'yup';
 
 import { getAllHotels, insertHotel, deleteHotel, updateHotel } from '../../api/hotelsAPI';
 import useSnackbar from "../../hooks/useSnackbar";
+import usePermissions from "../../hooks/UsePermissions";
 
 const Hotels = () => {
     const [hotels, setHotels] = useState([]);
@@ -25,6 +25,7 @@ const Hotels = () => {
     const [selectedType, setSelectedType] = useState("");
 
     const { showSnackbar, SnackbarComponent } = useSnackbar();
+    const getPermission = usePermissions();
 
     const emptyHotel = {
         destination: "",
@@ -94,63 +95,65 @@ const Hotels = () => {
                 <Typography variant="h6" fontWeight={600} color="primary">
                     Hotel Management
                 </Typography>
-                <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={handleAddDrawer}>
-                    Add Hotel
-                </Button>
+                {getPermission('hotel', 'add-hotel') &&
+                    <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={handleAddDrawer}>
+                        Add Hotel
+                    </Button>
+                }
             </Box>
 
             <Stack direction="row" spacing={2} flexWrap="wrap" alignItems="center" mb={2}>
-            <TextField
-                size="small"
-                label="Search by Hotel Name"
-                variant="outlined"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-            />
+                <TextField
+                    size="small"
+                    label="Search by Hotel Name"
+                    variant="outlined"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
 
-            <FormControl sx={{ minWidth: 140 }} size="small">
-                <InputLabel>Destination</InputLabel>
-                <Select
-                value={selectedDestination}
-                onChange={(e) => setSelectedDestination(e.target.value)}
-                label="Destination"
-                >
-                <MenuItem value="">All</MenuItem>
-                {[...new Set(hotels.map(h => h.destination))].map(dest => (
-                    <MenuItem key={dest} value={dest}>{dest}</MenuItem>
-                ))}
-                </Select>
-            </FormControl>
+                <FormControl sx={{ minWidth: 140 }} size="small">
+                    <InputLabel>Destination</InputLabel>
+                    <Select
+                        value={selectedDestination}
+                        onChange={(e) => setSelectedDestination(e.target.value)}
+                        label="Destination"
+                    >
+                        <MenuItem value="">All</MenuItem>
+                        {[...new Set(hotels.map(h => h.destination))].map(dest => (
+                            <MenuItem key={dest} value={dest}>{dest}</MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
 
-            <FormControl sx={{ minWidth: 160 }} size="small">
-                <InputLabel>Sub Destination</InputLabel>
-                <Select
-                value={selectedSubDestination}
-                onChange={(e) => setSelectedSubDestination(e.target.value)}
-                label="Sub Destination"
-                >
-                <MenuItem value="">All</MenuItem>
-                {[...new Set(hotels.map(h => h.sub_destination))].map(sub => (
-                    <MenuItem key={sub} value={sub}>{sub}</MenuItem>
-                ))}
-                </Select>
-            </FormControl>
+                <FormControl sx={{ minWidth: 160 }} size="small">
+                    <InputLabel>Sub Destination</InputLabel>
+                    <Select
+                        value={selectedSubDestination}
+                        onChange={(e) => setSelectedSubDestination(e.target.value)}
+                        label="Sub Destination"
+                    >
+                        <MenuItem value="">All</MenuItem>
+                        {[...new Set(hotels.map(h => h.sub_destination))].map(sub => (
+                            <MenuItem key={sub} value={sub}>{sub}</MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
 
-            <FormControl sx={{ minWidth: 140 }} size="small">
-                <InputLabel>Type</InputLabel>
-                <Select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                label="Type"
-                >
-                <MenuItem value="">All</MenuItem>
-                {[...new Set(hotels.map(h => h.type))].map(type => (
-                    <MenuItem key={type} value={type}>{type}</MenuItem>
-                ))}
-                </Select>
-            </FormControl>
+                <FormControl sx={{ minWidth: 140 }} size="small">
+                    <InputLabel>Type</InputLabel>
+                    <Select
+                        value={selectedType}
+                        onChange={(e) => setSelectedType(e.target.value)}
+                        label="Type"
+                    >
+                        <MenuItem value="">All</MenuItem>
+                        {[...new Set(hotels.map(h => h.type))].map(type => (
+                            <MenuItem key={type} value={type}>{type}</MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
             </Stack>
-            
+
             {hotels.length === 0 ? (
                 <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
                     <Typography variant="h6" color="text.secondary">Hotel not found</Typography>
@@ -159,36 +162,44 @@ const Hotels = () => {
                 <Grid container spacing={3}>
                     {hotels
                         .filter((hotel) =>
-                            hotel.hotel_name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+                            (hotel.hotel_name ?? "")
+                                .toLowerCase()
+                                .includes((searchQuery ?? "").toLowerCase()) &&
                             (selectedDestination ? hotel.destination === selectedDestination : true) &&
                             (selectedSubDestination ? hotel.sub_destination === selectedSubDestination : true) && (selectedType ? hotel.type === selectedType : true)
                         )
                         .map((hotel) => (
 
                             <Grid item xs={12} sm={6} md={3} key={hotel.id}>
-                                <Card sx={{ boxShadow: 4, borderRadius: 3 }}>
+                                <Card variant="outlined"
+                                    sx={{ height: "100%", display: "flex", flexDirection: "column", position: "relative" }}>
                                     <CardContent>
                                         <Typography variant="h6" color="primary" fontWeight={600}>{hotel.hotel_name}</Typography>
+                                        <Divider sx={{ mb: 1 }} />
                                         <Typography variant="body2" ><b>Location:</b> {hotel.destination} - {hotel.sub_destination}</Typography>
                                         <Typography variant="body2"><b>Type:</b> {hotel.type}</Typography>
                                         <Typography variant="body2"><b>Rating:</b> ⭐ {hotel.rating}</Typography>
                                     </CardContent>
-                                    <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 1, pt: 0 }}>
-                                        <Tooltip title="View">
-                                            <IconButton onClick={() => handleView(hotel)} size="small" color="success">
-                                                <Visibility fontSize="small" />
-                                            </IconButton>
-                                        </Tooltip>
-                                        <Tooltip title="Edit" onClick={() => handleEdit(hotel)} color="primary">
-                                            <IconButton size="small">
-                                                <Edit fontSize="small" />
-                                            </IconButton>
-                                        </Tooltip>
-                                        <Tooltip title="Delete">
-                                            <IconButton onClick={() => handleDelete(hotel._id)} size="small" color="error">
-                                                <Delete fontSize="small" />
-                                            </IconButton>
-                                        </Tooltip>
+                                    <CardActions sx={{ mt: "auto", justifyContent: "space-between", px: 2, pb: 2 }}>
+                                        {getPermission('hotel', 'view') &&
+                                            <Button size="small" variant="outlined" onClick={() => handleView(hotel)}>
+                                                View
+                                            </Button>
+                                        }
+
+                                        {getPermission('hotel', 'alter') &&
+                                            <Button size="small" variant="outlined" color="success" onClick={() => handleEdit(hotel)}>
+                                                Edit
+                                            </Button>
+                                        }
+
+                                        {getPermission('hotel', 'delete') &&
+
+                                            <Button size="small" color="error" variant="outlined" onClick={() => handleDelete(hotel._id)}>
+                                                Delete
+                                            </Button>
+                                        }
+
                                     </CardActions>
                                 </Card>
                             </Grid>

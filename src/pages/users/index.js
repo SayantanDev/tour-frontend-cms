@@ -23,7 +23,7 @@ const Users = () => {
     fullName: '',
     email: '',
     password: '',
-    confirmPassword: '',
+    confirmPassword: '', 
     permission: ''
   });
 

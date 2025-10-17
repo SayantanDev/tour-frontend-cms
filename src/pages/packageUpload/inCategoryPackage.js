@@ -6,12 +6,11 @@ import { getAllPackages, getPackagesByLocation } from "../../api/packageAPI";
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
-import { getSinglecatPackages, UpdateCatPacakgesbyPkgs} from '../../api/catPackageAPI';
+import { getSinglecatPackages, UpdateCatPacakgesbyPkgs } from '../../api/catPackageAPI';
 
 
 function CategoryPackageUploadInPlaces() {
   const { id } = useParams();
-  // const id = "6879ecd003b2d42cd73086b3";
   const [singleData, setsingleData] = useState({});
   const [locationData, setLocationData] = useState([]);
   const [pkgData, setPkgData] = useState([]);
@@ -19,115 +18,105 @@ function CategoryPackageUploadInPlaces() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchInfo, setSearchInfo] = useState("");
 
- useEffect(() => {
-  const fetchData = async () => {
-    const res = await getSinglecatPackages(id);
-    setsingleData(res.data);
-    setPackageIds(res.data.details.packages.package_ids);
-    console.log("this is my data", res.data);
-    
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await getSinglecatPackages(id);
+      setsingleData(res.data);
+      setPackageIds(res.data.details.packages.package_ids);
 
-    if (res.data.zone) {
-      const locationData = await getPackagesByLocation("Sikkim");
-      console.log("this is my location", locationData);
-      setLocationData(locationData.data);
+
+
+      if (res.data.zone) {
+        const locationData = await getPackagesByLocation(res.data.zone);
+        setLocationData(locationData.data);
+      }
+
+      const allPackages = await getAllPackages();
+      setPkgData(allPackages.data);
+
+
+
+    };
+    fetchData();
+  }, [id]);
+
+  const handleAdd = async (packageId) => {
+    setPackageIds((prev) => [...prev, packageId]);
+    const obj = {
+      "add": [packageId],
     }
 
-    const allPackages = await getAllPackages();
-    setPkgData(allPackages.data);
-    console.log("this is packages",allPackages.data);
-    
+    if (packageId) {
+      await UpdateCatPacakgesbyPkgs(id, obj);
+
+    }
 
   };
-  fetchData();
-}, [id]);
 
-const handleAdd = async (packageId) => {
-  setPackageIds((prev) => [...prev, packageId]);
-  console.log(packageId);
-  const obj = {
-    "add": [packageId],
-  }
-  
-  if(packageId) {
-    // const sendData = async () => {
-      await UpdateCatPacakgesbyPkgs(id,obj);
-    // }
-    // sendData();
-  }
-  console.log(obj);
-  
-};
+  const handleRemove = async (packageId) => {
+    setPackageIds((prev) => prev.filter((id) => id !== packageId));
+    const obj = {
+      "remove": [packageId],
+    }
 
-const handleRemove = async (packageId) => {
-  setPackageIds((prev) => prev.filter((id) => id !== packageId));
-  const obj = {
-    "remove": [packageId],
+    if (packageId) {
+
+      await UpdateCatPacakgesbyPkgs(id, obj);
+    }
+
+
   }
 
-  if(packageId) {
-   
-    await UpdateCatPacakgesbyPkgs(id,obj);
-  }
-  console.log(obj);
-  
-}
+  const finalPackages = pkgData.filter((singlePackage) => packageIds.includes(singlePackage._id));
 
-const finalPackages = pkgData.filter((singlePackage) => packageIds.includes(singlePackage._id));
+  const filterPackage = locationData.filter((data) => {
+    return data.label.toLowerCase().includes(searchTerm.toLowerCase())
+  });
 
-// console.log("finalPackages : ", finalPackages);
-
-const filterPackage = locationData.filter((data) => {
-   return data.label.toLowerCase().includes(searchTerm.toLowerCase())
-});
-
-
-// console.log(filterPackage);
-
-const filteredDestinationPkgs = finalPackages.filter((data) => {
-   return data.label.toLowerCase().includes(searchInfo.toLowerCase())
-});
-
-console.log("my filteredDestinationPkgs",filteredDestinationPkgs);
-
-
+  const filteredDestinationPkgs = finalPackages.filter((data) => {
+    return data.label.toLowerCase().includes(searchInfo.toLowerCase())
+  });
 
 
 
   return (
     <>
-     <Box display="flex" justifyContent="center">
-      <Typography variant="h4" fontWeight="bold" m={4} sx={{ transform: "translateX(-40px)" }}>
-        {singleData?.name || "Loading..."}
-      </Typography>
-     </Box>
+      <Box display="flex" justifyContent="center">
+        <Box m={4} display="flex" flexDirection="column" alignItems="center" gap={1}>
+          <Typography variant="h4" fontWeight="bold" sx={{ transform: "translateX(-40px)" }}>
+            {singleData?.name || "Loading..."}
+          </Typography>
+          <Typography variant="h6" fontWeight="bold" sx={{ transform: "translateX(-25px)" }}>Add/Update Packages</Typography>
+        </Box>
+
+      </Box>
       <Grid container gap={5} alignItems="stretch">
         <Grid item xs={5}>
-          <Card sx={{width: "100%",mb:4, display:'flex',flexDirection:"column",alignItems:"stretch"}}> 
-            
+          <Card sx={{ width: "100%", mb: 4, display: 'flex', flexDirection: "column", alignItems: "stretch" }}>
+
             <Typography variant="h5" fontWeight="bold" align="center" sx={{ mt: 2, mb: 2 }}>Preferred Packages</Typography>
-            
-           
-              
-                <TextField
-                  sx={{mx:2}}
-                  label="Search Packages"
-                  variant="outlined"
-                  size="small"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <SearchIcon color="action" />
-                      </InputAdornment>
-                    ),
-                  }}
-                  
-                />
-              
-                
-             
+
+
+
+            <TextField
+              sx={{ mx: 2 }}
+              label="Search Packages"
+              variant="outlined"
+              size="small"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
+
+            />
+
+
+
             <CardContent sx={{ flexGrow: 1 }}>
               <Table>
                 <TableHead>
@@ -138,49 +127,55 @@ console.log("my filteredDestinationPkgs",filteredDestinationPkgs);
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  
+
+                  {filterPackage.length === 0 && <TableRow>
+                    <TableCell colSpan={3} align="center">
+                      No Data Found
+                    </TableCell>
+                  </TableRow>}
+
                   {filterPackage.map((singlePackage) => (
                     <TableRow key={singlePackage._id}>
                       <TableCell>{singlePackage.label}</TableCell>
-                      <TableCell>{singlePackage.duration -1}N {singlePackage.duration}D</TableCell>
+                      <TableCell>{singlePackage.duration - 1}N {singlePackage.duration}D</TableCell>
                       <TableCell>
-                        {packageIds.includes(singlePackage._id) ? <Button variant="contained" color="error" onClick={() => handleRemove(singlePackage._id)}><DeleteIcon/></Button> : 
-                        <Button variant="contained" color="success" onClick={() => handleAdd(singlePackage._id)}><AddIcon /></Button>
+                        {packageIds.includes(singlePackage._id) ? <Button variant="contained" color="error" onClick={() => handleRemove(singlePackage._id)}><DeleteIcon /></Button> :
+                          <Button variant="contained" color="success" onClick={() => handleAdd(singlePackage._id)}><AddIcon /></Button>
                         }
                       </TableCell>
                     </TableRow>
-                    
+
                   ))}
-                  
-                    
-                    
-                  
+
+
+
+
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
         </Grid>
 
-        <Divider orientation="vertical" variant="middle" flexItem  />
+        <Divider orientation="vertical" variant="middle" flexItem />
 
         <Grid item xs={5}>
-          <Card sx={{width: "100%",mb:4, display:'flex',flexDirection:"column", alignItems:"stretch"}}>
+          <Card sx={{ width: "100%", mb: 4, display: 'flex', flexDirection: "column", alignItems: "stretch" }}>
 
             <Typography variant="h5" fontWeight="bold" align="center" sx={{ mt: 2, mb: 2 }}>Updated Packages</Typography>
             <TextField
-              sx={{mx:2}}
+              sx={{ mx: 2 }}
               label="Search Packages"
               variant="outlined"
               size="small"
               value={searchInfo}
               onChange={(e) => setSearchInfo(e.target.value)}
               InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" />
+                  </InputAdornment>
+                ),
+              }}
             />
             <CardContent sx={{ flexGrow: 1 }}>
               <Table>
@@ -192,11 +187,17 @@ console.log("my filteredDestinationPkgs",filteredDestinationPkgs);
                   </TableRow>
                 </TableHead>
                 <TableBody>
+
+                  {filteredDestinationPkgs.length === 0 && <TableRow>
+                    <TableCell colSpan={3} align="center">
+                      No Data Found
+                    </TableCell>
+                  </TableRow>}
                   {filteredDestinationPkgs.map((pkg) => (
                     <TableRow>
                       <TableCell>{pkg.label}</TableCell>
                       <TableCell>{pkg.duration - 1}N {pkg.duration}D</TableCell>
-                      <TableCell><Button variant="contained" color="error" onClick={() => handleRemove(pkg._id)}><DeleteIcon/></Button></TableCell>
+                      <TableCell><Button variant="contained" color="error" onClick={() => handleRemove(pkg._id)}><DeleteIcon /></Button></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

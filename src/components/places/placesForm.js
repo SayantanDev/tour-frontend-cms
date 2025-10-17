@@ -2,17 +2,19 @@ import React from 'react';
 import { Formik, FieldArray, Form } from 'formik';
 import * as Yup from 'yup';
 import {
-  Box, Button, Grid, TextField, Typography, Switch, FormControlLabel, Paper, Divider, IconButton, Chip, Stack,
+  Box, Button, Grid, TextField, Typography, Switch, FormControlLabel, Paper, Divider, Chip, Stack,
   MenuItem,
-  Checkbox
+  Checkbox,
+  FormControl,
+  InputLabel,
+  Select
 } from '@mui/material';
-import { Edit, Delete } from '@mui/icons-material';
-import { createPackage, updatePackage } from '../../api/packageAPI';
+import {Delete } from '@mui/icons-material';
 import useSnackbar from '../../hooks/useSnackbar';
 import { useSelector } from 'react-redux';
 
 import _ from 'lodash';
-import { insertPlace, updatePlace } from '../../api/placeApi';
+import { updatePlace } from '../../api/placeApi';
 import { useNavigate } from 'react-router-dom';
 
 const getInitialValues = (data) => {
@@ -91,31 +93,6 @@ const SectionWrapper = ({ title, children }) => (
   </Grid>
 );
 
-const RenderStringArray = ({ name, values, handleChange, label }) => (
-  <FieldArray name={name}>
-    {({ push, remove }) => (
-      <>
-        {values.map((val, index) => (
-          <Grid container spacing={1} key={index} sx={{ pb: 2 }}>
-            <Grid item xs={11}>
-              <TextField
-                label={`${label} ${index + 1}`}
-                name={`${name}[${index}]`}
-                value={val}
-                onChange={handleChange}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={1}>
-              <Button onClick={() => remove(index)} color="error">X</Button>
-            </Grid>
-          </Grid>
-        ))}
-        <Button onClick={() => push('')}>Add {label}</Button>
-      </>
-    )}
-  </FieldArray>
-);
 const RenderEditableList = ({ name, values, setFieldValue, label }) => {
   const [inputValue, setInputValue] = React.useState('');
   const [editIndex, setEditIndex] = React.useState(null);
@@ -190,8 +167,8 @@ const PlacesForm = () => {
     try {
       // let res;
       if (selectedPlace && selectedPlace._id) {
-        console.log("updatePlace");
-        
+        console.log("updatePlace",values);
+
         const res = await updatePlace(values, selectedPlace._id); // You'll need to import and define this API
         if (res) {
           showSnackbar('Package updated successfully', 'success');
@@ -199,8 +176,7 @@ const PlacesForm = () => {
         }
       } else {
         console.log("insertPlace");
-        
-        const res = await insertPlace(values);
+
         showSnackbar('You created a new place', 'success');
         navigate(`/places/view`);
         console.log("places data : ", values);
@@ -211,6 +187,27 @@ const PlacesForm = () => {
       showSnackbar('Something went wrong', 'error');
     }
   };
+
+  const Region_obj = [
+  {label: "None",
+    val: "",
+  },
+  {label: "Sikkim",
+    val: "sikkim",
+  },
+  {label: "Darjeeling",
+    val: "darjeeling",
+  },
+  {label: "North Sikkim",
+    val: "north-sikkim",
+  },
+  {label: "Meghalaya",
+    val: "meghalaya",
+  },
+  {label: "Arunachal Pradesh",
+    val: "arunachal-pradesh",
+  }
+]
 
 
   return (<>
@@ -245,15 +242,19 @@ const PlacesForm = () => {
                   {/* <Grid item xs={3}><FormControlLabel control={<Switch name="disabled" checked={values.disabled} onChange={handleChange} />} label="Disabled" /></Grid> */}
                   <Grid item xs={3}><FormControlLabel control={<Switch name="isActive" checked={values.isActive} onChange={handleChange} />} label="Is Active" /></Grid>
                   <Grid item xs={3}>
-                    <TextField
-                      label="Rigion"
-                      name="zone"
-                      value={values.zone}
-                      onChange={handleChange}
-                      error={touched.zone && Boolean(errors.zone)}
-                      helperText={touched.zone && errors.zone}
-                      fullWidth
-                    />
+                    <FormControl fullWidth>
+                      <InputLabel id="demo-simple-select-label">Region</InputLabel>
+                      <Select
+                        labelId="demo-simple-select-label"
+                        id="demo-simple-select"
+                        value={values.zone}
+                        label="Region"
+                        onChange={handleChange}
+                        name='zone'
+                      >
+                        {Region_obj.map((obj) => <MenuItem key={obj.val} value={obj.val}>{obj.label}</MenuItem>)}
+                      </Select>
+                    </FormControl>
                   </Grid>
                   <Grid item xs={3}>
                     <TextField
