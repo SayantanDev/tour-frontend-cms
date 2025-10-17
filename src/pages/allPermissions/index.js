@@ -17,6 +17,7 @@ import {
   Snackbar,
   Alert,
   IconButton,
+  TablePagination,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -43,6 +44,8 @@ const AllPermissions = () => {
     message: '',
     severity: 'success',
   });
+  const [page, setPage] = useState(0);
+  const rowsPerPage = 10;
 
   // ✅ Fetch all permissions
   const fetchPermissions = async () => {
@@ -50,8 +53,8 @@ const AllPermissions = () => {
       const res = await getAllPermission();
       const items = res?.items || [];
       console.log('permissions', items);
-      
-      setAllPermissions(items); 
+
+      setAllPermissions(items);
       setFilteredPermissions(items);
     } catch (error) {
       console.error('Error fetching permissions:', error);
@@ -177,6 +180,10 @@ const AllPermissions = () => {
     }
   };
 
+  const handleChangePage = (event, newpage) => {
+    setPage(newpage);
+  }
+
   return (
     <Container maxWidth="lg" sx={{ pt: 1, pb: 4 }}>
       {/* Header */}
@@ -212,8 +219,12 @@ const AllPermissions = () => {
       />
 
       {/* Table */}
-      <TableContainer>
-        <Table>
+      <TableContainer sx={{
+        border: '1px solid #ccc',
+        // borderRadius: 2,
+        boxShadow: '0px 2px 6px rgba(0,0,0,0.1)',
+      }}>
+        <Table sx={{padding: '6px 12px'}} size='small'>
           <TableHead>
             <TableRow>
               <TableCell>
@@ -229,32 +240,34 @@ const AllPermissions = () => {
           </TableHead>
           <TableBody>
             {filteredPermissions.length > 0 ? (
-              filteredPermissions.map((perm) => (
-                <TableRow key={perm._id}>
-                  <TableCell>{perm.module}</TableCell>
-                  <TableCell>
-                    {Array.isArray(perm.value)
-                      ? perm.value.join(', ')
-                      : perm.value}
-                  </TableCell>
-                  <TableCell align="right">
-                    <IconButton
-                      color="primary"
-                      size="small"
-                      onClick={() => handleEditClick(perm)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      color="error"
-                      size="small"
-                      onClick={() => handleDelete(perm._id)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))
+              filteredPermissions
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((perm) => (
+                  <TableRow key={perm._id}>
+                    <TableCell>{perm.module}</TableCell>
+                    <TableCell>
+                      {Array.isArray(perm.value)
+                        ? perm.value.join(', ')
+                        : perm.value}
+                    </TableCell>
+                    <TableCell align="right">
+                      <IconButton
+                        color="primary"
+                        size="small"
+                        onClick={() => handleEditClick(perm)}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton
+                        color="error"
+                        size="small"
+                        onClick={() => handleDelete(perm._id)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))
             ) : (
               <TableRow>
                 <TableCell colSpan={3} align="center">
@@ -264,6 +277,14 @@ const AllPermissions = () => {
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          component="div"
+          count={filteredPermissions.length}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          rowsPerPageOptions={[10]}
+        />
       </TableContainer>
 
       {/* Drawer Form */}

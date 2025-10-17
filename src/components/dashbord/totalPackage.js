@@ -10,6 +10,7 @@ import {
   TableRow,
   Paper,
   Button,
+  TablePagination,
 } from "@mui/material";
 import { getAllPackages } from "../../api/packageAPI";
 import { useNavigate } from "react-router-dom";
@@ -17,6 +18,8 @@ import usePermissions from "../../hooks/UsePermissions";
 
 const TotalPackage = () => {
   const [filteredPackages, setFilteredPackages] = useState([]);
+  const [page, setPage] = useState(0);
+  const rowsPerPage = 5;
   const navigate = useNavigate();
   const getPermission = usePermissions();
 
@@ -37,6 +40,8 @@ const TotalPackage = () => {
 
   // Get unique locations dynamically
   const locations = [...new Set(filteredPackages.map((pkg) => pkg.location))];
+  console.log("my locations are", locations);
+
 
   // Prepare summary data dynamically
   const summaryData = [
@@ -57,6 +62,10 @@ const TotalPackage = () => {
     }
   };
 
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  }
+
   return (
     getPermission('packages', 'view') && (
       <Box mb={5}>
@@ -75,33 +84,43 @@ const TotalPackage = () => {
             </TableHead>
 
             <TableBody>
-              {summaryData.map((item, index) => (
-                <TableRow
-                  key={index}
-                  hover
-                  sx={{
-                    "&:hover": { backgroundColor: "#f9f9f9" },
-                    transition: "background-color 0.2s ease",
-                  }}
-                >
-                  <TableCell align="center">{item.label}</TableCell>
-                  <TableCell align="center">
-                    <Typography fontWeight="bold">{item.count}</Typography>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Button
-                      variant="contained"
-                      size="small"
-                      color="primary"
-                      onClick={() => handleNavigate(item.location)}
-                    >
-                      View Packages
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {summaryData
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((item, index) => (
+                  <TableRow
+                    key={index}
+                    hover
+                    sx={{
+                      "&:hover": { backgroundColor: "#f9f9f9" },
+                      transition: "background-color 0.2s ease",
+                    }}
+                  >
+                    <TableCell align="center">{item.label}</TableCell>
+                    <TableCell align="center">
+                      <Typography fontWeight="bold">{item.count}</Typography>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Button
+                        variant="contained"
+                        size="small"
+                        color="primary"
+                        onClick={() => handleNavigate(item.location)}
+                      >
+                        View Packages
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
+
+          <TablePagination
+            component="div"
+            count={summaryData.length}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            rowsPerPageOptions={[5]} />
         </TableContainer>
       </Box>
     )

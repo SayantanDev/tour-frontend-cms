@@ -10,6 +10,7 @@ import {
   TableRow,
   Paper,
   Button,
+  TablePagination,
 } from "@mui/material";
 import { getAllplaces } from "../../api/placeApi";
 import { useNavigate } from "react-router-dom";
@@ -17,6 +18,8 @@ import usePermissions from "../../hooks/UsePermissions";
 
 const TotalPlace = () => {
   const [places, setPlaces] = useState([]);
+  const [page, setPage] = useState(0);
+  const rowsPerPage = 5;
   const navigate = useNavigate();
   const getPermission = usePermissions();
 
@@ -54,6 +57,10 @@ const TotalPlace = () => {
     }
   };
 
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
   return (
     getPermission('places', 'view') && (
       <Box mb={5}>
@@ -78,33 +85,44 @@ const TotalPlace = () => {
             </TableHead>
 
             <TableBody>
-              {summaryData.map((item, index) => (
-                <TableRow
-                  key={index}
-                  hover
-                  sx={{
-                    "&:hover": { backgroundColor: "#f9f9f9" },
-                    transition: "background-color 0.2s ease",
-                  }}
-                >
-                  <TableCell align="center">{item.label}</TableCell>
-                  <TableCell align="center">
-                    <Typography fontWeight="bold">{item.count}</Typography>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Button
-                      variant="contained"
-                      size="small"
-                      color="primary"
-                      onClick={() => handleNavigate(item.zone)}
-                    >
-                      View Places
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {summaryData
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((item, index) => (
+                  <TableRow
+                    key={index}
+                    hover
+                    sx={{
+                      "&:hover": { backgroundColor: "#f9f9f9" },
+                      transition: "background-color 0.2s ease",
+                    }}
+                  >
+                    <TableCell align="center">{item.label}</TableCell>
+                    <TableCell align="center">
+                      <Typography fontWeight="bold">{item.count}</Typography>
+                    </TableCell>
+                    <TableCell align="center">
+                      <Button
+                        variant="contained"
+                        size="small"
+                        color="primary"
+                        onClick={() => handleNavigate(item.zone)}
+                      >
+                        View Places
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
+
+          <TablePagination
+            component="div"
+            count={summaryData.length}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            rowsPerPageOptions={[5]} // 👈 fixed to always show 5
+          />
         </TableContainer>
       </Box>
     )
