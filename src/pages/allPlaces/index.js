@@ -330,11 +330,11 @@ const AllPlaces = () => {
 
       {/* Pagination bar at bottom */}
 
-      {paginatedRows.length >= 9 &&
+      {paginatedRows.length >= 1 &&
         <Box p={2} mt="auto" display="flex" justifyContent="flex-end" alignItems="center" mb={2}>
           <Box display="flex" alignItems="center">
             <Typography variant="body2" mr={1}>
-              Rows per page:
+              Places per page:
             </Typography>
             <Select
               value={rowsPerPage}
@@ -347,7 +347,7 @@ const AllPlaces = () => {
               {[9, 18, 27].map((option) => (
                 <MenuItem key={option} value={option}>
                   {option}
-                </MenuItem>
+                </MenuItem> 
               ))}
             </Select>
           </Box>
