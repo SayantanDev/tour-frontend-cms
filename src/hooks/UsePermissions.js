@@ -38,7 +38,7 @@ const userPermissionData = [
       { module: "packages", value: ["view", "create", "alter"] },
       { module: "ctg-packages", value: ["view", "create", "alter", "delete"] },
       { module: "logout", value: ["view"] },
-      { module: "places", value: ["view"] },
+      // { module: "places", value: ["view"] },
       { module: "hotel", value: ["view", "alter"] },
     ],
   },

@@ -2,8 +2,11 @@ import React from 'react';
 import TotalInquiry from '../../components/dashbord/totalInquiry';
 import TotalQuiry from '../../components/dashbord/totalQuiry';
 import { Box } from '@mui/material';
+import PlacePackageSummary from '../../components/dashbord/PlacePackageSummary';
 
 const Dashboard = () => {
+
+
   return (
     <Box
       sx={{
@@ -19,6 +22,7 @@ const Dashboard = () => {
     >
       <TotalQuiry />
       <TotalInquiry />
+      <PlacePackageSummary />
     </Box>
   );
 };

@@ -11,7 +11,7 @@ import LocationOffIcon from '@mui/icons-material/LocationOff';
 import DriveFolderUploadIcon from '@mui/icons-material/DriveFolderUpload';
 import PackageDialog from '../../components/packages/PackageDialog';
 import { getAllPackages, getSinglePackages, verifyPackage, updatePackageRanking } from '../../api/packageAPI';
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { removeSelectedPackage, setSelectedPackage } from "../../reduxcomponents/slices/packagesSlice";
 import usePermissions from "../../hooks/UsePermissions";
@@ -58,6 +58,18 @@ const AllPackages = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
+  //navigatyion from dashboard
+  const location = useLocation();
+
+
+   useEffect(() => {
+      const params = new URLSearchParams(location.search);
+      const zoneFromURL = params.get("zone");
+      
+      setFilterLocation(zoneFromURL ?? null);
+    
+    }, [location.search]);
+  
   // NEW: filters
   const [filterVerified, setFilterVerified] = useState('All'); // 'All' | 'Verified' | 'Not Verified'
   const [filterDateField, setFilterDateField] = useState('created'); // 'created' | 'updated'

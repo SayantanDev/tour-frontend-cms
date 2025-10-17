@@ -24,7 +24,7 @@ import {
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { getAllplaces, getSinglePlace, deletePlace } from "../../api/placeApi";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { removeSelectedPlace, setSelectedPlace } from "../../reduxcomponents/slices/placesSlice";
 import useSnackbar from "../../hooks/useSnackbar";
@@ -40,6 +40,20 @@ const AllPlaces = () => {
   const [allPlaces, setAllPlaces] = useState([]);
   const [filteredPlaces, setFilteredPlaces] = useState([]);
   const [rankingLoading, setRankingLoading] = useState({});
+
+  //navigated from dashboard
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const zoneFromURL = params.get("zone");
+
+    if (zoneFromURL) {
+      setSelectedZone(zoneFromURL);
+    }
+  }, [location.search]);
+
+
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(9);
@@ -207,7 +221,7 @@ const AllPlaces = () => {
 
         {/* Cards */}
         {paginatedRows.length === 0 ? <Typography>No Data Found</Typography> :
-          <Grid container spacing={3}>  
+          <Grid container spacing={3}>
             {paginatedRows.map((place) => (
               <Grid item xs={12} sm={6} md={4} key={place._id}>
                 <Card
