@@ -8,12 +8,12 @@ import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 
 
-function TotalQuiry() {
+function  TotalQuiry() {
   // const [query, setQuery] = useState([]);
   const [filteredQuery, setFilteredQuery] = useState([]);
   // const [loading, setLoading] = useState(true);
   
-  useEffect(() => {
+  useEffect(() => {  
     const fetchQuery = async () => {
       try {
         const response = await getAllQueries();
@@ -28,6 +28,7 @@ function TotalQuiry() {
     };
     fetchQuery();
   }, []);
+  
   const confirm = filteredQuery.filter(q => q.lead_stage === "Confirm");
   const New = filteredQuery.filter(q => q.lead_stage === "New");
   const postpond = filteredQuery.filter(q => q.lead_stage === "Postponed");
