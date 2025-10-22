@@ -52,7 +52,6 @@ const AllPermissions = () => {
     try {
       const res = await getAllPermission();
       const items = res?.items || [];
-      console.log('permissions', items);
 
       setAllPermissions(items);
       setFilteredPermissions(items);

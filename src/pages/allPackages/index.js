@@ -10,10 +10,10 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
 import DriveFolderUploadIcon from '@mui/icons-material/DriveFolderUpload';
 import PackageDialog from '../../components/packages/PackageDialog';
-import { getAllPackages, getSinglePackages, verifyPackage, updatePackageRanking } from '../../api/packageAPI';
+import { getSinglePackages, verifyPackage, updatePackageRanking } from '../../api/packageAPI';
 import { useLocation, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { removeSelectedPackage, setSelectedPackage } from "../../reduxcomponents/slices/packagesSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { removeSelectedPackage, setSelectedPackage, updatePackageVerified, updatepackageRanking } from "../../reduxcomponents/slices/packagesSlice";
 import usePermissions from "../../hooks/UsePermissions";
 import PaymentsIcon from '@mui/icons-material/Payments';
 import CostDialogbox from "../../components/packages/costDialogbox";
@@ -47,7 +47,9 @@ const safeDuration = (pkg) => pkg?.details?.header?.h2 ?? "—";
 
 // ========== Component ==========
 const AllPackages = () => {
-  const [allPackages, setAllPackages] = useState([]);
+  // const [allPackages, setAllPackages] = useState([]);
+  const { allPackages } = useSelector(state => state.package);
+
   const [filteredPackages, setFilteredPackages] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newD, setNewD] = useState(false);
@@ -62,14 +64,14 @@ const AllPackages = () => {
   const location = useLocation();
 
 
-   useEffect(() => {
-      const params = new URLSearchParams(location.search);
-      const zoneFromURL = params.get("zone");
-      
-      setFilterLocation(zoneFromURL ?? null);
-    
-    }, [location.search]);
-  
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const zoneFromURL = params.get("zone");
+
+    setFilterLocation(zoneFromURL ?? null);
+
+  }, [location.search]);
+
   // NEW: filters
   const [filterVerified, setFilterVerified] = useState('All'); // 'All' | 'Verified' | 'Not Verified'
   const [filterDateField, setFilterDateField] = useState('created'); // 'created' | 'updated'
@@ -92,11 +94,10 @@ const AllPackages = () => {
     valueCost: [],
   });
   const [openConfirm, setOpenConfirm] = useState({ isVisible: false, section: "", target: "" });
-  
+
 
   const handleOpenConfirm = (section, target) => {
     setOpenConfirm({ isVisible: true, section, target });
-    console.log(section, target);
   }
 
   const handleCloseConfirm = () => setOpenConfirm({ isVisible: false, section: "", target: "" });
@@ -115,7 +116,7 @@ const AllPackages = () => {
       updated.valueCost = updated.valueCost.filter((d) => d.Type !== target);
     }
     setCostDialogData(updated);
-    handleCloseConfirm();  
+    handleCloseConfirm();
   }
 
   // Hooks
@@ -123,16 +124,7 @@ const AllPackages = () => {
   const dispatch = useDispatch();
   const getPermission = usePermissions();
 
-  // initial fetch
-  useEffect(() => {
-    getAllPackages()
-      .then((res) => {
-        setAllPackages(res.data || []);
-      })
-      .catch((err) => {
-        console.error('Failed to fetch packages', err);
-      });
-  }, []);
+
 
   const uniqueLocations = useMemo(
     () => [...new Set(allPackages.map(pkg => pkg.location).filter(Boolean))],
@@ -215,7 +207,7 @@ const AllPackages = () => {
     rankingFilter
   ]);
 
-  console.log(filteredPackages);
+
 
   // actions
   const handleView = (id) => {
@@ -230,7 +222,7 @@ const AllPackages = () => {
     } catch (error) {
       console.error('Failed to fetch single package', error);
     }
-  };
+  }; 
 
   const createNewPackage = () => {
     dispatch(removeSelectedPackage());
@@ -241,7 +233,6 @@ const AllPackages = () => {
   const handleChangeRowsPerPage = (event) => { setRowsPerPage(+event.target.value); setPage(0); };
 
   const paginatedRows = filteredPackages.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-  console.log(paginatedRows);
 
 
   const handleToggleVerified = async (row, nextVal) => {
@@ -249,23 +240,16 @@ const AllPackages = () => {
     setToggleLoading(prev => ({ ...prev, [id]: true }));
 
     // optimistic UI
-    setAllPackages(prev =>
-      prev.map(p => (p._id === id ? { ...p, verified: nextVal } : p))
-    );
+    // setAllPackages(prev =>
+    //   prev.map(p => (p._id === id ? { ...p, verified: nextVal } : p))
+    // );
 
     try {
       const objD = { verified: nextVal };
       await verifyPackage(id, objD); // <-- backend update
-      // reflect updated_at immediately
-      setAllPackages(prev =>
-        prev.map(p => (p._id === id ? { ...p, updated_at: new Date().toISOString() } : p))
-      );
+      dispatch(updatePackageVerified({ id, verified: nextVal }));
     } catch (err) {
       console.error("Failed to update verified", err);
-      // revert on error
-      setAllPackages(prev =>
-        prev.map(p => (p._id === id ? { ...p, verified: !nextVal } : p))
-      );
     } finally {
       setToggleLoading(prev => ({ ...prev, [id]: false }));
     }
@@ -278,23 +262,12 @@ const AllPackages = () => {
 
     setRankingLoading(prev => ({ ...prev, [id]: true }));
 
-    // optimistic UI
-    const prevSnapshot = allPackages;
-    setAllPackages(prev =>
-      prev.map(p => (p._id === id ? { ...p, ranking: newRanking } : p))
-    );
-
     try {
       // Assume API signature: updatePackageRanking(id, { ranking: number })
       await updatePackageRanking(id, { ranking: newRanking });
-      // bump updated_at
-      setAllPackages(prev =>
-        prev.map(p => (p._id === id ? { ...p, updated_at: new Date().toISOString() } : p))
-      );
+     dispatch(updatepackageRanking({ id, ranking: newRanking }));
     } catch (err) {
       console.error("Failed to update ranking", err);
-      // revert on error
-      setAllPackages(prevSnapshot);
     } finally {
       setRankingLoading(prev => ({ ...prev, [id]: false }));
     }
@@ -313,7 +286,6 @@ const AllPackages = () => {
   const handleOpenDialog = (id) => {
 
     setSelectedId(id);
-    console.log(id);
 
 
 
@@ -350,7 +322,6 @@ const AllPackages = () => {
 
 
     setCostDialogData(costData);
-    console.log(costData);
 
     setOpenDialog(true);
   };
@@ -618,6 +589,7 @@ const AllPackages = () => {
       />
       <CostDialogbox
         open={openDialog}
+        selectedId={selectedId}
         openConfirm={openConfirm}
         handleClose={handleCloseDialog}
         costDialogdata={costDialogdata}

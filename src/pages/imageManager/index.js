@@ -29,7 +29,6 @@ const ImageManagerPage = () => {
         const res = await getImages(schema, id);
         setExistingImages(res.images || []);
         setExistingName(res.name || "Document"); 
-        console.log("this is my image",res);
         
       } catch (err) {
         console.error("Failed to load images", err);

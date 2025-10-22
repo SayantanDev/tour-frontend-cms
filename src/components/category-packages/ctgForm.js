@@ -218,31 +218,31 @@ const SectionWrapper = ({ title, children }) => (
   </Grid>
 );
 
-const RenderStringArray = ({ name, values, handleChange, label }) => (
-  <FieldArray name={name}>
-    {({ push, remove }) => (
-      <>
-        {values.map((val, index) => (
-          <Grid container spacing={1} key={index} sx={{ pb: 2 }}>
-            <Grid item xs={11}>
-              <TextField
-                label={`${label} ${index + 1}`}
-                name={`${name}[${index}]`}
-                value={val}
-                onChange={handleChange}
-                fullWidth
-              />
-            </Grid>
-            <Grid item xs={1}>
-              <Button onClick={() => remove(index)} color="error">X</Button>
-            </Grid>
-          </Grid>
-        ))}
-        <Button onClick={() => push('')}>Add {label}</Button>
-      </>
-    )}
-  </FieldArray>
-);
+// const RenderStringArray = ({ name, values, handleChange, label }) => (
+//   <FieldArray name={name}>
+//     {({ push, remove }) => (
+//       <>
+//         {values.map((val, index) => (
+//           <Grid container spacing={1} key={index} sx={{ pb: 2 }}>
+//             <Grid item xs={11}>
+//               <TextField
+//                 label={`${label} ${index + 1}`}
+//                 name={`${name}[${index}]`}
+//                 value={val}
+//                 onChange={handleChange}
+//                 fullWidth
+//               />
+//             </Grid>
+//             <Grid item xs={1}>
+//               <Button onClick={() => remove(index)} color="error">X</Button>
+//             </Grid>
+//           </Grid>
+//         ))}
+//         <Button onClick={() => push('')}>Add {label}</Button>
+//       </>
+//     )}
+//   </FieldArray>
+// );
 const RenderEditableList = ({ name, values, setFieldValue, label }) => {
   const [inputValue, setInputValue] = React.useState('');
   const [editIndex, setEditIndex] = React.useState(null);
@@ -308,7 +308,7 @@ const RenderEditableList = ({ name, values, setFieldValue, label }) => {
 const CtgForm = () => {
   const navigate = useNavigate();
   const { fetchSelectedCtgPackage: selectedCatPackage } = useSelector((state) => state.ctgpakage);
-  // console.log("selectedCatPackage : ", selectedCatPackage);
+ 
 
   // const getInitialValues = (selectedCatPackage) => selectedCatPackage || initialValues;
 
@@ -327,7 +327,6 @@ const CtgForm = () => {
         await CatPackageCreate(values);
         showSnackbar('You created a new place', 'success');
         navigate(`/category-packages/view`);
-        // console.log("places data : ", values);
 
       }
     } catch (error) {

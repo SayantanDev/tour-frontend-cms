@@ -75,7 +75,6 @@ const AllUserPermissions = () => {
     setSelectedId(id);
     setSelectedRole(role);
 
-    console.log(allUserPermissions);
 
 
 

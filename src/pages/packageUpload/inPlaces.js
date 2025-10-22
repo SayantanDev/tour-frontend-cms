@@ -22,17 +22,14 @@ const PackageUploadInPlaces = () => {
       const res = await getSinglePlace(id);
       setsingleData(res);
       setPackageIds(res.details.packages.package_ids);
-      console.log("this is my data", res);
 
       if (res.zone) {
         const locationData = await getPackagesByLocation(res.zone);
-        console.log("this is my location", locationData.data);
         setLocationData(locationData.data);
       }
 
       const allPackages = await getAllPackages();
       setPkgData(allPackages.data);
-      console.log("this is packages", allPackages.data);
 
 
     };
@@ -41,7 +38,6 @@ const PackageUploadInPlaces = () => {
 
   const handleAdd = async (packageId) => {
     setPackageIds((prev) => [...prev, packageId]);
-    console.log(packageId);
     const obj = {
       "add": [packageId],
     }
@@ -49,7 +45,6 @@ const PackageUploadInPlaces = () => {
     if (packageId) {
       await UpdatePlacesPacakges(id, obj);
     }
-    console.log(obj);
 
   };
 
@@ -63,20 +58,17 @@ const PackageUploadInPlaces = () => {
 
       await UpdatePlacesPacakges(id, obj);
     }
-    console.log(obj);
 
   }
 
   const finalPackages = pkgData.filter((singlePackage) => packageIds.includes(singlePackage._id));
 
-  console.log("finalPackages : ", finalPackages);
 
   const filterPackage = locationData.filter((data) => {
     return data.label.toLowerCase().includes(searchTerm.toLowerCase())
   });
 
 
-  console.log(filterPackage);
 
   const filteredDestinationPkgs = finalPackages.filter((data) => {
     return data.label.toLowerCase().includes(searchInfo.toLowerCase())

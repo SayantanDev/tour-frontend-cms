@@ -14,6 +14,8 @@ import {
 } from "@mui/material";
 import { getAllplaces } from "../../api/placeApi";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { fetchAllPlaces } from "../../reduxcomponents/slices/placesSlice"
 import usePermissions from "../../hooks/UsePermissions";
 
 const TotalPlace = () => {
@@ -22,12 +24,14 @@ const TotalPlace = () => {
   const rowsPerPage = 5;
   const navigate = useNavigate();
   const getPermission = usePermissions();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchPlaces = async () => {
       try {
         const response = await getAllplaces();
         setPlaces(response);
+        dispatch(fetchAllPlaces(response));
       } catch (error) {
         console.error("Error fetching places:", error);
       }

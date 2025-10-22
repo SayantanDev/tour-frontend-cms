@@ -6,8 +6,10 @@ const initialeditState = {
     fetchNewPackageItinerary: {},
     checkItinery: false,
     checkReach: false,
+    allPackages: [],
+    loading: false,
+    error: null
 };
-
 const Packages = createSlice({
     name: 'packages',
     initialState: initialeditState,
@@ -40,9 +42,22 @@ const Packages = createSlice({
         },
         removeSelectedPackage: (state, action) => {
             state.fetchSelectedPackage = {};
+        },
+        updatePackageVerified: (state, action) => {
+            const { id, verified } = action.payload;
+            const pkg = state.allPackages.find(p => p._id === id);
+            if (pkg) pkg.verified = verified;
+        },
+        updatepackageRanking: (state, action) => {
+            const { id, ranking } = action.payload;
+            const pkg = state.allPackages.find(p => p._id === id);
+            if (pkg) pkg.ranking = ranking;
+        },
+        fetchAllPackages: (state, action) => {
+            state.allPackages = action.payload;
         }
     }
 });
 
-export const { setSelectedPackage, setNewPackageItinerary, setNewPackageInfo, removePackageInfo,removePackageItinerary,setCheckItinery,setCheckReach, removeSelectedPackage } = Packages.actions;
+export const { setSelectedPackage, setNewPackageItinerary, setNewPackageInfo, removePackageInfo, removePackageItinerary, setCheckItinery, setCheckReach, removeSelectedPackage, updatePackageVerified, updatepackageRanking, fetchAllPackages } = Packages.actions;
 export default Packages.reducer;

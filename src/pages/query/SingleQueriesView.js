@@ -162,13 +162,11 @@ function SingleQueriesView() {
 
     // ⬇️ Set status to "pending" only for this changed row
     updatedRow.status = "Pending";
-    // console.log("updatedRow : ",updatedRow);
 
     // ⬇️ Replace only the edited row
     newData[editIndex] = updatedRow;
 
     const itnObj = { followup_details: newData };
-    // console.log("itnObj : ",itnObj);
 
     const res = await updateFollowupDetails(fetchSelectedquerie.id, itnObj);
     if (res) {
@@ -192,8 +190,6 @@ function SingleQueriesView() {
     setVerifyStatus('');
     setRejectedReason('');
     setVerifyPopupOpen(true);
-    const originalRow = itineraryData[editIndex];
-    console.log("Verify Itinerary row : ", originalRow);
 
   }
 

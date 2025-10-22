@@ -171,7 +171,6 @@ const Query = () => {
   const openChangeRequestModal = async (queryId) => {
     try {
       const res = await getChangeRequest(queryId);
-      console.log("getChangeRequest response : ", res);
       // const data = await res.json();
       setSelectedChangeRequests(res);
       setCurrentQueryId(queryId);
@@ -199,7 +198,6 @@ const Query = () => {
   const openRejectedChangeModal = async (operationId) => {
     try {
       const res = await getRejectedChanges(operationId);
-      console.log("");
 
       // const data = await res.json();
       setRejectedChanges(res);

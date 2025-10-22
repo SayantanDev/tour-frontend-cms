@@ -14,6 +14,8 @@ import {
 } from "@mui/material";
 import { getAllPackages } from "../../api/packageAPI";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { fetchAllPackages } from "../../reduxcomponents/slices/packagesSlice";
 import usePermissions from "../../hooks/UsePermissions";
 
 const TotalPackage = () => {
@@ -22,6 +24,7 @@ const TotalPackage = () => {
   const rowsPerPage = 5;
   const navigate = useNavigate();
   const getPermission = usePermissions();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchPackages = async () => {
@@ -31,6 +34,7 @@ const TotalPackage = () => {
           (a, b) => new Date(b.created_at) - new Date(a.created_at)
         );
         setFilteredPackages(sortedData);
+        dispatch(fetchAllPackages(response.data));
       } catch (error) {
         console.error("Error fetching packages:", error);
       }
@@ -40,7 +44,6 @@ const TotalPackage = () => {
 
   // Get unique locations dynamically
   const locations = [...new Set(filteredPackages.map((pkg) => pkg.location))];
-  console.log("my locations are", locations);
 
 
   // Prepare summary data dynamically

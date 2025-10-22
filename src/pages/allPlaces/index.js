@@ -23,10 +23,10 @@ import {
   Pagination,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { getAllplaces, getSinglePlace, deletePlace } from "../../api/placeApi";
+import { getSinglePlace, deletePlace } from "../../api/placeApi";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { removeSelectedPlace, setSelectedPlace } from "../../reduxcomponents/slices/placesSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { removeSelectedPlace, setSelectedPlace, fetchAllPlaces } from "../../reduxcomponents/slices/placesSlice";
 import useSnackbar from "../../hooks/useSnackbar";
 import CheckIcon from "@mui/icons-material/Check";
 import { handleChangeRanking } from "../allPackages/rankingUtil"; // adjust path
@@ -37,7 +37,7 @@ const AllPlaces = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const getPermission = usePermissions();
-  const [allPlaces, setAllPlaces] = useState([]);
+  // const [allPlaces, setAllPlaces] = useState([]);
   const [filteredPlaces, setFilteredPlaces] = useState([]);
   const [rankingLoading, setRankingLoading] = useState({});
 
@@ -72,15 +72,7 @@ const AllPlaces = () => {
   const [menuPlaceId, setMenuPlaceId] = useState(null);
   const menuOpen = Boolean(menuAnchorEl);
 
-  useEffect(() => {
-    getAllplaces()
-      .then((res) => {
-        setAllPlaces(res);
-        setFilteredPlaces(res);
-      }).catch((err) => {
-        console.error("Failed to fetch places", err);
-      });
-  }, []);
+ const {allPlaces} = useSelector(state => state.place); 
 
   const zones = [...new Set(allPlaces.map((place) => place.zone))];
 
@@ -127,7 +119,7 @@ const AllPlaces = () => {
   const confirmDelete = async () => {
     try {
       await deletePlace(deleteId);
-      setAllPlaces((prev) => prev.filter((place) => place._id !== deleteId));
+      dispatch(fetchAllPlaces(allPlaces.filter((place) => place._id !== deleteId)));
       setConfirmOpen(false);
       showSnackbar("Place Deleted successfully", "success");
     } catch (err) {
@@ -294,7 +286,7 @@ const AllPlaces = () => {
                             place,
                             e.target.value,
                             allPlaces,
-                            setAllPlaces,
+                            (updatedPlaces) => dispatch(fetchAllPlaces(updatedPlaces)),
                             rankingLoading,
                             setRankingLoading
                           )
@@ -347,7 +339,7 @@ const AllPlaces = () => {
               {[9, 18, 27].map((option) => (
                 <MenuItem key={option} value={option}>
                   {option}
-                </MenuItem> 
+                </MenuItem>
               ))}
             </Select>
           </Box>

@@ -123,13 +123,11 @@ const SelectedPkg = ({ selectedCard, handleBack, customerInput, setCustomerInput
 
                 // Fallback for optional arrays
                 const itineraryList = itineraryData?.shortItinerary || [];
-                console.log("itineraryList :: ", itineraryList);
 
                 const inclusionList = pakageData?.details?.cost?.inclusions || [];
-                console.log("inclusionList :: ", inclusionList);
 
                 const exclusionList = pakageData?.details?.cost?.exclusions || [];
-                console.log("exclusionList :: ", exclusionList);
+
 
 
                 const doc = new Document({
