@@ -4,7 +4,7 @@ import TotalPackage from "./totalPackage";
 
 const PlacePackageSummary = () => {
   return (
-    <Box sx={{ mt: 4, px: 2 }}>
+    <Box sx={{ mt: 4 }}>
       <Grid container spacing={3}>
         {/* Left: Places Table */}
         <Grid item xs={12} md={6}>

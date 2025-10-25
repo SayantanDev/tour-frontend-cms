@@ -11,6 +11,7 @@ import {
   Paper,
   Button,
   TablePagination,
+  Skeleton,
 } from "@mui/material";
 import { getAllplaces } from "../../api/placeApi";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +21,7 @@ const TotalPlace = () => {
   const [places, setPlaces] = useState([]);
   const [page, setPage] = useState(0);
   const rowsPerPage = 5;
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const getPermission = usePermissions();
 
@@ -30,6 +32,8 @@ const TotalPlace = () => {
         setPlaces(response);
       } catch (error) {
         console.error("Error fetching places:", error);
+      } finally {
+        setTimeout(()=> setLoading(false),1000);
       }
     };
     fetchPlaces();
@@ -61,6 +65,22 @@ const TotalPlace = () => {
     setPage(newPage);
   };
 
+  const renderSkeletonRows = () => {
+    return Array.from({ length: rowsPerPage }).map((_, i) => (
+      <TableRow key={i}>
+        <TableCell align="center">
+          <Skeleton variant="text" width={100} height={25} />
+        </TableCell>
+        <TableCell align="center">
+          <Skeleton variant="text" width={60} height={25} />
+        </TableCell>
+        <TableCell align="center">
+          <Skeleton variant="rectangular" width={120} height={35} sx={{ borderRadius: 1 }} />
+        </TableCell>
+      </TableRow>
+    ));
+  };
+
   return (
     getPermission('places', 'view') && (
       <Box mb={5}>
@@ -85,7 +105,7 @@ const TotalPlace = () => {
             </TableHead>
 
             <TableBody>
-              {summaryData
+              {loading ? renderSkeletonRows() : summaryData
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((item, index) => (
                   <TableRow
@@ -115,14 +135,17 @@ const TotalPlace = () => {
             </TableBody>
           </Table>
 
-          <TablePagination
-            component="div"
-            count={summaryData.length}
-            page={page}
-            onPageChange={handleChangePage}
-            rowsPerPage={rowsPerPage}
-            rowsPerPageOptions={[5]} // 👈 fixed to always show 5
-          />
+          {!loading && (
+            <TablePagination
+              component="div"
+              count={summaryData.length}
+              page={page}
+              onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage}
+              rowsPerPageOptions={[5]} // 👈 fixed to always show 5
+            />
+          )}
+
         </TableContainer>
       </Box>
     )

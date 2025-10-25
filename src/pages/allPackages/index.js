@@ -560,7 +560,7 @@ const AllPackages = () => {
                     {getPermission('packages', 'alter-image') &&
                       <Tooltip title="Image Upload">
                         <IconButton color="success" onClick={() => handleImageUpload(row.id)}>
-                          <DriveFolderUploadIcon />
+                          <DriveFolderUploadIcon /> 
                         </IconButton>
                       </Tooltip>}
                     {getPermission('packages', 'view') &&

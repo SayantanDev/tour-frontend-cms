@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { getAllInquiries } from '../../api/inquiryAPI';
 import {
-  Card, CardContent, Typography, Box,
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Skeleton,
 } from '@mui/material';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 
 const TotalInquiry = () => {
   const [filteredInquiries, setFilteredInquiries] = useState([]);
+  const [loading, setLoading] = useState(true); // ✅ loading state
 
   useEffect(() => {
     const fetchInquiries = async () => {
@@ -18,6 +23,8 @@ const TotalInquiry = () => {
         setFilteredInquiries(sortedData);
       } catch (error) {
         console.error("Error fetching inquiries:", error);
+      } finally {
+        setTimeout(() => setLoading(false), 1000); // ✅ stop loading when done
       }
     };
     fetchInquiries();
@@ -28,7 +35,6 @@ const TotalInquiry = () => {
       <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
         Inquiries Summary
       </Typography>
-
       <Card
         sx={{
           width: '10vw',
@@ -50,20 +56,25 @@ const TotalInquiry = () => {
           },
         }}
       >
-        <CardContent sx={{ p: 0, width: '100%', height: '100%' }}>
-          <Box sx={{ height: '100%', width: '100%', textAlign: 'center' }}>
-            <Box mb={0.5}>
-              <NotificationsActiveIcon color="primary" />
+        {loading ? <Skeleton variant='rounded'/> : (
+          <CardContent sx={{ p: 0, width: '100%', height: '100%' }}>
+            <Box sx={{ height: '100%', width: '100%', textAlign: 'center' }}>
+              <Box mb={0.5}>
+                <NotificationsActiveIcon color="primary" />
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                Total Inquiries
+              </Typography>
+              <Typography variant="h6" fontWeight="bold" color="primary">
+                {filteredInquiries.length}
+              </Typography>
+
             </Box>
-            <Typography variant="body2" color="text.secondary">
-              Total Inquiries
-            </Typography>
-            <Typography variant="h6" fontWeight="bold" color="primary">
-              {filteredInquiries.length}
-            </Typography>
-          </Box>
-        </CardContent>
+          </CardContent>
+        )}
+
       </Card>
+
     </>
   );
 };

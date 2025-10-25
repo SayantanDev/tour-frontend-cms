@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  Container, Typography, Button, Box, IconButton, useMediaQuery, Tooltip
+  Container, Typography, Button, Box, IconButton, useMediaQuery
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import DeleteIcon from '@mui/icons-material/Delete';

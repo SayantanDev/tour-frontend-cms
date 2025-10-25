@@ -5,7 +5,8 @@ const initialeditState = {
     fetchNewPackageInfo: {},
     fetchNewPackageItinerary: {},
     checkItinery: false,
-    checkReach: false,
+    checkReach: false, 
+    loading: false,
 };
 
 const Packages = createSlice({

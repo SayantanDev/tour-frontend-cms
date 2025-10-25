@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialeditState = {
     fetchSelectedPlace: {},
-    
+    loading: false,
 };
 
 const Places = createSlice({

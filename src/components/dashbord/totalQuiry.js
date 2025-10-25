@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { getAllQueries } from "../../api/queriesAPI";
-import { Card, CardContent, Typography, Box, Grid } from '@mui/material';
+import { Card, CardContent, Typography, Box, Grid, Skeleton } from '@mui/material';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import NewReleasesIcon from '@mui/icons-material/NewReleases';
@@ -8,12 +8,12 @@ import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 
 
-function  TotalQuiry() {
+function TotalQuiry() {
   // const [query, setQuery] = useState([]);
   const [filteredQuery, setFilteredQuery] = useState([]);
-  // const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   
-  useEffect(() => {  
+  useEffect(() => {
     const fetchQuery = async () => {
       try {
         const response = await getAllQueries();
@@ -23,12 +23,11 @@ function  TotalQuiry() {
       } catch (error) {
         console.error("Error fetching query:", error);
       } finally {
-        // setLoading(false);
+        setTimeout(() => setLoading(false), 1000);
       }
     };
     fetchQuery();
   }, []);
-  
   const confirm = filteredQuery.filter(q => q.lead_stage === "Confirm");
   const New = filteredQuery.filter(q => q.lead_stage === "New");
   const postpond = filteredQuery.filter(q => q.lead_stage === "Postponed");
@@ -56,7 +55,7 @@ function  TotalQuiry() {
         },
       }}
     >
-      <CardContent sx={{ p: 0, width: '100%', height: '100%' }}>
+      {loading ? <Skeleton variant='rounded'/> : (<CardContent sx={{ p: 0, width: '100%', height: '100%' }}>
         <Box sx={{ height: '100%', width: '100%', textAlign: 'center' }}>
           <Box mb={0.5}>{icon}</Box>
           <Typography variant="body2" color="text.secondary">
@@ -64,9 +63,10 @@ function  TotalQuiry() {
           </Typography>
           <Typography variant="h6" fontWeight="bold" color={color}>
             {count}
-          </Typography>
+          </Typography>  
         </Box>
-      </CardContent>
+      </CardContent>)}
+      
     </Card>
   );
 

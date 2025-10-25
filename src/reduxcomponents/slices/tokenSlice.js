@@ -6,12 +6,12 @@ const tokenSlice = createSlice({
     token: null,
     refreshToken: null,
     user: null
-  },
+  }, 
   reducers: {
     addLoginToken: (state, action) => {
       state.token = action.payload.token;
       state.refreshToken = action.payload.refreshToken;
-      state.user = action.payload.user;
+      state.user = action.payload.user; 
     },
     logoutUser: (state) => {
       state.token = null;

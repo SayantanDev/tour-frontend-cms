@@ -18,7 +18,7 @@ import Users from "./pages/users";
 import Dashboard from "./pages/dashboard";
 import Query from "./pages/query";
 import Itinerary from "./pages/itinerary";
-import AdditionalCost from "./pages/additionalCost";
+import AdditionalCost from "./pages/additionalCost"; 
 import CreateItinerary from "./pages/createItinerary";
 import withAuthRedirect from "./components/withAuthRedirect";
 import View from "./components/packages/View";
@@ -35,6 +35,7 @@ import PackageUploadInPlaces from "./pages/packageUpload/inPlaces";
 import CategoryPackageUploadInPlaces from "./pages/packageUpload/inCategoryPackage";
 import AllPermissions from "./pages/allPermissions";
 import AllUserPermissions from "./pages/allUserPermissions";
+import Profile from "./pages/Profile";
 
 const RootLayoutWithRedirect = withAuthRedirect(RootLayout);
 
@@ -71,7 +72,11 @@ const router = createBrowserRouter(
           element={<ProtectedRoute Element={AllPackages} module="packages" />}
         />
         <Route
-          path="hotels"
+          path="profile"
+          element={<ProtectedRoute Element={Profile} module="profille" />}
+        />
+        <Route
+          path="hotels" 
           element={<ProtectedRoute Element={Hotels} module="hotel" />}
         />
         <Route

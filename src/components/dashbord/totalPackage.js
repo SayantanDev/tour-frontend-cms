@@ -11,6 +11,7 @@ import {
   Paper,
   Button,
   TablePagination,
+  Skeleton,
 } from "@mui/material";
 import { getAllPackages } from "../../api/packageAPI";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +21,7 @@ const TotalPackage = () => {
   const [filteredPackages, setFilteredPackages] = useState([]);
   const [page, setPage] = useState(0);
   const rowsPerPage = 5;
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const getPermission = usePermissions();
 
@@ -33,6 +35,8 @@ const TotalPackage = () => {
         setFilteredPackages(sortedData);
       } catch (error) {
         console.error("Error fetching packages:", error);
+      } finally {
+        setTimeout(()=> setLoading(false),1000);
       }
     };
     fetchPackages();
@@ -40,7 +44,6 @@ const TotalPackage = () => {
 
   // Get unique locations dynamically
   const locations = [...new Set(filteredPackages.map((pkg) => pkg.location))];
-  console.log("my locations are", locations);
 
 
   // Prepare summary data dynamically
@@ -66,6 +69,24 @@ const TotalPackage = () => {
     setPage(newPage);
   }
 
+
+  const renderSkeltonRows = () => {
+    return Array.from({ length: rowsPerPage }).map((_, i) => (
+      <TableRow key={i}>
+        <TableCell align="center">
+          <Skeleton variant="text" width={100} height={25} />
+        </TableCell>
+        <TableCell align="center">
+          <Skeleton variant="text" width={60} height={25} />
+        </TableCell>
+        <TableCell align="center">
+          <Skeleton variant="rectangular" width={120} height={35} sx={{ borderRadius: 1 }} />
+        </TableCell>
+      </TableRow>
+    ));
+  };
+
+
   return (
     getPermission('packages', 'view') && (
       <Box mb={5}>
@@ -84,43 +105,48 @@ const TotalPackage = () => {
             </TableHead>
 
             <TableBody>
-              {summaryData
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((item, index) => (
-                  <TableRow
-                    key={index}
-                    hover
-                    sx={{
-                      "&:hover": { backgroundColor: "#f9f9f9" },
-                      transition: "background-color 0.2s ease",
-                    }}
-                  >
-                    <TableCell align="center">{item.label}</TableCell>
-                    <TableCell align="center">
-                      <Typography fontWeight="bold">{item.count}</Typography>
-                    </TableCell>
-                    <TableCell align="center">
-                      <Button
-                        variant="contained"
-                        size="small"
-                        color="primary"
-                        onClick={() => handleNavigate(item.location)}
-                      >
-                        View Packages
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+              {loading ? renderSkeltonRows()
+                : summaryData
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((item, index) => (
+                    <TableRow
+                      key={index}
+                      hover
+                      sx={{
+                        "&:hover": { backgroundColor: "#f9f9f9" },
+                        transition: "background-color 0.2s ease",
+                      }}
+                    >
+                      <TableCell align="center">{item.label}</TableCell>
+                      <TableCell align="center">
+                        <Typography fontWeight="bold">{item.count}</Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Button
+                          variant="contained"
+                          size="small"
+                          color="primary"
+                          onClick={() => handleNavigate(item.location)}
+                        >
+                          View Packages
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
             </TableBody>
           </Table>
 
-          <TablePagination
-            component="div"
-            count={summaryData.length}
-            page={page}
-            onPageChange={handleChangePage}
-            rowsPerPage={rowsPerPage}
-            rowsPerPageOptions={[5]} />
+          {!loading && (
+            <TablePagination
+              component="div"
+              count={summaryData.length}
+              page={page}
+              onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage}
+              rowsPerPageOptions={[5]} 
+            />
+          )}
+
         </TableContainer>
       </Box>
     )
