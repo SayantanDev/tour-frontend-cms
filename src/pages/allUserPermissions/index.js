@@ -46,6 +46,8 @@ const AllUserPermissions = () => {
     try {
       const res = await getAllUserPermission();
       const items = res?.items || [];
+      console.log(items);
+      
 
       setAllUserPermissions(items);
     } catch (error) {
