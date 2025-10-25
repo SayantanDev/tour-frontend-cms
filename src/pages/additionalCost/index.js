@@ -10,7 +10,6 @@ import {
     Box
   } from '@mui/material';
 import { useSelector } from "react-redux";
-  
 
 const AdditionalCost = () => {
     // const [carTypes, setCarTypes] = useState(CONFIG_STR.additionalCosts.car);

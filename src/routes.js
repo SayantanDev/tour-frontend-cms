@@ -73,7 +73,7 @@ const router = createBrowserRouter(
         />
         <Route
           path="profile"
-          element={<ProtectedRoute Element={Profile} module="profille" />}
+          element={<ProtectedRoute Element={Profile} module="packages" />}
         />
         <Route
           path="hotels" 
