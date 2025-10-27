@@ -29,11 +29,13 @@ import { useNavigate } from "react-router-dom";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { updatePassword } from "../../../api/userAPI";
+import useSnackbar from "../../../hooks/useSnackbar";
 
 const ProfileDropdown = ({ anchorEl, handleClose }) => {
   const open = Boolean(anchorEl);
   const { user } = useSelector(state => state.tokens);
   const navigate = useNavigate();
+  const snackbar = useSnackbar();
 
   //States
   const [openDialog, setOpenDialog] = useState(false);
@@ -49,7 +51,27 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
     confirmPassword: Yup.string()
       .oneOf([Yup.ref("newPassword"), null], "Passwords must match")
       .required("Confirm password is required"),
-  })
+  });
+
+
+  const handleUpdatePassword = async () => {
+    try {
+      const payload = {
+        oldPassword: formData.oldPassword,
+        newPassword: formData.newPassword,
+      };
+
+      const res = await updatePassword(payload);
+      console.log("Password updated successfully", res);
+      setConfirmOpen(false);
+      setOpenDialog(false);
+      snackbar("Password updated successfully");
+      // navigate("/");
+    } catch (error) {
+      console.error("Password update failed:", error);
+
+    }
+  }
 
   return (
     <Popover
@@ -157,7 +179,7 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
           validationSchema={validationSchema}
           onSubmit={(values) => {
             setFormData(values);
-            setConfirmOpen(true)
+            setConfirmOpen(true);
           }}
         >
           {({ errors, touched }) => (
@@ -214,36 +236,7 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
           <Button
             variant="contained"
             color="primary"
-            onClick={async () => {
-              try {
-                setConfirmOpen(false);
-
-
-                const payload = {
-                  oldPassword: formData.oldPassword,
-                  newPassword: formData.newPassword,
-                };
-
-                const res = await updatePassword(payload);
-                console.log("Password updated successfully", res);
-
-                setOpenDialog(false);
-                setSnackbarOpen(true);
-                // navigate("/");
-              } catch (error) {
-                console.error("Password update failed:", error);
-
-                if (error.response && error.response.status === 401) {
-                  // Old password incorrect
-                  setOpenDialog(true); // reopen dialog
-                  // You can also set field-level error here
-                  alert(error.response?.data?.message);
-                } else {
-                  alert(error.response?.data?.message || "Failed to update password");
-                }
-              }
-            }}
-
+            onClick={() => handleUpdatePassword()}
           >
             Yes, Update
           </Button>
