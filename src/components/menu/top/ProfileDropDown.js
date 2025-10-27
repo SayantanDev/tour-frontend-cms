@@ -21,6 +21,8 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import SecurityIcon from '@mui/icons-material/Security';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 // import DarkModeIcon from "@mui/icons-material/DarkMode";
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -39,6 +41,8 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
   const [openDialog, setOpenDialog] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [formData, setFormData] = useState(null);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showOldPassword, setShowOldPassword] = useState(false);
 
 
   //Validation Schema
@@ -66,9 +70,9 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
       // navigate("/");
     } catch (error) {
       console.error("Password update failed:", error);
-      showSnackbar(`${error?.response?.data?.message}`,'error');
+      showSnackbar(`${error?.response?.data?.message}`, 'error');
     }
-    
+
   }
 
   return (
@@ -187,19 +191,39 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
                   as={TextField}
                   name="oldPassword"
                   label="Old Password"
-                  type="password"
+                  type={showOldPassword ? "text" : "password"}
                   fullWidth
                   error={(touched.oldPassword && Boolean(errors.oldPassword))}
                   helperText={(touched.oldPassword && errors.oldPassword)}
+                  InputProps={{
+                    endAdornment: (
+                        <Box
+                          sx={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+                          onClick={() => setShowOldPassword(prev => !prev)}
+                        >
+                          {showOldPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                        </Box>
+                    )
+                  }}
                 />
                 <Field
                   as={TextField}
                   name="newPassword"
                   label="New Password"
-                  type="password"
+                  type={showNewPassword ? "text" : "password"}
                   fullWidth
                   error={touched.newPassword && Boolean(errors.newPassword)}
                   helperText={touched.newPassword && errors.newPassword}
+                  InputProps={{
+                    endAdornment: (
+                        <Box
+                          sx={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+                          onClick={() => setShowNewPassword(prev => !prev)}
+                        >
+                          {showNewPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                        </Box>
+                    )
+                  }}
                 />
                 <Field
                   as={TextField}
@@ -241,7 +265,7 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
         </DialogActions>
       </Dialog>
 
-      <SnackbarComponent/>
+      <SnackbarComponent />
     </Popover>
   );
 };
