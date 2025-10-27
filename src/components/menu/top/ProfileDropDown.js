@@ -40,7 +40,7 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [formData, setFormData] = useState(null);
-  const [oldPasswordErr, setOldPasswordError] = useState('');
+
 
   //Validation Schema
   const validationSchema = Yup.object({
@@ -169,8 +169,8 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
                   label="Old Password"
                   type="password"
                   fullWidth
-                  error={(touched.oldPassword && Boolean(errors.oldPassword)) || Boolean(oldPasswordErr)}
-                  helperText={(touched.oldPassword && errors.oldPassword) || oldPasswordErr}
+                  error={(touched.oldPassword && Boolean(errors.oldPassword))}
+                  helperText={(touched.oldPassword && errors.oldPassword)}
                 />
                 <Field
                   as={TextField}
@@ -217,7 +217,7 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
             onClick={async () => {
               try {
                 setConfirmOpen(false);
-                setOldPasswordError(''); // clear previous error
+
 
                 const payload = {
                   oldPassword: formData.oldPassword,
@@ -229,8 +229,18 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
 
                 setOpenDialog(false);
                 setSnackbarOpen(true);
+                // navigate("/");
               } catch (error) {
-                alert(error.response?.data?.message || "Failed to update password");
+                console.error("Password update failed:", error);
+
+                if (error.response && error.response.status === 401) {
+                  // Old password incorrect
+                  setOpenDialog(true); // reopen dialog
+                  // You can also set field-level error here
+                  alert(error.response?.data?.message);
+                } else {
+                  alert(error.response?.data?.message || "Failed to update password");
+                }
               }
             }}
 
