@@ -28,6 +28,7 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
+import { updatePassword } from "../../../api/userAPI";
 
 const ProfileDropdown = ({ anchorEl, handleClose }) => {
   const open = Boolean(anchorEl);
@@ -38,6 +39,8 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
   const [openDialog, setOpenDialog] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [formData, setFormData] = useState(null);
+  const [oldPasswordErr, setOldPasswordError] = useState('');
 
   //Validation Schema
   const validationSchema = Yup.object({
@@ -152,7 +155,11 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
             confirmPassword: "",
           }}
           validationSchema={validationSchema}
-          onSubmit={() => setConfirmOpen(true)}>
+          onSubmit={(values) => {
+            setFormData(values);
+            setConfirmOpen(true)
+          }}
+        >
           {({ errors, touched }) => (
             <Form>
               <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -162,8 +169,8 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
                   label="Old Password"
                   type="password"
                   fullWidth
-                  error={touched.oldPassword && Boolean(errors.oldPassword)}
-                  helperText={touched.oldPassword && errors.oldPassword}
+                  error={(touched.oldPassword && Boolean(errors.oldPassword)) || Boolean(oldPasswordErr)}
+                  helperText={(touched.oldPassword && errors.oldPassword) || oldPasswordErr}
                 />
                 <Field
                   as={TextField}
@@ -207,11 +214,26 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
           <Button
             variant="contained"
             color="primary"
-            onClick={() => {
-              setConfirmOpen(false);
-              setOpenDialog(false);
-              setSnackbarOpen(true);
+            onClick={async () => {
+              try {
+                setConfirmOpen(false);
+                setOldPasswordError(''); // clear previous error
+
+                const payload = {
+                  oldPassword: formData.oldPassword,
+                  newPassword: formData.newPassword,
+                };
+
+                const res = await updatePassword(payload);
+                console.log("Password updated successfully", res);
+
+                setOpenDialog(false);
+                setSnackbarOpen(true);
+              } catch (error) {
+                alert(error.response?.data?.message || "Failed to update password");
+              }
             }}
+
           >
             Yes, Update
           </Button>

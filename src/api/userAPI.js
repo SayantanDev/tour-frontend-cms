@@ -21,9 +21,14 @@ export function getAllUsers() {
 export function updateUser(obj, userId) {
     const UPDATEUSER__URL = `${USER_URL}/updateUser/${userId}`;
     return axios.put(UPDATEUSER__URL, obj);
-};
+}; 
 
 export function deleteUser(userId) {
     const DELETEUSER__URL = `${USER_URL}/deleteUser/${userId}`;
     return axios.delete(DELETEUSER__URL);
 };
+
+export function updatePassword(obj) {
+    const UPDATEPASSWORD__URL = `${USER_URL}/reset/password`;
+    return axios.put(UPDATEPASSWORD__URL,obj);
+}
