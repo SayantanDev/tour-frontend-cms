@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  Alert,
   Avatar,
   Box,
   Button,
@@ -14,7 +13,6 @@ import {
   ListItemIcon,
   ListItemText,
   Popover,
-  Snackbar,
   TextField,
   Typography,
 } from "@mui/material";
@@ -35,12 +33,11 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
   const open = Boolean(anchorEl);
   const { user } = useSelector(state => state.tokens);
   const navigate = useNavigate();
-  const snackbar = useSnackbar();
+  const { showSnackbar, SnackbarComponent } = useSnackbar();
 
   //States
   const [openDialog, setOpenDialog] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [formData, setFormData] = useState(null);
 
 
@@ -65,12 +62,13 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
       console.log("Password updated successfully", res);
       setConfirmOpen(false);
       setOpenDialog(false);
-      snackbar("Password updated successfully");
+      showSnackbar(`${res.data.message}`, 'success');
       // navigate("/");
     } catch (error) {
       console.error("Password update failed:", error);
-
+      showSnackbar(`${error?.response?.data?.message}`,'error');
     }
+    
   }
 
   return (
@@ -243,21 +241,7 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
         </DialogActions>
       </Dialog>
 
-      {/* Success Snackbar */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={3000}
-        onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        <Alert
-          onClose={() => setSnackbarOpen(false)}
-          severity="success"
-          sx={{ width: "100%" }}
-        >
-          Password updated successfully!
-        </Alert>
-      </Snackbar>
+      <SnackbarComponent/>
     </Popover>
   );
 };
