@@ -15,6 +15,7 @@ import {
   Paper,
   Alert,
   Snackbar,
+  Divider,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { addLoginToken } from "../../reduxcomponents/slices/tokenSlice";
@@ -119,84 +120,94 @@ const Profile = () => {
   ));
 
   return (
-    <Card sx={{ maxWidth: 800, p: 2, m: 2 }}>
-      <CardContent>
-        <Typography variant="h5" align="center" gutterBottom mb={4} fontWeight={700}>
-          Profile Summary
-        </Typography>
+    <Box 
+      sx={{
+        display: "flex",
+        justifyContent:"center",
+        p:2
+      }}>
+      <Card sx={{ width: "80%", p: 3, m: 2 }}>
+        <CardContent>
+          <Typography variant="h5" align="center" gutterBottom mb={4} fontWeight={700}>
+            Profile Summary
+          </Typography>
 
-        <Grid container spacing={4}>
-          {["name", "email", "role"].map((field) => (
-            <Grid item xs={12} sm={6} key={field}>
-              <Box sx={{ mb: 1 }}>
-                <Typography
-                  variant="subtitle2"
-                  sx={{ color: "#555", fontWeight: 600 }}
-                >
-                  {field.charAt(0).toUpperCase() + field.slice(1)}
-                </Typography>
-              </Box>
+          <Divider sx={{ my: 3 }} />
 
-              {editField === field ? (
-                <TextField
-                  name={field}
-                  value={editableUser[field]}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  autoFocus
-                  size="small"
-                  fullWidth
-                />
-              ) : (
-                <Typography
-                  onDoubleClick={() => handleDoubleClick(field)}
-                  sx={{
-                    cursor: "pointer",
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 1,
-                  }}
-                >
-                  {editableUser[field]}
-                </Typography>
-              )}
-            </Grid>
-          ))}
-        </Grid>
-        {editableUser.role !== "Admin" &&
-          <Box mt={4}>
-            <Typography variant="h6" gutterBottom fontWeight={500}>
-              Permissions
-            </Typography>
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Module</TableCell>
-                    <TableCell>Value</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>{permissionRows}</TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
-        }
-      </CardContent>
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={3000}
-        onClose={() => setOpenSnackbar(false)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
+          <Grid container spacing={4}>
+            {["name", "email", "role"].map((field) => (
+              <Grid item xs={12} sm={6} key={field}>
+                <Box sx={{ mb: 1 }}>
+                  <Typography
+                    variant="subtitle2"
+                    sx={{ color: "#555", fontWeight: 600 }}
+                  >
+                    {field.charAt(0).toUpperCase() + field.slice(1)}
+                  </Typography>
+                </Box>
+
+                {editField === field ? (
+                  <TextField
+                    name={field}
+                    value={editableUser[field]}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    autoFocus
+                    size="small"
+                    fullWidth
+                  />
+                ) : (
+                  <Typography
+                    onDoubleClick={() => handleDoubleClick(field)}
+                    sx={{
+                      cursor: "pointer",
+                      px: 1,
+                      py: 0.5,
+                      borderRadius: 1,
+                    }}
+                  >
+                    {editableUser[field]}
+                  </Typography>
+                )}
+              </Grid>
+            ))}
+          </Grid>
+          {editableUser.role !== "Admin" &&
+            <Box mt={4}>
+              <Typography gutterBottom sx={{color: "#555"}} fontWeight={600}>
+                Permissions
+              </Typography>
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 600 }}>Module</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Value</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>{permissionRows}</TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          }
+        </CardContent>
+        <Snackbar
+          open={openSnackbar}
+          autoHideDuration={3000}
           onClose={() => setOpenSnackbar(false)}
-          severity="success"
-          sx={{ width: "100%" }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         >
-          Profile edited successfully!
-        </Alert>
-      </Snackbar>
-    </Card>
+          <Alert
+            onClose={() => setOpenSnackbar(false)}
+            severity="success"
+            sx={{ width: "100%" }}
+          >
+            Profile edited successfully!
+          </Alert>
+        </Snackbar>
+      </Card>
+    </Box>
+
   );
 };
 

@@ -30,11 +30,13 @@ import { Formik, Form, Field } from "formik";
 import * as Yup from "yup";
 import { updatePassword } from "../../../api/userAPI";
 import useSnackbar from "../../../hooks/useSnackbar";
+import usePermissions from "../../../hooks/UsePermissions";
 
 const ProfileDropdown = ({ anchorEl, handleClose }) => {
   const open = Boolean(anchorEl);
   const { user } = useSelector(state => state.tokens);
   const navigate = useNavigate();
+  const permission = usePermissions();
   const { showSnackbar, SnackbarComponent } = useSnackbar();
 
   //States
@@ -133,7 +135,7 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
           <ListItemText primary="Dark Mode" />
           <Switch size="small" />
         </ListItemButton> */}
-
+        {permission()}
         <ListItemButton onClick={() => navigate('/permission')}>
           <ListItemIcon>
             <SecurityIcon />
@@ -197,7 +199,7 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
                   helperText={(touched.oldPassword && errors.oldPassword)}
                   InputProps={{
                     endAdornment: (
-                        <Box
+                        <Box  
                           sx={{ cursor: "pointer", display: "flex", alignItems: "center" }}
                           onClick={() => setShowOldPassword(prev => !prev)}
                         >
