@@ -570,8 +570,6 @@ const Query = () => {
           <Button onClick={() => setRejectedModalOpen(false)} fullWidth sx={{ mt: 2 }}>Close</Button>
         </Box>
       </Modal>
-
-
       <SnackbarComponent />
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>

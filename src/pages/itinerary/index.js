@@ -7,7 +7,7 @@ import {
     OutlinedInput, InputLabel, FormControl, Chip, Stack
 } from "@mui/material";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
-import { getAllInquiries, InquiryUserAssign, InquiryUserRemove } from "../../api/inquiryAPI";
+import { deleteInquiry, getAllInquiries, InquiryUserAssign, InquiryUserRemove } from "../../api/inquiryAPI";
 import { getAllUsers } from "../../api/userAPI";
 import { useDispatch } from "react-redux";
 import { setSelectedInquiry } from "../../reduxcomponents/slices/inquirySlice";
@@ -94,26 +94,35 @@ const Inquiry = () => {
         navigate(`/createItinerary`);
     };
 
-    const handleOpenDeleteDialog = (inquiryId) => {
-        setSelectedInquiryId(inquiryId);
+    const handleOpenDeleteDialog = (inquiry) => {
+        setSelectedInquiryId(inquiry);
         setDeleteDialogOpen(true);
     };
+
 
     // const handleCloseDeleteDialog = () => {
     //     // setDeleteDialogOpen(false);
     //     setSelectedInquiryId(null);
     // };
 
-    // const handleConfirmDelete = async () => {
-    //     try {
-    //         await deleteInquiry(selectedInquiryId);
-    //         await fetchInquiries();
-    //     } catch (error) {
-    //         console.error("Error deleting inquiry:", error);
-    //     } finally {
-    //         handleCloseDeleteDialog();
-    //     }
-    // };
+    const handleConfirmDelete = async () => {
+        try {
+            const res = await deleteInquiry(selectedInquiryId._id);
+            if (res.success) {
+                showSnackbar("Inquiry deleted successfully", "success");
+                await fetchInquiries();
+            } else {
+                showSnackbar("Failed to delete inquiry", "error");
+            }
+        } catch (error) {
+            console.error("Error deleting inquiry:", error);
+            showSnackbar("Something went wrong while deleting", "error");
+        } finally {
+            setDeleteDialogOpen(false);
+            setSelectedInquiryId(null);
+        }
+    };
+
 
     const handleAssignUser = async () => {
         try {
@@ -154,7 +163,7 @@ const Inquiry = () => {
 
     return (
         <Container>
-            
+
             <Stack
                 direction="row"
                 alignItems="center"
@@ -168,37 +177,37 @@ const Inquiry = () => {
 
                 <Stack direction="row" spacing={1} flexWrap="wrap">
                     <Button variant="contained" size="small" onClick={() => navigate("/createItinerary")}>
-                    Create New Inquiry
+                        Create New Inquiry
                     </Button>
                     {hasPermission("inquiry", "alter") && (
-                    <>
-                        <Button
-                        variant="outlined"
-                        size="small"
-                        disabled={!selectedInquiries.length}
-                        onClick={() => setAssignDialogOpen(true)}
-                        >
-                        Assign User
-                        </Button>
-                        <Button
-                        variant="outlined"
-                        size="small"
-                        disabled={!selectedInquiries.length}
-                        onClick={() => setUserRemoveDialogOpen(true)}
-                        >
-                        Remove User
-                        </Button>
-                    </>
+                        <>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                disabled={!selectedInquiries.length}
+                                onClick={() => setAssignDialogOpen(true)}
+                            >
+                                Assign User
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                disabled={!selectedInquiries.length}
+                                onClick={() => setUserRemoveDialogOpen(true)}
+                            >
+                                Remove User
+                            </Button>
+                        </>
                     )}
                 </Stack>
 
                 <Box sx={{ minWidth: 250, flexGrow: 1, maxWidth: 300 }}>
                     <TextField
-                    size="small"
-                    label="Search by Name, Email, or Phone"
-                    fullWidth
-                    value={searchQuery}
-                    onChange={handleSearch}
+                        size="small"
+                        label="Search by Name, Email, or Phone"
+                        fullWidth
+                        value={searchQuery}
+                        onChange={handleSearch}
                     />
                 </Box>
             </Stack>
@@ -234,7 +243,7 @@ const Inquiry = () => {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {                           filteredInquiries.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((inquiry, index) => (
+                                {filteredInquiries.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((inquiry, index) => (
                                     <React.Fragment key={inquiry._id}>
                                         <TableRow>
                                             {hasPermission("inquiry", "alter") && (
@@ -275,7 +284,7 @@ const Inquiry = () => {
                                                             </IconButton>
                                                         </Tooltip>
                                                         <Tooltip title="Delete">
-                                                            <IconButton onClick={() => handleOpenDeleteDialog(inquiry._id)} size="small">
+                                                            <IconButton onClick={() => handleOpenDeleteDialog(inquiry)} size="small">
                                                                 <Delete fontSize="small" />
                                                             </IconButton>
                                                         </Tooltip>
@@ -293,7 +302,7 @@ const Inquiry = () => {
                                                                 <Typography variant="body2">Message: {inquiry.guest_message}</Typography>
                                                                 <Typography variant="body2">Verified: {inquiry.verifyed ? "Yes" : "No"}</Typography>
                                                                 <Typography variant="body2">
-                                                                    Arrival: 
+                                                                    Arrival:
                                                                     {new Date(inquiry.arrival_date).toLocaleString()}
                                                                 </Typography>
                                                             </CardContent>
@@ -364,6 +373,41 @@ const Inquiry = () => {
                     <Button onClick={handleRemoveUser} sx={{ color: 'red' }}>Remove</Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+                <DialogTitle>Confirm Delete</DialogTitle>
+                <DialogContent>
+                    {selectedInquiryId && (
+                        <>
+                            <Typography sx={{ mb: 1 }}>
+                                Are you sure you want to delete this inquiry? This action cannot be undone.
+                            </Typography>
+                            <Paper
+                                variant="outlined"
+                                sx={{ p: 2, bgcolor: "#fafafa", borderRadius: 1, mt: 1 }}
+                            >
+                                <Typography><b>Name:</b> {selectedInquiryId.guest_name || "N/A"}</Typography>
+                                <Typography><b>Email:</b> {selectedInquiryId.guest_email || "N/A"}</Typography>
+                                <Typography><b>Phone:</b> {selectedInquiryId.guest_phone || "N/A"}</Typography>
+                                {selectedInquiryId.arrival_date && (
+                                    <Typography>
+                                        <b>Arrival Date:</b>{" "}
+                                        {new Date(selectedInquiryId.arrival_date).toLocaleDateString("en-IN")}
+                                    </Typography>
+                                )}
+                            </Paper>
+                        </>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+                    <Button color="error" variant="contained" onClick={handleConfirmDelete}>
+                        Delete
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
             <SnackbarComponent />
         </Container>
     );
