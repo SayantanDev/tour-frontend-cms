@@ -2,9 +2,13 @@ import React, { useEffect, useState } from "react";
 import {
   Container, Typography, IconButton, Tooltip, Box, Chip, MenuItem,
   Modal, Paper, TextField, Button, Table, TableBody,
-  TableCell, TableContainer, TableHead, TableRow, TablePagination, Select, Checkbox
+  TableCell, TableContainer, TableHead, TableRow, TablePagination, Select, Checkbox,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from "@mui/material";
-import { getAllQueries, updateQueries } from "../../api/queriesAPI";
+import { deleteQueries, getAllQueries, updateQueries } from "../../api/queriesAPI";
 import usePermissions from "../../hooks/UsePermissions";
 import { useDispatch } from "react-redux";
 import { setSelectedquerie } from "../../reduxcomponents/slices/queriesSlice";
@@ -12,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import useSnackbar from "../../hooks/useSnackbar";
 import { getAllUsers } from "../../api/userAPI";
 import { getChangeRequest, getRejectedChanges, handleChangeRequestApproval } from "../../api/operationAPI";
+import { Delete } from '@mui/icons-material';
 
 const Query = () => {
   const checkPermission = usePermissions();
@@ -135,10 +140,11 @@ const Query = () => {
       (!locationQuery || item.destination === locationQuery)
     );
   });
-  const handleOpenDeleteDialog = (queryId) => {
-    setQueryToDelete(queryId);
+  const handleOpenDeleteDialog = (row) => {
+    setQueryToDelete(row);
     setDeleteDialogOpen(true);
   };
+
 
   const openUserModal = (row) => {
     setSelectedQueryId(row._id);
@@ -207,6 +213,23 @@ const Query = () => {
     } catch (err) {
       console.error("Failed to load rejected changes", err);
       showSnackbar("Failed to load rejected changes", "error");
+    }
+  };
+  const handleDeleteQuery = async () => {
+    try {
+      const res = await deleteQueries(queryToDelete._id);
+      if (res.success) {
+        showSnackbar("Query deleted successfully", "success");
+        fetchQuery();
+      } else {
+        showSnackbar("Failed to delete query", "error");
+      }
+    } catch (err) {
+      console.error("Delete failed:", err);
+      showSnackbar("Something went wrong while deleting", "error");
+    } finally {
+      setDeleteDialogOpen(false);
+      setQueryToDelete(null);
     }
   };
 
@@ -300,6 +323,7 @@ const Query = () => {
               <TableCell>Advance</TableCell>
               <TableCell>Actions</TableCell>
               {checkPermission("operation", "change-request") && (<TableCell>Change Request</TableCell>)}
+              {checkPermission("queries", "delete") && (<TableCell>Delete</TableCell>)}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -366,13 +390,7 @@ const Query = () => {
                           </IconButton>
                         </Tooltip>
                       }
-                      {checkPermission("queries", "assuser") && (
-                      <Tooltip title="Delete">
-                        <IconButton onClick={() => handleOpenDeleteDialog(row._id)}>
-                          <Typography color="error">Delete</Typography>
-                        </IconButton>
-                      </Tooltip>
-                      )}
+
                       {checkPermission("queries", "assuser") && (
                         <Tooltip title="Assign Users">
                           <IconButton onClick={() => openUserModal(row)}>
@@ -385,19 +403,28 @@ const Query = () => {
                   )}
                 </TableCell>
                 {checkPermission("operation", "change-request") && (
-                <TableCell>
-                  <Tooltip title="View Rejected Changes">
-                    <IconButton onClick={() => openRejectedChangeModal(row.operation_id)}>
-                      <Typography color="error">Rejected</Typography>
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="View Changes Request">
-                    <IconButton onClick={() => openChangeRequestModal(row.operation_id)}>
-                      <Button size="small">CRV</Button>
-                      {/* <Typography color="error">Rejected</Typography> */}
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
+                  <TableCell>
+                    <Tooltip title="View Rejected Changes">
+                      <IconButton onClick={() => openRejectedChangeModal(row.operation_id)}>
+                        <Typography color="error">Rejected</Typography>
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="View Changes Request">
+                      <IconButton onClick={() => openChangeRequestModal(row.operation_id)}>
+                        <Button size="small">CRV</Button>
+                        {/* <Typography color="error">Rejected</Typography> */}
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                )}
+                {checkPermission("queries", "delete") && (
+                  <TableCell>
+                    <Tooltip title="Delete">
+                      <IconButton onClick={() => handleOpenDeleteDialog(row)}>
+                        <Typography color="error">Delete</Typography>
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
                 )}
               </TableRow>
             ))}
@@ -546,6 +573,35 @@ const Query = () => {
 
 
       <SnackbarComponent />
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          {queryToDelete && (
+            <>
+              <Typography sx={{ mb: 1 }}>
+                Are you sure you want to delete this query?
+              </Typography>
+              <Paper variant="outlined" sx={{ p: 2, bgcolor: "#fafafa" }}>
+                <Typography><b>Name:</b> {queryToDelete.guest_info?.guest_name || "N/A"}</Typography>
+                <Typography><b>Phone:</b> {queryToDelete.guest_info?.guest_phone || "N/A"}</Typography>
+                <Typography><b>Status:</b> {queryToDelete.lead_stage || "N/A"}</Typography>
+                {queryToDelete.destination && (
+                  <Typography><b>Destination:</b> {queryToDelete.destination}</Typography>
+                )}
+              </Paper>
+            </>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={handleDeleteQuery}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+
     </Container>
   );
 };

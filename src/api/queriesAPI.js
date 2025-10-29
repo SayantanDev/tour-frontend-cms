@@ -39,3 +39,9 @@ export async function removeUsersFromQueries(payload){
     return result.data;
 }
 
+export async function deleteQueries(id) {
+    const DELETEUSER_URL = `${QRY_URL}/delete-queries/${id}`;
+    const result = await axios.delete(DELETEUSER_URL);
+    return result.data;
+}
+
