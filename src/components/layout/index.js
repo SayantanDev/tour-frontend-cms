@@ -5,19 +5,23 @@ import Footer from "../menu/footer";
 import Navigation from "../menu/navigation";
 import Top from "../menu/top";
 import { CssBaseline, Box, } from '@mui/material';
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { setConfigData } from "../../reduxcomponents/slices/configSlice";
 
   const Layout = () => {
     const isMobileOrTablet = useMediaQuery('(max-width:900px)');
     const fetchConfigData = useSelector((state) => state.config.configData);
     const [drawerOpen, setDrawerOpen] = useState(true);
+    const dispatch = useDispatch();
 
   useEffect(() => {
-    setDrawerOpen(!isMobileOrTablet);
+    setDrawerOpen(!isMobileOrTablet); 
   }, [isMobileOrTablet]);
   
     const toggleDrawer = () => {
-      setDrawerOpen(!drawerOpen);
+      const newDrawerState = !drawerOpen;
+      setDrawerOpen(newDrawerState);
+      dispatch(setConfigData({drawerOpen: newDrawerState}));
     };
   
     return (  

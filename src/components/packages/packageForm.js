@@ -188,25 +188,31 @@ const PackageForm = () => {
   };
 
   const Region_obj = [
-  {label: "None",
-    val: "",
-  },
-  {label: "Sikkim",
-    val: "sikkim",
-  },
-  {label: "Darjeeling",
-    val: "darjeeling",
-  },
-  {label: "North Sikkim",
-    val: "north-sikkim",
-  },
-  {label: "Meghalaya",
-    val: "meghalaya",
-  },
-  {label: "Arunachal Pradesh",
-    val: "arunachal-pradesh",
-  }
-]
+    {
+      label: "None",
+      val: "",
+    },
+    {
+      label: "Sikkim",
+      val: "sikkim",
+    },
+    {
+      label: "Darjeeling",
+      val: "darjeeling",
+    },
+    {
+      label: "North Sikkim",
+      val: "north-sikkim",
+    },
+    {
+      label: "Meghalaya",
+      val: "meghalaya",
+    },
+    {
+      label: "Arunachal Pradesh",
+      val: "arunachal-pradesh",
+    }
+  ]
 
 
   return (<>
@@ -219,20 +225,23 @@ const PackageForm = () => {
       {({ values, handleChange, setFieldValue, errors, touched }) => (
         <Box sx={{ position: 'relative' }}>
           <Box sx={{
-            position: 'sticky',
-            top: 0,
+            position: 'fixed',
+            top: "64px",
+            left: "180px",
+            right: "25px",
             zIndex: 10,
             background: '#fff',
             p: 2,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-          }}>
+            // ...(drawerOpen && { left: '180px' }),
+          }}> 
             <Typography variant={"h4"}>{selectedPackage && selectedPackage._id ? 'Update ' : 'Create a new '}Package</Typography>
             <Button variant="contained" type="submit" form="package-form">{selectedPackage && selectedPackage._id ? 'Update ' : 'Create'}</Button>
           </Box>
           <Form id="package-form">
-            <Grid container spacing={2} sx={{ p: 2 }}>
+            <Grid container spacing={2} sx={{ p: 2, mt: "40px" }}>
 
               <SectionWrapper title="Basic Info" sx={{ mt: 2 }}>
                 <Grid container spacing={2}>
@@ -246,7 +255,7 @@ const PackageForm = () => {
                       <Select
                         labelId="demo-simple-select-label"
                         id="demo-simple-select"
-                        value={values.zone} 
+                        value={values.zone}
                         label="Location"
                         onChange={handleChange}
                         name='location'
@@ -866,6 +875,9 @@ const PackageForm = () => {
 
             </Grid>
           </Form>
+          <Box sx={{ display: 'flex', justifyContent: "center", mb: 5 }}>
+            <Button variant="contained" type="submit" form="package-form">{selectedPackage && selectedPackage._id ? 'Update' : 'Create'}</Button>
+          </Box>
         </Box>
       )}
     </Formik>

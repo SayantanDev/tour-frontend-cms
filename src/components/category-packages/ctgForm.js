@@ -11,7 +11,6 @@ import {
 import { Delete } from '@mui/icons-material';
 import useSnackbar from '../../hooks/useSnackbar';
 import { useSelector } from 'react-redux';
-
 import _ from 'lodash';
 import { CatPackageCreate, updateCatPackage } from '../../api/catPackageAPI';
 import { useNavigate } from 'react-router-dom';
@@ -35,14 +34,14 @@ const getInitialValues = (data) => {
     meta: { title: '', description: '', keywords: [] },
     tags: [],
     is_active: true,
-    disable: false,
+    disable: false,  
     details: {
       header: { h1: '', h2: '', h3: '', h4: '' },
       overview: [{ name: '', description: '' }],
       packages: { description: [''], package_ids: [] },
       intro: [''],
       why_choose: { title: '', description: [''], details: [''] },
-      what_to_peek: { title: '', description: [''], details: [''] },
+      what_to_peek: { title: '', description: [''], details: [''] },   
       what_makes: { title: '', description: [''], details: [{ name: '', description: '' }] },
       activity: { title: '', description: [''], details: [{ name: '', description: [''] }] },
       best_places: {
@@ -155,52 +154,67 @@ const getInitialValues = (data) => {
 };
 
 const package_usage_types_obj = [
-  {label: "None",
+  {
+    label: "None",
     val: "",
   },
-  {label: "Home page attraction",
+  {
+    label: "Home page attraction",
     val: "home-page-attraction",
   },
-  {label: "Attraction",
+  {
+    label: "Attraction",
     val: "attraction",
   },
-  {label: "Tour Category",
+  {
+    label: "Tour Category",
     val: "tour-category",
   },
-  {label: "Home Page Tour Category",
+  {
+    label: "Home Page Tour Category",
     val: "home-page-tour-category",
   },
-  {label: "Trek Category",
+  {
+    label: "Trek Category",
     val: "trek-category",
   },
-  {label: "Home Page Trek Category",
+  {
+    label: "Home Page Trek Category",
     val: "home-page-trek-category",
   },
-  {label: "Places Category",
+  {
+    label: "Places Category",
     val: "places-category",
   },
-  {label: "Home Page Places Category",
+  {
+    label: "Home Page Places Category",
     val: "home-page-places-category",
   },
 ]
 
 const Region_obj = [
-  {label: "None",
+  {
+    label: "None",
     val: "",
   },
-  {label: "Sikkim",
+  {
+    label: "Sikkim",
     val: "sikkim",
   },
-  {label: "Darjeeling",
+  {
+    label: "Darjeeling",
     val: "darjeeling",
   },
-  {label: "North Sikkim",
+  {
+    label: "North Sikkim",
     val: "north-sikkim",
   },
-  {label: "Meghalaya",
+  {
+    label: "Meghalaya",
     val: "meghalaya",
   },
-  {label: "Arunachal Pradesh",
+  {
+    label: "Arunachal Pradesh",
     val: "arunachal-pradesh",
   }
 ]
@@ -311,6 +325,7 @@ const CtgForm = () => {
   // console.log("selectedCatPackage : ", selectedCatPackage);
 
   // const getInitialValues = (selectedCatPackage) => selectedCatPackage || initialValues;
+  
 
   const { showSnackbar, SnackbarComponent } = useSnackbar();
 
@@ -319,7 +334,7 @@ const CtgForm = () => {
       // let res;
       if (selectedCatPackage && selectedCatPackage._id) {
 
-        const res = await  updateCatPackage(selectedCatPackage._id, values); // You'll need to import and define this API
+        const res = await updateCatPackage(selectedCatPackage._id, values); // You'll need to import and defin ethis API
         if (res) {
           showSnackbar('Package updated successfully', 'success');
         }
@@ -345,8 +360,10 @@ const CtgForm = () => {
       {({ values, handleChange, setFieldValue, errors, touched }) => (
         <Box sx={{ position: 'relative' }}>
           <Box sx={{
-            position: 'sticky',
-            top: 0,
+            position: 'fixed',
+            top: "64px",
+            left: "180px",
+            right: "25px",
             zIndex: 10,
             background: '#fff',
             p: 2,
@@ -360,7 +377,7 @@ const CtgForm = () => {
             <Button variant="contained" type="submit" form="package-form">{selectedCatPackage && selectedCatPackage._id ? 'Update' : 'Create'}</Button>
           </Box>
           <Form id="package-form">
-            <Grid container spacing={2} sx={{ p: 2 }}>
+            <Grid container spacing={2} sx={{ p: 2, mt: "40px" }}>
 
               <SectionWrapper title="Basic Info" sx={{ mt: 2 }}>
                 <Grid container spacing={2}>
@@ -2987,6 +3004,9 @@ const CtgForm = () => {
               </SectionWrapper>
             </Grid>
           </Form>
+          <Box sx={{ display: 'flex', justifyContent: "center", mb:5}}>
+            <Button variant="contained" type="submit" form="package-form">{selectedCatPackage && selectedCatPackage._id ? 'Update' : 'Create'}</Button>
+          </Box>
         </Box>
       )}
     </Formik>

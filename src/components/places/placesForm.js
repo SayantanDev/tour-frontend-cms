@@ -9,7 +9,7 @@ import {
   InputLabel,
   Select
 } from '@mui/material';
-import {Delete } from '@mui/icons-material';
+import { Delete } from '@mui/icons-material';
 import useSnackbar from '../../hooks/useSnackbar';
 import { useSelector } from 'react-redux';
 
@@ -167,7 +167,7 @@ const PlacesForm = () => {
     try {
       // let res;
       if (selectedPlace && selectedPlace._id) {
-        console.log("updatePlace",values);
+        console.log("updatePlace", values);
 
         const res = await updatePlace(values, selectedPlace._id); // You'll need to import and define this API
         if (res) {
@@ -189,25 +189,31 @@ const PlacesForm = () => {
   };
 
   const Region_obj = [
-  {label: "None",
-    val: "",
-  },
-  {label: "Sikkim",
-    val: "sikkim",
-  },
-  {label: "Darjeeling",
-    val: "darjeeling",
-  },
-  {label: "North Sikkim",
-    val: "north-sikkim",
-  },
-  {label: "Meghalaya",
-    val: "meghalaya",
-  },
-  {label: "Arunachal Pradesh",
-    val: "arunachal-pradesh",
-  }
-]
+    {
+      label: "None",
+      val: "",
+    },
+    {
+      label: "Sikkim",
+      val: "sikkim",
+    },
+    {
+      label: "Darjeeling",
+      val: "darjeeling",
+    },
+    {
+      label: "North Sikkim",
+      val: "north-sikkim",
+    },
+    {
+      label: "Meghalaya",
+      val: "meghalaya",
+    },
+    {
+      label: "Arunachal Pradesh",
+      val: "arunachal-pradesh",
+    }
+  ]
 
 
   return (<>
@@ -220,8 +226,10 @@ const PlacesForm = () => {
       {({ values, handleChange, setFieldValue, errors, touched }) => (
         <Box sx={{ position: 'relative' }}>
           <Box sx={{
-            position: 'sticky',
-            top: 0,
+            position: 'fixed',
+            top: "64px",
+            left: "180px",
+            right: "25px",
             zIndex: 10,
             background: '#fff',
             p: 2,
@@ -235,7 +243,7 @@ const PlacesForm = () => {
             <Button variant="contained" type="submit" form="package-form">{selectedPlace && selectedPlace._id ? 'Update' : 'Create'}</Button>
           </Box>
           <Form id="package-form">
-            <Grid container spacing={2} sx={{ p: 2 }}>
+            <Grid container spacing={2} sx={{ p: 2, mt: "40px" }}>
 
               <SectionWrapper title="Basic Info" sx={{ mt: 2 }}>
                 <Grid container spacing={2}>
@@ -1336,6 +1344,16 @@ const PlacesForm = () => {
               </SectionWrapper>
             </Grid>
           </Form>
+          <Box sx={{ display: 'flex', justifyContent:"center"}}>
+            <Button
+              variant="contained"
+              type="submit"
+              form="package-form"
+              sx={{ mb: 5 }}
+            >
+              {selectedPlace && selectedPlace._id ? 'Update' : 'Create'}
+            </Button>
+          </Box>
         </Box>
       )}
     </Formik>

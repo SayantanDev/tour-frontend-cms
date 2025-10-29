@@ -2,11 +2,12 @@
 // components/Navigation.js (With Badge Notification Counts + Clear on Click)
 // ===============================
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Drawer, List, ListItem, ListItemText, ListItemButton, Badge, ListItemIcon,
   Typography, useMediaQuery,
+  Box,
 } from "@mui/material";
 import usePermissions from "../../../hooks/UsePermissions";
 import { useSelector, useDispatch } from "react-redux";
@@ -38,6 +39,36 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
 
   const inquiryCount = notifications.filter(n => n.type === 'inquiry').length;
   const operationCount = notifications.filter(n => n.type === 'operation').length;
+
+  const [drawerWidth, setDrawerWidth] = useState(180);
+  const isResizing = useRef(false);
+
+  const startResizing = (e) => {
+    isResizing.current = true;
+    document.body.style.cursor = "col-resize";
+  };
+
+  const stopResizing = () => {
+    isResizing.current = false;
+    document.body.style.cursor = "default";
+  };
+
+  const resize = (e) => {
+    if (!isResizing.current) return;
+    const newWidth = e.clientX;
+    if (newWidth > 180 && newWidth < 480) {
+      setDrawerWidth(newWidth);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener("mousemove", resize);
+    window.addEventListener("mouseup", stopResizing);
+    return () => {
+      window.addEventListener("mousemove", resize);
+      window.addEventListener("mouseup", stopResizing);
+    };
+  }, []);
 
   const navLinkClicked = (link, label) => {
     // Remove related notifications
@@ -75,46 +106,46 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
     // Add more mappings here
   };
 
-  const drawer = (
-    <div>
-      <List>
-        {fetchConfigData.navigationStrings
-          .filter((element) => checkPermission(element.module, "view"))
-          .map((element) => {
-            const IconComponent = iconMap[element.icon];
-            const showBadge =
-              (element.label === "Inquiry" && inquiryCount > 0) ||
-              (element.label === "Leads" && operationCount > 0);
+  // const drawer = (
+  //   <div>
+  //     <List>
+  //       {fetchConfigData.navigationStrings
+  //         .filter((element) => checkPermission(element.module, "view"))
+  //         .map((element) => {
+  //           const IconComponent = iconMap[element.icon];
+  //           const showBadge =
+  //             (element.label === "Inquiry" && inquiryCount > 0) ||
+  //             (element.label === "Leads" && operationCount > 0);
 
-            const badgeCount =
-              element.label === "Inquiry" ? inquiryCount :
-                element.label === "Leads" ? operationCount : 0;
+  //           const badgeCount =
+  //             element.label === "Inquiry" ? inquiryCount :
+  //               element.label === "Leads" ? operationCount : 0;
 
-            return (
-              <ListItem
-                disablePadding
-                key={element.link}
-                className={currentTab === element.label ? "active" : ""}
-              >
-                <ListItemButton
-                  onClick={() => navLinkClicked(element.link, element.label)}
-                >
-                  {IconComponent && <IconComponent sx={{ mr: 1 }} />}
+  //           return (
+  //             <ListItem
+  //               disablePadding
+  //               key={element.link}
+  //               className={currentTab === element.label ? "active" : ""}
+  //             >
+  //               <ListItemButton
+  //                 onClick={() => navLinkClicked(element.link, element.label)}
+  //               >
+  //                 {IconComponent && <IconComponent sx={{ mr: 1 }} />}
 
-                  {showBadge ? (
-                    <Badge badgeContent={badgeCount} color="error">
-                      <ListItemText primary={element.label} />
-                    </Badge>
-                  ) : (
-                    <ListItemText primary={element.label} />
-                  )}
-                </ListItemButton>
-              </ListItem>
-            );
-          })}
-      </List>
-    </div>
-  );
+  //                 {showBadge ? (
+  //                   <Badge badgeContent={badgeCount} color="error">
+  //                     <ListItemText primary={element.label} />
+  //                   </Badge>
+  //                 ) : (
+  //                   <ListItemText primary={element.label} />
+  //                 )}
+  //               </ListItemButton>
+  //             </ListItem>
+  //           );
+  //         })}
+  //     </List>
+  //   </div>
+  // );
 
   return (
     // <Drawer
@@ -135,16 +166,14 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
     // >
     //   {drawer}
     // </Drawer>
-    <Drawer
+    <> <Drawer
       sx={{
-        width: fetchConfigData.drawerWidth,
+        width: drawerWidth,
         flexShrink: 0,
         "& .MuiDrawer-paper": {
-          width: fetchConfigData.drawerWidth,
+          width: drawerWidth,
           boxSizing: "border-box",
-          // pt: "64px",
           marginTop: "64px",
-          // background: 'linear-gradient(180deg, #1a237e, #3949ab)', // Blue gradient
           color: '#fff',
           borderRight: 'none',
         },
@@ -202,7 +231,17 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
       </List>
     </Drawer>
 
+    <Box
+    onMouseDown={startResizing}
+    sx={{
+      width: "5px",
+      cursor: "w-resize",
+      zIndex: 999,
+    }}></Box>
+    </>
   );
 };
 
 export default Navigation;
+
+

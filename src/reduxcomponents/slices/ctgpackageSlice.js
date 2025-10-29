@@ -1,8 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialeditState = {
-    fetchSelectedCtgPackage: {},
-    
+    fetchSelectedCtgPackage: {},    
 };
 
 const Ctgpakage = createSlice({
@@ -15,7 +14,7 @@ const Ctgpakage = createSlice({
        
         removeSelectedCtgPackage: (state, action) => {
             state.fetchSelectedCtgPackage = {};
-        }
+        } 
     }
 });
 
