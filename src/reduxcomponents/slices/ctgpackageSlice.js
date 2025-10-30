@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialeditState = {
     fetchSelectedCtgPackage: {},
-    
+    allPermission: [],
 };
 
 const Ctgpakage = createSlice({
@@ -15,9 +15,12 @@ const Ctgpakage = createSlice({
        
         removeSelectedCtgPackage: (state, action) => {
             state.fetchSelectedCtgPackage = {};
-        }
+        },
+        setSelectedPermission: (state, action) => {
+            state.allPermission = action.payload;
+        },
     }
 });
 
-export const { setSelectedCtgPakage,removeSelectedCtgPackage } = Ctgpakage.actions;
+export const { setSelectedCtgPakage,removeSelectedCtgPackage,setSelectedPermission} = Ctgpakage.actions;
 export default Ctgpakage.reducer;

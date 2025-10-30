@@ -16,10 +16,10 @@ import {
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import { deleteUserPermission, getAllUserPermission, updateUserPermission } from "../../api/userPermissionAPI";
-import { getAllPermission } from "../../api/permissionsAPI";
 import ReadMoreIcon from "@mui/icons-material/ReadMore";
 import PermissionDialogBox from "./permissionDialogBox";
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useSelector } from "react-redux";
 
 const AllUserPermissions = () => {
   const theme = useTheme();
@@ -27,14 +27,14 @@ const AllUserPermissions = () => {
 
   // ===================== STATE =====================
   const [allUserPermissions, setAllUserPermissions] = useState([]);
-  const [allPermissions, setAllPermissions] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
   const [permissionDialogData, setPermissionDialogData] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [filteredPermissions, setFilteredPermissions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-
+  const { allPermission } = useSelector(state => state.ctgpakage);
+  
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -53,20 +53,8 @@ const AllUserPermissions = () => {
     }
   };
 
-  const fetchPermissions = async () => {
-    try {
-      const res = await getAllPermission();
-      const items = res?.items || [];
-
-      setAllPermissions(items);
-    } catch (error) {
-      console.error("Error fetching permissions:", error);
-    }
-  };
-
   useEffect(() => {
     fetchUserPermissions();
-    fetchPermissions();
   }, []);
 
   // ===================== HANDLE DIALOG =====================
@@ -75,20 +63,18 @@ const AllUserPermissions = () => {
     setSelectedId(id);
     setSelectedRole(role);
 
-    console.log(allUserPermissions);
 
 
 
     const currentUser = allUserPermissions.find((user) => user._id === id);
     const savedPermission = currentUser?.permission || [];
-
+    
 
     // Generate permission dialog structure based on allPermissions
-    const permissionData = allPermissions.map((perm) => {
+    const permissionData = allPermission.map((perm) => {
       const savedModule = savedPermission.find((sp) => sp.module === perm.module);
       const savedValues = savedModule?.value || [];
-
-
+  
       return {
         module: perm.module,
         enabled: savedModule ? true : false,
@@ -188,7 +174,6 @@ const AllUserPermissions = () => {
         message: 'Permission deleted!',
         severity: 'success',
       });
-      fetchPermissions();
     } catch (error) {
       console.error('Error deleting permission:', error);
       setSnackbar({

@@ -13,6 +13,7 @@ import { useDispatch } from "react-redux";
 import { setSelectedInquiry } from "../../reduxcomponents/slices/inquirySlice";
 import useSnackbar from "../../hooks/useSnackbar";
 import usePermissions from "../../hooks/UsePermissions";
+import { addAllUsers } from "../../reduxcomponents/slices/loginSlice";
 
 const Inquiry = () => {
     const dispatch = useDispatch();
@@ -30,7 +31,6 @@ const Inquiry = () => {
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [selectedInquiryId, setSelectedInquiryId] = useState(null);
-
     const [selectedInquiries, setSelectedInquiries] = useState([]);
     const [assignDialogOpen, setAssignDialogOpen] = useState(false);
     const [userRemoveDialogOpen, setUserRemoveDialogOpen] = useState(false);
@@ -55,6 +55,9 @@ const Inquiry = () => {
         const fetchUsers = async () => {
             try {
                 const response = await getAllUsers();
+                dispatch(addAllUsers(response.data));
+                console.log(response.data);
+                
                 const usersOnly = response.data.filter(u => u.permission === "User");
                 setUserList(usersOnly);
             } catch (err) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  Container, Typography, Button, Box, IconButton, useMediaQuery, Tooltip
+  Container, Typography, Button, Box, IconButton, useMediaQuery
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -9,16 +9,19 @@ import DataTable from '../../components/dataTable';
 import AddUserDialog from './AddUserDialog';
 import DeleteUserDialog from './DeleteUserDialog';
 import { addUser, getAllUsers, deleteUser, updateUser } from '../../api/userAPI';
+import { useDispatch, useSelector } from "react-redux";
+import { addAllUsers } from "../../reduxcomponents/slices/loginSlice";
 
 const Users = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
+  const { allUsers } = useSelector(state => state.loggedinUser);
   const [userAdded, setUserAdded] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const dispatch = useDispatch();
   const [dialogDelOpen, setDialogDelOpen] = useState(false);
   const [delUserId, setDelUserId] = useState('');
-  const [allUsers, setAllUsers] = useState([]);
+  // const [allUsers, setAllUsers] = useState([]);
   const [userFormData, setUserFormData] = useState({
     fullName: '',
     email: '',
@@ -27,11 +30,11 @@ const Users = () => {
     permission: ''
   });
 
-  useEffect(() => {
-    getAllUsers()
-      .then((res) => setAllUsers(res.data))
-      .catch((err) => console.error(err));
-  }, [userAdded]);
+  // useEffect(() => {
+  //   getAllUsers()
+  //     .then((res) => setAllUsers(res.data))
+  //     .catch((err) => console.error(err));
+  // }, [userAdded]);
 
   const handleAddUserClick = () => {
     setUserFormData({
@@ -85,8 +88,9 @@ const Users = () => {
 
   const handleDelUserSubmit = () => {
     deleteUser(delUserId)
-      .then(() => {
-        getAllUsers().then((res) => setAllUsers(res.data));
+      .then((res) => {
+        // getAllUsers().then((res) => setAllUsers(res.data));
+        dispatch(addAllUsers(res.data));
         handleDelClose();
       })
       .catch(() => handleDelClose());

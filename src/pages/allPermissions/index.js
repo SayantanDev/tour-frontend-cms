@@ -27,11 +27,14 @@ import {
   deletePermission,
   updatePermission,
 } from '../../api/permissionsAPI';
+import { useDispatch } from 'react-redux';
+import { setSelectedPermission } from '../../reduxcomponents/slices/ctgpackageSlice';
+
 
 const AllPermissions = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
+  const dispatch = useDispatch();
   const [allPermissions, setAllPermissions] = useState([]);
   const [filteredPermissions, setFilteredPermissions] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -51,9 +54,10 @@ const AllPermissions = () => {
   const fetchPermissions = async () => {
     try {
       const res = await getAllPermission();
+      
       const items = res?.items || [];
       console.log('permissions', items);
-
+      dispatch(setSelectedPermission(items));
       setAllPermissions(items);
       setFilteredPermissions(items);
     } catch (error) {
