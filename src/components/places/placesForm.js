@@ -9,12 +9,12 @@ import {
   InputLabel,
   Select
 } from '@mui/material';
-import {Delete } from '@mui/icons-material';
+import { Delete } from '@mui/icons-material';
 import useSnackbar from '../../hooks/useSnackbar';
 import { useSelector } from 'react-redux';
 
 import _ from 'lodash';
-import { updatePlace } from '../../api/placeApi';
+import { insertPlace, updatePlace } from '../../api/placeApi';
 import { useNavigate } from 'react-router-dom';
 
 const getInitialValues = (data) => {
@@ -167,7 +167,7 @@ const PlacesForm = () => {
     try {
       // let res;
       if (selectedPlace && selectedPlace._id) {
-        console.log("updatePlace",values);
+        console.log("updatePlace", values);
 
         const res = await updatePlace(values, selectedPlace._id); // You'll need to import and define this API
         if (res) {
@@ -175,11 +175,13 @@ const PlacesForm = () => {
 
         }
       } else {
-        console.log("insertPlace");
+        const res = await insertPlace(values); // You'll need to import and define this API
 
-        showSnackbar('You created a new place', 'success');
-        navigate(`/places/view`);
-        console.log("places data : ", values);
+        if (res) {
+          showSnackbar('You created a new place', 'success');
+          navigate(`/places/view`);
+        }
+
 
       }
     } catch (error) {
@@ -189,25 +191,31 @@ const PlacesForm = () => {
   };
 
   const Region_obj = [
-  {label: "None",
-    val: "",
-  },
-  {label: "Sikkim",
-    val: "sikkim",
-  },
-  {label: "Darjeeling",
-    val: "darjeeling",
-  },
-  {label: "North Sikkim",
-    val: "north-sikkim",
-  },
-  {label: "Meghalaya",
-    val: "meghalaya",
-  },
-  {label: "Arunachal Pradesh",
-    val: "arunachal-pradesh",
-  }
-]
+    {
+      label: "None",
+      val: "",
+    },
+    {
+      label: "Sikkim",
+      val: "sikkim",
+    },
+    {
+      label: "Darjeeling",
+      val: "darjeeling",
+    },
+    {
+      label: "North Sikkim",
+      val: "north-sikkim",
+    },
+    {
+      label: "Meghalaya",
+      val: "meghalaya",
+    },
+    {
+      label: "Arunachal Pradesh",
+      val: "arunachal-pradesh",
+    }
+  ]
 
 
   return (<>
