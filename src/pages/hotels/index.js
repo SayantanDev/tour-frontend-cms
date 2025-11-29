@@ -660,6 +660,7 @@ const Hotels = () => {
                           <Typography fontWeight={600} color="primary">Season Price</Typography>
                           <Box mt={1}>
                             <Typography>CP: ₹{cat.season_price.cp_plan}</Typography>
+                            <Typography>EP: ₹{cat.season_price.ep_plan}</Typography>
                             <Typography>AP: ₹{cat.season_price.ap_plan}</Typography>
                             <Typography>MAP: ₹{cat.season_price.map_plan}</Typography>
                             <Typography>Extra Mat: ₹{cat.season_price.extra_mat}</Typography>
@@ -674,6 +675,7 @@ const Hotels = () => {
                           <Typography fontWeight={600} color="secondary">Off Season Price</Typography>
                           <Box mt={1}>
                             <Typography>CP: ₹{cat.off_season_price.cp_plan}</Typography>
+                            <Typography>EP: ₹{cat.off_season_price.ep_plan}</Typography>
                             <Typography>AP: ₹{cat.off_season_price.ap_plan}</Typography>
                             <Typography>MAP: ₹{cat.off_season_price.map_plan}</Typography>
                             <Typography>Extra Mat: ₹{cat.off_season_price.extra_mat}</Typography>
