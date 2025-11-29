@@ -40,6 +40,7 @@ const Hotels = () => {
         room_cat: "",
         season_price: {
           cp_plan: 0,
+          ep_plan: 0,
           ap_plan: 0,
           map_plan: 0,
           extra_mat: 0,
@@ -47,6 +48,7 @@ const Hotels = () => {
         },
         off_season_price: {
           cp_plan: 0,
+          ep_plan: 0,
           ap_plan: 0,
           map_plan: 0,
           extra_mat: 0,
@@ -252,6 +254,7 @@ const Hotels = () => {
 
                     season_price: Yup.object({
                       cp_plan: Yup.number().required("Required").min(0),
+                      ep_plan: Yup.number().required("Required").min(0),
                       ap_plan: Yup.number().required("Required").min(0),
                       map_plan: Yup.number().required("Required").min(0),
                       extra_mat: Yup.number().required("Required").min(0),
@@ -260,6 +263,7 @@ const Hotels = () => {
 
                     off_season_price: Yup.object({
                       cp_plan: Yup.number().required("Required").min(0),
+                      ep_plan: Yup.number().required("Required").min(0),
                       ap_plan: Yup.number().required("Required").min(0),
                       map_plan: Yup.number().required("Required").min(0),
                       extra_mat: Yup.number().required("Required").min(0),
@@ -385,7 +389,15 @@ const Hotels = () => {
                                         onChange={handleChange}
                                       />
                                     </Grid>
-
+                                    <Grid item xs={4}>
+                                      <TextField
+                                        fullWidth type="number" label="EP"
+                                        placeholder="EP Plan"
+                                        name={`category[${i}].season_price.ep_plan`}
+                                        value={cat.season_price.ep_plan}
+                                        onChange={handleChange}
+                                      />
+                                    </Grid>
                                     <Grid item xs={4}>
                                       <TextField
                                         fullWidth type="number" label="AP"
@@ -396,7 +408,7 @@ const Hotels = () => {
                                       />
                                     </Grid>
 
-                                    <Grid item xs={4}>
+                                    <Grid item xs={4} mt={2}>
                                       <TextField
                                         fullWidth type="number" label="MAP"
                                         placeholder="MAP Plan"
@@ -407,7 +419,7 @@ const Hotels = () => {
                                     </Grid>
 
                                     {/* Row 2 */}
-                                    <Grid item xs={6} mt={2}>
+                                    <Grid item xs={4} mt={2}>
                                       <TextField
                                         fullWidth type="number" label="Extra Mat"
                                         placeholder="Extra Mattress"
@@ -417,7 +429,7 @@ const Hotels = () => {
                                       />
                                     </Grid>
 
-                                    <Grid item xs={6} mt={2}>
+                                    <Grid item xs={4} mt={2}>
                                       <TextField
                                         fullWidth type="number" label="CNB"
                                         placeholder="Child No Bed"
@@ -455,7 +467,15 @@ const Hotels = () => {
                                         onChange={handleChange}
                                       />
                                     </Grid>
-
+                                    <Grid item xs={4}>
+                                      <TextField
+                                        fullWidth type="number" label="EP"
+                                        placeholder="EP Plan"
+                                        name={`category[${i}].off_season_price.ep_plan`}
+                                        value={cat.off_season_price.ep_plan}
+                                        onChange={handleChange}
+                                      />
+                                    </Grid>
                                     <Grid item xs={4}>
                                       <TextField
                                         fullWidth type="number" label="AP"
@@ -466,7 +486,7 @@ const Hotels = () => {
                                       />
                                     </Grid>
 
-                                    <Grid item xs={4}>
+                                    <Grid item xs={4} mt={2}>
                                       <TextField
                                         fullWidth type="number" label="MAP"
                                         placeholder="MAP Plan"
@@ -477,7 +497,7 @@ const Hotels = () => {
                                     </Grid>
 
                                     {/* Row 2 */}
-                                    <Grid item xs={6} mt={2}>
+                                    <Grid item xs={4} mt={2}>
                                       <TextField
                                         fullWidth type="number" label="Extra Mat"
                                         placeholder="Extra Mattress"
@@ -487,7 +507,7 @@ const Hotels = () => {
                                       />
                                     </Grid>
 
-                                    <Grid item xs={6} mt={2}>
+                                    <Grid item xs={4} mt={2}>
                                       <TextField
                                         fullWidth type="number" label="CNB"
                                         placeholder="Child No Bed"
@@ -636,7 +656,7 @@ const Hotels = () => {
                     <Grid container spacing={3}>
                       {/* LEFT – Season */}
                       <Grid item xs={6}>
-                        <Box sx={{border: "1px solid #1976d2", borderRadius: 2, p: 2}}>
+                        <Box sx={{ border: "1px solid #1976d2", borderRadius: 2, p: 2 }}>
                           <Typography fontWeight={600} color="primary">Season Price</Typography>
                           <Box mt={1}>
                             <Typography>CP: ₹{cat.season_price.cp_plan}</Typography>
@@ -650,7 +670,7 @@ const Hotels = () => {
 
                       {/* RIGHT – Off season */}
                       <Grid item xs={6}>
-                        <Box sx={{border: "1px solid #ad1457", borderRadius: 2, p: 2}}>
+                        <Box sx={{ border: "1px solid #ad1457", borderRadius: 2, p: 2 }}>
                           <Typography fontWeight={600} color="secondary">Off Season Price</Typography>
                           <Box mt={1}>
                             <Typography>CP: ₹{cat.off_season_price.cp_plan}</Typography>
