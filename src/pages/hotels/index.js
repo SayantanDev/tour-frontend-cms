@@ -13,6 +13,7 @@ import { getAllHotels, insertHotel, deleteHotel, updateHotel } from "../../api/h
 import useSnackbar from "../../hooks/useSnackbar";
 import usePermissions from "../../hooks/UsePermissions";
 
+
 const Hotels = () => {
   const [hotels, setHotels] = useState([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -28,6 +29,7 @@ const Hotels = () => {
   const { showSnackbar, SnackbarComponent } = useSnackbar();
   const getPermission = usePermissions();
 
+  // ⭐ Correct Default Object
   const emptyHotel = {
     destination: "",
     sub_destination: "",
@@ -36,21 +38,31 @@ const Hotels = () => {
     category: [
       {
         room_cat: "",
-        season_price: 0,
-        off_season_price: 0,
-        cp_plan: 0,
-        ap_plan: 0,
-        map_plan: 0
-      }
+        season_price: {
+          cp_plan: 0,
+          ap_plan: 0,
+          map_plan: 0,
+          extra_mat: 0,
+          cnb: 0,
+        },
+        off_season_price: {
+          cp_plan: 0,
+          ap_plan: 0,
+          map_plan: 0,
+          extra_mat: 0,
+          cnb: 0,
+        },
+      },
     ],
     rating: 0,
     contacts: [""],
     address: "",
-    amenities: [""]
+    amenities: [""],
   };
 
   const [newHotel, setNewHotel] = useState(emptyHotel);
 
+  // FETCH HOTELS
   useEffect(() => {
     async function fetchHotels() {
       try {
@@ -73,29 +85,28 @@ const Hotels = () => {
   const handleEdit = (hotel) => {
     setEditMode(true);
     setAddMode(false);
-    setNewHotel(hotel);
+    setNewHotel(JSON.parse(JSON.stringify(hotel)));
     setSelectedHotel(hotel);
     setDrawerOpen(true);
-  };
-
-  const handleDelete = async (id) => {
-    const ok = window.confirm("Are you sure?");
-    if (!ok) return;
-
-    try {
-      await deleteHotel(id);
-      setHotels(hotels.filter((h) => h._id !== id));
-      showSnackbar("Hotel deleted successfully", "success");
-    } catch (err) {
-      showSnackbar("Failed to delete hotel", "error");
-    }
   };
 
   const handleAddDrawer = () => {
     setAddMode(true);
     setEditMode(false);
-    setNewHotel(emptyHotel);
+    setNewHotel(JSON.parse(JSON.stringify(emptyHotel)));
     setDrawerOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure?")) return;
+
+    try {
+      await deleteHotel(id);
+      setHotels(hotels.filter((h) => h._id !== id));
+      showSnackbar("Hotel deleted", "success");
+    } catch {
+      showSnackbar("Failed to delete hotel", "error");
+    }
   };
 
   return (
@@ -122,10 +133,10 @@ const Hotels = () => {
         <FormControl size="small">
           <InputLabel>Destination</InputLabel>
           <Select
+            sx={{ minWidth: 150 }}
             value={selectedDestination}
             label="Destination"
             onChange={(e) => setSelectedDestination(e.target.value)}
-            sx={{ minWidth: 140 }}
           >
             <MenuItem value="">All</MenuItem>
             {[...new Set(hotels.map((h) => h.destination))].map((d) => (
@@ -137,10 +148,10 @@ const Hotels = () => {
         <FormControl size="small">
           <InputLabel>Sub Destination</InputLabel>
           <Select
+            sx={{ minWidth: 170 }}
             value={selectedSubDestination}
             label="Sub Destination"
             onChange={(e) => setSelectedSubDestination(e.target.value)}
-            sx={{ minWidth: 160 }}
           >
             <MenuItem value="">All</MenuItem>
             {[...new Set(hotels.map((h) => h.sub_destination))].map((d) => (
@@ -152,14 +163,14 @@ const Hotels = () => {
         <FormControl size="small">
           <InputLabel>Type</InputLabel>
           <Select
+            sx={{ minWidth: 150 }}
             value={selectedType}
             label="Type"
             onChange={(e) => setSelectedType(e.target.value)}
-            sx={{ minWidth: 140 }}
           >
             <MenuItem value="">All</MenuItem>
-            {[...new Set(hotels.map((h) => h.type))].map((d) => (
-              <MenuItem key={d} value={d}>{d}</MenuItem>
+            {[...new Set(hotels.map((h) => h.type))].map((t) => (
+              <MenuItem key={t} value={t}>{t}</MenuItem>
             ))}
           </Select>
         </FormControl>
@@ -169,10 +180,10 @@ const Hotels = () => {
       <Grid container spacing={3}>
         {hotels
           .filter((h) =>
-            h.hotel_name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-            (selectedDestination ? h.destination === selectedDestination : true) &&
-            (selectedSubDestination ? h.sub_destination === selectedSubDestination : true) &&
-            (selectedType ? h.type === selectedType : true)
+            h.hotel_name?.toLowerCase().includes(searchQuery.toLowerCase()) &&
+            (!selectedDestination || h.destination === selectedDestination) &&
+            (!selectedSubDestination || h.sub_destination === selectedSubDestination) &&
+            (!selectedType || h.type === selectedType)
           )
           .map((hotel) => (
             <Grid item xs={12} sm={6} md={3} key={hotel._id}>
@@ -189,13 +200,11 @@ const Hotels = () => {
 
                 <CardActions sx={{ mt: "auto", justifyContent: "space-between", p: 2 }}>
                   <Button size="small" variant="outlined" onClick={() => handleView(hotel)}>View</Button>
-
                   {getPermission("hotel", "alter") && (
                     <Button size="small" variant="outlined" color="success" onClick={() => handleEdit(hotel)}>
                       Edit
                     </Button>
                   )}
-
                   {getPermission("hotel", "delete") && (
                     <Button size="small" variant="outlined" color="error" onClick={() => handleDelete(hotel._id)}>
                       Delete
@@ -207,9 +216,15 @@ const Hotels = () => {
           ))}
       </Grid>
 
-      {/* DRAWER */}
+      {/* === DRAWER === */}
       <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
-        <Box sx={{ width: 600, p: 3 }}>
+        <Box sx={{
+          width: 920,
+          p: 3,
+          maxHeight: "100vh",
+          overflowY: "auto"
+        }}>
+
           <Box display="flex" justifyContent="space-between" alignItems="center">
             <Typography variant="h6">
               {addMode ? "Add Hotel" : editMode ? "Edit Hotel" : "Hotel Details"}
@@ -219,69 +234,81 @@ const Hotels = () => {
 
           <Divider sx={{ my: 2 }} />
 
-          {/* ADD / EDIT FORM */}
+
+          {/* ADD / EDIT MODE */}
           {(addMode || editMode) ? (
             <Formik
               initialValues={newHotel}
               enableReinitialize
               validationSchema={Yup.object({
-                hotel_name: Yup.string().required("Required"),
-                destination: Yup.string().required("Required"),
-                sub_destination: Yup.string().required("Required"),
-                type: Yup.string().required("Required"),
+                hotel_name: Yup.string().required("Hotel name is required"),
+                destination: Yup.string().required("Destination is required"),
+                sub_destination: Yup.string().required("Sub destination is required"),
+                type: Yup.string().required("Type is required"),
+
                 category: Yup.array().of(
                   Yup.object({
-                    room_cat: Yup.string().required("Required"),
-                    season_price: Yup.number().required(),
-                    off_season_price: Yup.number().required(),
-                    cp_plan: Yup.number().required(),
-                    ap_plan: Yup.number().required(),
-                    map_plan: Yup.number().required(),
+                    room_cat: Yup.string().required("Room category required"),
+
+                    season_price: Yup.object({
+                      cp_plan: Yup.number().required("Required").min(0),
+                      ap_plan: Yup.number().required("Required").min(0),
+                      map_plan: Yup.number().required("Required").min(0),
+                      extra_mat: Yup.number().required("Required").min(0),
+                      cnb: Yup.number().required("Required").min(0),
+                    }),
+
+                    off_season_price: Yup.object({
+                      cp_plan: Yup.number().required("Required").min(0),
+                      ap_plan: Yup.number().required("Required").min(0),
+                      map_plan: Yup.number().required("Required").min(0),
+                      extra_mat: Yup.number().required("Required").min(0),
+                      cnb: Yup.number().required("Required").min(0),
+                    }),
                   })
-                )
+                ),
               })}
+
               onSubmit={async (values) => {
                 try {
                   if (editMode) {
                     await updateHotel(selectedHotel._id, values);
-                    setHotels(
-                      hotels.map((h) =>
-                        h._id === selectedHotel._id ? { ...values, _id: selectedHotel._id } : h
-                      )
-                    );
-                    showSnackbar("Hotel updated!", "success");
+                    showSnackbar("Hotel updated", "success");
+                    setHotels(hotels.map((h) =>
+                      h._id === selectedHotel._id ? { ...values, _id: h._id } : h
+                    ));
                   } else {
                     const res = await insertHotel(values);
+                    showSnackbar("Hotel added", "success");
                     setHotels([...hotels, res.data]);
-                    showSnackbar("Hotel added!", "success");
                   }
                   setDrawerOpen(false);
-                } catch (err) {
-                  showSnackbar("Error saving hotel", "error");
+
+                } catch {
+                  showSnackbar("Error saving", "error");
                 }
               }}
+
             >
               {({ values, handleChange }) => (
                 <Form>
 
-                  {/* Hotel Name + Type */}
+                  {/* HOTEL NAME + TYPE */}
                   <Grid container spacing={2}>
                     <Grid item xs={6}>
-                      <TextField
-                        fullWidth
-                        label="Hotel Name"
+                      <TextField fullWidth label="Hotel Name"
+                        placeholder="Example: Hotel Mount View"
                         name="hotel_name"
                         value={values.hotel_name}
-                        onChange={handleChange}
-                      />
+                        onChange={handleChange} />
                     </Grid>
 
                     <Grid item xs={6}>
                       <FormControl fullWidth>
                         <InputLabel>Type</InputLabel>
                         <Select
-                          name="type"
                           label="Type"
+                          name="type"
                           value={values.type}
                           onChange={handleChange}
                         >
@@ -293,127 +320,196 @@ const Hotels = () => {
                     </Grid>
                   </Grid>
 
-                  {/* Destination + Sub Destination */}
+                  {/* DESTINATION */}
                   <Grid container spacing={2} mt={2}>
                     <Grid item xs={6}>
-                      <TextField
-                        fullWidth
-                        label="Destination"
+                      <TextField fullWidth label="Destination"
+                        placeholder="Example: Darjeeling, Gangtok"
                         name="destination"
                         value={values.destination}
-                        onChange={handleChange}
-                      />
+                        onChange={handleChange} />
                     </Grid>
 
                     <Grid item xs={6}>
-                      <TextField
-                        fullWidth
-                        label="Sub Destination"
+                      <TextField fullWidth label="Sub Destination"
+                        placeholder="Example: MG Marg, Mall Road"
                         name="sub_destination"
                         value={values.sub_destination}
-                        onChange={handleChange}
-                      />
+                        onChange={handleChange} />
                     </Grid>
                   </Grid>
 
-                  {/* CATEGORY SECTION */}
-                  <Typography fontWeight={600} mt={3} mb={1}>
-                    Room Categories
-                  </Typography>
+                  {/* ⭐ CATEGORY BLOCK ⭐ */}
+                  <Typography fontWeight={600} mt={3} mb={1}>Room Categories</Typography>
 
                   <FieldArray name="category">
                     {({ push, remove }) => (
                       <>
                         {values.category.map((cat, i) => (
-                          <Box
-                            key={i}
-                            sx={{
-                              border: "1px solid #1976d2",
-                              p: 2,
-                              mb: 2,
-                              borderRadius: 2
-                            }}
-                          >
-                            {/* Room Category */}
+                          <Box key={i} sx={{ border: "1px solid #1976d2", borderRadius: 2, p: 2, mb: 3 }}>
+
                             <TextField
                               fullWidth
                               label="Room Category"
+                              placeholder="Example: Deluxe, Super Deluxe"
                               name={`category[${i}].room_cat`}
                               value={cat.room_cat}
                               onChange={handleChange}
+                              sx={{ mb: 2 }}
                             />
 
-                            {/* Row 1 - Season + Off Season */}
-                            <Grid container spacing={2} mt={1}>
+                            {/* LEFT & RIGHT BOX */}
+                            <Grid container spacing={2}>
+
+                              {/* ========== LEFT BOX ========== */}
                               <Grid item xs={6}>
-                                <TextField
-                                  fullWidth
-                                  type="number"
-                                  label="Season Price"
-                                  name={`category[${i}].season_price`}
-                                  value={cat.season_price}
-                                  onChange={handleChange}
-                                />
+                                <Box sx={{
+                                  border: "1px solid #0d47a1",
+                                  borderRadius: 2,
+                                  p: 2,
+                                  background: "#f1f7ff"
+                                }}>
+                                  <Typography fontWeight={700} color="primary" mb={2}>
+                                    Season Price
+                                  </Typography>
+
+                                  <Grid container spacing={2}>
+
+                                    {/* Row 1 */}
+                                    <Grid item xs={4}>
+                                      <TextField
+                                        fullWidth type="number" label="CP"
+                                        placeholder="CP Plan"
+                                        name={`category[${i}].season_price.cp_plan`}
+                                        value={cat.season_price.cp_plan}
+                                        onChange={handleChange}
+                                      />
+                                    </Grid>
+
+                                    <Grid item xs={4}>
+                                      <TextField
+                                        fullWidth type="number" label="AP"
+                                        placeholder="AP Plan"
+                                        name={`category[${i}].season_price.ap_plan`}
+                                        value={cat.season_price.ap_plan}
+                                        onChange={handleChange}
+                                      />
+                                    </Grid>
+
+                                    <Grid item xs={4}>
+                                      <TextField
+                                        fullWidth type="number" label="MAP"
+                                        placeholder="MAP Plan"
+                                        name={`category[${i}].season_price.map_plan`}
+                                        value={cat.season_price.map_plan}
+                                        onChange={handleChange}
+                                      />
+                                    </Grid>
+
+                                    {/* Row 2 */}
+                                    <Grid item xs={6} mt={2}>
+                                      <TextField
+                                        fullWidth type="number" label="Extra Mat"
+                                        placeholder="Extra Mattress"
+                                        name={`category[${i}].season_price.extra_mat`}
+                                        value={cat.season_price.extra_mat}
+                                        onChange={handleChange}
+                                      />
+                                    </Grid>
+
+                                    <Grid item xs={6} mt={2}>
+                                      <TextField
+                                        fullWidth type="number" label="CNB"
+                                        placeholder="Child No Bed"
+                                        name={`category[${i}].season_price.cnb`}
+                                        value={cat.season_price.cnb}
+                                        onChange={handleChange}
+                                      />
+                                    </Grid>
+
+                                  </Grid>
+                                </Box>
                               </Grid>
 
+                              {/* ========== RIGHT BOX ========== */}
                               <Grid item xs={6}>
-                                <TextField
-                                  fullWidth
-                                  type="number"
-                                  label="Off Season Price"
-                                  name={`category[${i}].off_season_price`}
-                                  value={cat.off_season_price}
-                                  onChange={handleChange}
-                                />
+                                <Box sx={{
+                                  border: "1px solid #ad1457",
+                                  borderRadius: 2,
+                                  p: 2,
+                                  background: "#fff0f6"
+                                }}>
+                                  <Typography fontWeight={700} color="secondary" mb={2}>
+                                    Off Season Price
+                                  </Typography>
+
+                                  <Grid container spacing={2}>
+
+                                    {/* Row 1 */}
+                                    <Grid item xs={4}>
+                                      <TextField
+                                        fullWidth type="number" label="CP"
+                                        placeholder="CP Plan"
+                                        name={`category[${i}].off_season_price.cp_plan`}
+                                        value={cat.off_season_price.cp_plan}
+                                        onChange={handleChange}
+                                      />
+                                    </Grid>
+
+                                    <Grid item xs={4}>
+                                      <TextField
+                                        fullWidth type="number" label="AP"
+                                        placeholder="AP Plan"
+                                        name={`category[${i}].off_season_price.ap_plan`}
+                                        value={cat.off_season_price.ap_plan}
+                                        onChange={handleChange}
+                                      />
+                                    </Grid>
+
+                                    <Grid item xs={4}>
+                                      <TextField
+                                        fullWidth type="number" label="MAP"
+                                        placeholder="MAP Plan"
+                                        name={`category[${i}].off_season_price.map_plan`}
+                                        value={cat.off_season_price.map_plan}
+                                        onChange={handleChange}
+                                      />
+                                    </Grid>
+
+                                    {/* Row 2 */}
+                                    <Grid item xs={6} mt={2}>
+                                      <TextField
+                                        fullWidth type="number" label="Extra Mat"
+                                        placeholder="Extra Mattress"
+                                        name={`category[${i}].off_season_price.extra_mat`}
+                                        value={cat.off_season_price.extra_mat}
+                                        onChange={handleChange}
+                                      />
+                                    </Grid>
+
+                                    <Grid item xs={6} mt={2}>
+                                      <TextField
+                                        fullWidth type="number" label="CNB"
+                                        placeholder="Child No Bed"
+                                        name={`category[${i}].off_season_price.cnb`}
+                                        value={cat.off_season_price.cnb}
+                                        onChange={handleChange}
+                                      />
+                                    </Grid>
+
+                                  </Grid>
+                                </Box>
                               </Grid>
+
                             </Grid>
 
-                            {/* Row 2 - CP + AP */}
-                            <Grid container spacing={2} mt={1}>
-                              <Grid item xs={6}>
-                                <TextField
-                                  fullWidth
-                                  type="number"
-                                  label="CP Plan"
-                                  name={`category[${i}].cp_plan`}
-                                  value={cat.cp_plan}
-                                  onChange={handleChange}
-                                />
-                              </Grid>
-
-                              <Grid item xs={6}>
-                                <TextField
-                                  fullWidth
-                                  type="number"
-                                  label="AP Plan"
-                                  name={`category[${i}].ap_plan`}
-                                  value={cat.ap_plan}
-                                  onChange={handleChange}
-                                />
-                              </Grid>
-                            </Grid>
-
-                            {/* Row 3 - MAP */}
-                            <Grid container spacing={2} mt={1}>
-                              <Grid item xs={6}>
-                                <TextField
-                                  fullWidth
-                                  type="number"
-                                  label="MAP Plan"
-                                  name={`category[${i}].map_plan`}
-                                  value={cat.map_plan}
-                                  onChange={handleChange}
-                                />
-                              </Grid>
-
-                              <Grid item xs={6}></Grid>
-                            </Grid>
-
+                            {/* REMOVE CATEGORY */}
                             {values.category.length > 1 && (
-                              <IconButton color="error" onClick={() => remove(i)} sx={{ mt: 1 }}>
+                              <IconButton color="error" onClick={() => remove(i)} sx={{ mt: 2 }}>
                                 <DeleteIcon />
                               </IconButton>
                             )}
+
                           </Box>
                         ))}
 
@@ -423,11 +519,8 @@ const Hotels = () => {
                           onClick={() =>
                             push({
                               room_cat: "",
-                              season_price: 0,
-                              off_season_price: 0,
-                              cp_plan: 0,
-                              ap_plan: 0,
-                              map_plan: 0
+                              season_price: { cp_plan: 0, ap_plan: 0, map_plan: 0, extra_mat: 0, cnb: 0 },
+                              off_season_price: { cp_plan: 0, ap_plan: 0, map_plan: 0, extra_mat: 0, cnb: 0 },
                             })
                           }
                         >
@@ -437,45 +530,37 @@ const Hotels = () => {
                     )}
                   </FieldArray>
 
-                  {/* Rating */}
+
+                  {/* RATING */}
                   <TextField
-                    fullWidth
-                    type="number"
-                    label="Rating"
-                    name="rating"
-                    margin="normal"
-                    value={values.rating}
-                    onChange={handleChange}
+                    fullWidth type="number" label="Rating"
+                    placeholder="Example: 4.5"
+                    name="rating" value={values.rating} onChange={handleChange}
+                    sx={{ mt: 3 }}
                   />
 
-                  {/* Address */}
+                  {/* ADDRESS */}
                   <TextField
-                    fullWidth
-                    label="Address"
-                    name="address"
-                    margin="normal"
-                    value={values.address}
-                    onChange={handleChange}
+                    fullWidth label="Address" name="address"
+                    placeholder="Hotel full address"
+                    value={values.address} onChange={handleChange}
+                    sx={{ mt: 2 }}
                   />
 
-                  {/* Contacts */}
-                  <Typography fontWeight={600} mt={2} mb={2}>Contacts</Typography>
+                  {/* CONTACTS */}
+                  <Typography fontWeight={600} mt={3}>Contacts</Typography>
                   <FieldArray name="contacts">
                     {({ push, remove }) => (
                       <>
                         {values.contacts.map((c, i) => (
-                          <Box key={i} display="flex" alignItems="center" gap={1}>
+                          <Box key={i} display="flex" gap={1} alignItems="center">
                             <TextField
-                              fullWidth
-                              label={`Contact ${i + 1}`}
-                              name={`contacts[${i}]`}
-                              value={c}
-                              onChange={handleChange}
-                              mb={2}
+                              fullWidth margin="dense" label={`Contact ${i + 1}`}
+                              placeholder="Phone number"
+                              name={`contacts[${i}]`} value={c} onChange={handleChange}
                             />
-
                             {values.contacts.length > 1 && (
-                              <IconButton onClick={() => remove(i)} color="error">
+                              <IconButton color="error" onClick={() => remove(i)}>
                                 <DeleteIcon />
                               </IconButton>
                             )}
@@ -487,23 +572,20 @@ const Hotels = () => {
                     )}
                   </FieldArray>
 
-                  {/* Amenities */}
-                  <Typography fontWeight={600} mt={2} mb={2}>Amenities</Typography>
+                  {/* AMENITIES */}
+                  <Typography fontWeight={600} mt={3}>Amenities</Typography>
                   <FieldArray name="amenities">
                     {({ push, remove }) => (
                       <>
                         {values.amenities.map((a, i) => (
-                          <Box key={i} display="flex" alignItems="center" gap={1}>
+                          <Box key={i} display="flex" gap={1} alignItems="center">
                             <TextField
-                              fullWidth
-                              label={`Amenity ${i + 1}`}
-                              name={`amenities[${i}]`}
-                              value={a}
-                              onChange={handleChange}
+                              fullWidth margin="dense" label={`Amenity ${i + 1}`}
+                              placeholder="WiFi, Heater, TV, etc"
+                              name={`amenities[${i}]`} value={a} onChange={handleChange}
                             />
-
                             {values.amenities.length > 1 && (
-                              <IconButton onClick={() => remove(i)} color="error">
+                              <IconButton color="error" onClick={() => remove(i)}>
                                 <DeleteIcon />
                               </IconButton>
                             )}
@@ -518,60 +600,82 @@ const Hotels = () => {
                   <Button type="submit" variant="contained" fullWidth sx={{ mt: 3 }}>
                     Save Hotel
                   </Button>
+
                 </Form>
               )}
             </Formik>
           ) : (
+
+            /* ================= VIEW MODE ================= */
             selectedHotel && (
               <>
-                {/* VIEW MODE */}
-
                 <Grid container spacing={2}>
                   <Grid item xs={6}>
-                    <TextField label="Hotel Name" fullWidth value={selectedHotel.hotel_name} disabled />
+                    <TextField fullWidth disabled label="Hotel Name" value={selectedHotel.hotel_name} />
                   </Grid>
-
                   <Grid item xs={6}>
-                    <TextField label="Type" fullWidth value={selectedHotel.type} disabled />
+                    <TextField fullWidth disabled label="Type" value={selectedHotel.type} />
                   </Grid>
                 </Grid>
 
                 <Grid container spacing={2} mt={2}>
                   <Grid item xs={6}>
-                    <TextField label="Destination" fullWidth value={selectedHotel.destination} disabled />
+                    <TextField fullWidth disabled label="Destination" value={selectedHotel.destination} />
                   </Grid>
                   <Grid item xs={6}>
-                    <TextField label="Sub Destination" fullWidth value={selectedHotel.sub_destination} disabled />
+                    <TextField fullWidth disabled label="Sub Destination" value={selectedHotel.sub_destination} />
                   </Grid>
                 </Grid>
 
-                {/* View Categories */}
-                {selectedHotel.category.map((cat, i) => (
-                  <Box key={i} sx={{ border: "1px solid #e0e0e0", p: 2, borderRadius: 2, mb: 2 }}>
-                    <Typography fontWeight={600}>Room Category: {cat.room_cat}</Typography>
+                {/* CATEGORY VIEW */}
+                {selectedHotel.category?.map((cat, i) => (
+                  <Box key={i} sx={{ border: "1px solid #ddd", p: 2, borderRadius: 2, mt: 3 }}>
 
-                    <Grid container spacing={2} mt={1}>
-                      <Grid item xs={6}><Typography><b>Season Price:</b> ₹{cat.season_price}</Typography></Grid>
-                      <Grid item xs={6}><Typography><b>Off Season Price:</b> ₹{cat.off_season_price}</Typography></Grid>
+                    <Typography fontWeight={600} mb={2}>Room Category: {cat.room_cat}</Typography>
 
-                      <Grid item xs={6}><Typography><b>CP Plan:</b> ₹{cat.cp_plan}</Typography></Grid>
-                      <Grid item xs={6}><Typography><b>AP Plan:</b> ₹{cat.ap_plan}</Typography></Grid>
+                    <Grid container spacing={3}>
+                      {/* LEFT – Season */}
+                      <Grid item xs={6}>
+                        <Box sx={{border: "1px solid #1976d2", borderRadius: 2, p: 2}}>
+                          <Typography fontWeight={600} color="primary">Season Price</Typography>
+                          <Box mt={1}>
+                            <Typography>CP: ₹{cat.season_price.cp_plan}</Typography>
+                            <Typography>AP: ₹{cat.season_price.ap_plan}</Typography>
+                            <Typography>MAP: ₹{cat.season_price.map_plan}</Typography>
+                            <Typography>Extra Mat: ₹{cat.season_price.extra_mat}</Typography>
+                            <Typography>CNB: ₹{cat.season_price.cnb}</Typography>
+                          </Box>
+                        </Box>
+                      </Grid>
 
-                      <Grid item xs={6}><Typography><b>MAP Plan:</b> ₹{cat.map_plan}</Typography></Grid>
+                      {/* RIGHT – Off season */}
+                      <Grid item xs={6}>
+                        <Box sx={{border: "1px solid #ad1457", borderRadius: 2, p: 2}}>
+                          <Typography fontWeight={600} color="secondary">Off Season Price</Typography>
+                          <Box mt={1}>
+                            <Typography>CP: ₹{cat.off_season_price.cp_plan}</Typography>
+                            <Typography>AP: ₹{cat.off_season_price.ap_plan}</Typography>
+                            <Typography>MAP: ₹{cat.off_season_price.map_plan}</Typography>
+                            <Typography>Extra Mat: ₹{cat.off_season_price.extra_mat}</Typography>
+                            <Typography>CNB: ₹{cat.off_season_price.cnb}</Typography>
+                          </Box>
+                        </Box>
+                      </Grid>
                     </Grid>
+
                   </Box>
                 ))}
 
-                <TextField fullWidth label="Rating" margin="normal" value={selectedHotel.rating} disabled />
-                <TextField fullWidth label="Address" margin="normal" value={selectedHotel.address} disabled />
+                <TextField fullWidth disabled label="Rating" value={selectedHotel.rating} sx={{ mt: 3 }} />
+                <TextField fullWidth disabled label="Address" value={selectedHotel.address} sx={{ mt: 2 }} />
 
-                <Typography fontWeight={600} mt={2} mb={2}>Contacts</Typography>
+                <Typography fontWeight={600} mt={3}>Contacts</Typography>
                 {selectedHotel.contacts.map((c, i) => (
-                  <TextField key={i} margin="dense" fullWidth value={c} disabled />
+                  <TextField key={i} fullWidth disabled value={c} sx={{ mt: 1 }} />
                 ))}
 
-                <Typography fontWeight={600} mt={2} mb={2}>Amenities</Typography>
-                <Stack direction="row" spacing={1} flexWrap="wrap">
+                <Typography fontWeight={600} mt={3}>Amenities</Typography>
+                <Stack direction="row" spacing={1} flexWrap="wrap" mt={1}>
                   {selectedHotel.amenities.map((a, i) => (
                     <Chip key={i} label={a} sx={{ mb: 1 }} />
                   ))}
@@ -579,7 +683,6 @@ const Hotels = () => {
               </>
             )
           )}
-
         </Box>
       </Drawer>
 
