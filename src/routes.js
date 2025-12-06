@@ -18,7 +18,7 @@ import Users from "./pages/users";
 import Dashboard from "./pages/dashboard";
 import Query from "./pages/query";
 import Itinerary from "./pages/itinerary";
-import AdditionalCost from "./pages/additionalCost"; 
+import AdditionalCost from "./pages/additionalCost";
 import CreateItinerary from "./pages/createItinerary";
 import withAuthRedirect from "./components/withAuthRedirect";
 import View from "./components/packages/View";
@@ -36,6 +36,7 @@ import CategoryPackageUploadInPlaces from "./pages/packageUpload/inCategoryPacka
 import AllPermissions from "./pages/allPermissions";
 import AllUserPermissions from "./pages/allUserPermissions";
 import Profile from "./pages/Profile";
+import WhatsappInbox from "./pages/whatsappInbox";
 
 const RootLayoutWithRedirect = withAuthRedirect(RootLayout);
 
@@ -76,7 +77,7 @@ const router = createBrowserRouter(
           element={<ProtectedRoute Element={Profile} module="packages" />}
         />
         <Route
-          path="hotels" 
+          path="hotels"
           element={<ProtectedRoute Element={Hotels} module="hotel" />}
         />
         <Route
@@ -142,6 +143,10 @@ const router = createBrowserRouter(
         <Route
           path="user-permission"
           element={<ProtectedRoute Element={AllUserPermissions} module="user-permission" />}
+        />
+        <Route
+          path="whatsapp-inbox"
+          element={<ProtectedRoute Element={WhatsappInbox} module="whatsapp" />}
         />
         <Route path="not-authorized" element={<NotAuthorized />} />
       </Route>

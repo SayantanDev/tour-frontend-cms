@@ -7,6 +7,7 @@ import notify from "./notificationSlice"
 import configReducer from "./configSlice"
 import placeReducer from "./placesSlice"
 import ctgReducer from "./ctgpackageSlice"
+import whatsappReducer from "./whatsappSlice"
 import { combineReducers } from "redux";
 
 const rootReducer = combineReducers({
@@ -19,6 +20,7 @@ const rootReducer = combineReducers({
 	config: configReducer,
 	place: placeReducer,
 	ctgpakage: ctgReducer,
+	whatsapp: whatsappReducer,
 })
 
 export default rootReducer;
