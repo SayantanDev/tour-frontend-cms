@@ -23,7 +23,7 @@ import {
   Button,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import FilterListIcon from '@mui/icons-material/FilterList';
+// import FilterListIcon from '@mui/icons-material/FilterList';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { setSelectedChat, setFilters, assignChat, unassignChat, addChat, setChats } from '../../reduxcomponents/slices/whatsappSlice';
 import { autoAssignChat, assignChat as assignChatAPI, unassignChat as unassignChatAPI, getAllChats } from '../../api/whatsappAPI';
@@ -33,7 +33,7 @@ import AddIcon from '@mui/icons-material/Add';
 
 const ChatList = ({ socket }) => {
   const dispatch = useDispatch();
-  const { chats, selectedChat, filters, agents, currentAgent, unreadCounts, labels } = useSelector(
+  const { chats, selectedChat, filters, agents, unreadCounts} = useSelector(
     (state) => state.whatsapp
   );
   const [searchQuery, setSearchQuery] = useState('');

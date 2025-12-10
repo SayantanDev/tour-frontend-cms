@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Box, Grid, Paper, Typography, IconButton, Tooltip, Button } from '@mui/material';
+import { Box, Grid, Paper, Typography, IconButton, Tooltip, Button, Alert, Snackbar } from '@mui/material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PersonIcon from '@mui/icons-material/Person';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -9,7 +9,9 @@ import ChatList from '../../components/whatsapp/ChatList';
 import ChatWindow from '../../components/whatsapp/ChatWindow';
 import CustomerInfoPanel from '../../components/whatsapp/CustomerInfoPanel';
 import AdminMonitoringPanel from '../../components/whatsapp/AdminMonitoringPanel';
-import { getAllChats, getAllAgents, getOnlineAgents } from '../../api/whatsappAPI';
+import { getAllChats, getAllAgents, getOnlineAgents, checkConfigurationStatus, setStoreRef, loadConfigFromBackend } from '../../api/whatsappAPI';
+import { setWhatsAppConfig } from '../../reduxcomponents/slices/whatsappSlice';
+import { store } from '../../reduxcomponents/store';
 import {
   setChats,
   setAgents,
@@ -31,6 +33,25 @@ const WhatsappInbox = () => {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
+  const [configStatus, setConfigStatus] = useState({ valid: true, message: '' });
+  const [configErrorSnackbar, setConfigErrorSnackbar] = useState({ open: false, message: '' });
+
+  // Set store reference for WHATSAPP_API_CONFIG to access Redux state
+  useEffect(() => {
+    setStoreRef(store);
+
+    // Load config from backend database on mount
+    // Only store in Redux if config exists in database
+    const loadConfig = async () => {
+      try {
+        await loadConfigFromBackend(dispatch, setWhatsAppConfig);
+      } catch (error) {
+        console.error('Failed to load config from backend on mount:', error);
+      }
+    };
+
+    loadConfig();
+  }, [dispatch]);
 
   // Initialize socket connection
   useEffect(() => {
@@ -113,20 +134,49 @@ const WhatsappInbox = () => {
   }, [dispatch, currentAgent, filters]);
 
   // Fetch initial data
+  // Check configuration status on mount
+  useEffect(() => {
+    const checkConfig = async () => {
+      try {
+        const status = await checkConfigurationStatus();
+        setConfigStatus(status);
+        if (!status.valid) {
+          setConfigErrorSnackbar({ open: true, message: status.message });
+        }
+      } catch (err) {
+        console.error('Failed to check configuration status:', err);
+      }
+    };
+    checkConfig();
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Always try to fetch data - APIs will handle validation internally
+        // For backend API, backend will handle config validation
+        // For direct provider, APIs will reject with clear error messages
         const [chatsRes, agentsRes, onlineRes] = await Promise.all([
           getAllChats(filters).catch(err => {
             console.error('Failed to fetch chats:', err);
+            // Check if it's a config error
+            if (err.message?.includes('Configuration') || err.message?.includes('configure')) {
+              setConfigErrorSnackbar({ open: true, message: err.message });
+            }
             return { data: [] };
           }),
           getAllAgents().catch(err => {
             console.error('Failed to fetch agents:', err);
+            if (err.message?.includes('Configuration') || err.message?.includes('configure')) {
+              setConfigErrorSnackbar({ open: true, message: err.message });
+            }
             return { data: [] };
           }),
           getOnlineAgents().catch(err => {
             console.error('Failed to fetch online agents:', err);
+            if (err.message?.includes('Configuration') || err.message?.includes('configure')) {
+              setConfigErrorSnackbar({ open: true, message: err.message });
+            }
             return { data: [] };
           }),
         ]);
@@ -227,7 +277,10 @@ const WhatsappInbox = () => {
             {showAdminPanel && isAdmin ? (
               <AdminMonitoringPanel />
             ) : selectedChat ? (
-              <CustomerInfoPanel chatId={selectedChat?.id} />
+              <CustomerInfoPanel
+                chatId={selectedChat?.id}
+                onOpenConfig={() => setConfigDialogOpen(true)}
+              />
             ) : (
               <Box sx={{ p: 2, textAlign: 'center' }}>
                 <Typography variant="body2" color="text.secondary">
@@ -242,8 +295,47 @@ const WhatsappInbox = () => {
       {/* Configuration Dialog */}
       <WhatsAppConfigDialog
         open={configDialogOpen}
-        onClose={() => setConfigDialogOpen(false)}
+        onClose={() => {
+          setConfigDialogOpen(false);
+          // Recheck config status after closing dialog
+          checkConfigurationStatus()
+            .then(status => {
+              setConfigStatus(status);
+              if (status.valid) {
+                // Reload data if config is now valid
+                window.location.reload();
+              }
+            })
+            .catch(err => console.error('Failed to check config:', err));
+        }}
       />
+
+      {/* Configuration Error Snackbar */}
+      <Snackbar
+        open={configErrorSnackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setConfigErrorSnackbar({ open: false, message: '' })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          severity="warning"
+          onClose={() => setConfigErrorSnackbar({ open: false, message: '' })}
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              onClick={() => {
+                setConfigDialogOpen(true);
+                setConfigErrorSnackbar({ open: false, message: '' });
+              }}
+            >
+              Configure
+            </Button>
+          }
+        >
+          {configErrorSnackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

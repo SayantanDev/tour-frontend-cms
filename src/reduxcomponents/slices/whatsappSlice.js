@@ -28,6 +28,17 @@ const initialState = {
     teamNotes: {},
     isLoading: false,
     error: null,
+    // WhatsApp API Configuration
+    config: {
+        provider: process.env.REACT_APP_WHATSAPP_PROVIDER || 'twilio',
+        baseURL: process.env.REACT_APP_WHATSAPP_API_URL || '',
+        apiKey: process.env.REACT_APP_WHATSAPP_API_KEY || '',
+        apiSecret: process.env.REACT_APP_WHATSAPP_API_SECRET || '',
+        accountSid: process.env.REACT_APP_WHATSAPP_ACCOUNT_SID || '',
+        phoneNumberId: process.env.REACT_APP_WHATSAPP_PHONE_NUMBER_ID || '',
+        businessAccountId: process.env.REACT_APP_WHATSAPP_BUSINESS_ACCOUNT_ID || '',
+        apiVersion: process.env.REACT_APP_WHATSAPP_API_VERSION || 'v18.0',
+    },
 };
 
 const whatsappSlice = createSlice({
@@ -256,6 +267,21 @@ const whatsappSlice = createSlice({
         setError: (state, action) => {
             state.error = action.payload;
         },
+        setWhatsAppConfig: (state, action) => {
+            state.config = { ...state.config, ...action.payload };
+        },
+        clearWhatsAppConfig: (state) => {
+            state.config = {
+                provider: process.env.REACT_APP_WHATSAPP_PROVIDER || 'twilio',
+                baseURL: process.env.REACT_APP_WHATSAPP_API_URL || '',
+                apiKey: process.env.REACT_APP_WHATSAPP_API_KEY || '',
+                apiSecret: process.env.REACT_APP_WHATSAPP_API_SECRET || '',
+                accountSid: process.env.REACT_APP_WHATSAPP_ACCOUNT_SID || '',
+                phoneNumberId: process.env.REACT_APP_WHATSAPP_PHONE_NUMBER_ID || '',
+                businessAccountId: process.env.REACT_APP_WHATSAPP_BUSINESS_ACCOUNT_ID || '',
+                apiVersion: process.env.REACT_APP_WHATSAPP_API_VERSION || 'v18.0',
+            };
+        },
     },
 });
 
@@ -297,6 +323,8 @@ export const {
     markChatAsRead,
     setLoading,
     setError,
+    setWhatsAppConfig,
+    clearWhatsAppConfig,
 } = whatsappSlice.actions;
 
 export default whatsappSlice.reducer;

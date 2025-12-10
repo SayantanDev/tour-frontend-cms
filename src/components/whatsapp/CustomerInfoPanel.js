@@ -13,20 +13,23 @@ import {
   ListItemText,
   IconButton,
   Avatar,
+  Alert,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { getCustomerInfo, updateCustomerInfo } from '../../api/whatsappAPI';
 import moment from 'moment';
 
-const CustomerInfoPanel = ({ chatId }) => {
+const CustomerInfoPanel = ({ chatId, onOpenConfig }) => {
   const dispatch = useDispatch();
   const { selectedChat } = useSelector((state) => state.whatsapp);
   const [customerInfo, setCustomerInfo] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedInfo, setEditedInfo] = useState({});
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (selectedChat?.phoneNumber) {
@@ -37,35 +40,43 @@ const CustomerInfoPanel = ({ chatId }) => {
   const loadCustomerInfo = async () => {
     if (!selectedChat?.phoneNumber) return;
     setLoading(true);
+    setError('');
     try {
       const res = await getCustomerInfo(selectedChat.phoneNumber);
       setCustomerInfo(res.data);
       setEditedInfo(res.data || {});
     } catch (error) {
       console.error('Failed to load customer info:', error);
-      // Initialize with chat data if API fails
-      setCustomerInfo({
-        phoneNumber: selectedChat.phoneNumber,
-        name: selectedChat.customerName,
-        email: '',
-        address: '',
-        notes: '',
-        tags: [],
-        totalOrders: 0,
-        totalSpent: 0,
-        lastContact: selectedChat.lastMessageTime,
-      });
-      setEditedInfo({
-        phoneNumber: selectedChat.phoneNumber,
-        name: selectedChat.customerName,
-        email: '',
-        address: '',
-        notes: '',
-        tags: [],
-        totalOrders: 0,
-        totalSpent: 0,
-        lastContact: selectedChat.lastMessageTime,
-      });
+      const errorMessage = error.message || 'Failed to load customer info';
+
+      // Check if it's a configuration error
+      if (errorMessage.includes('Configuration') || errorMessage.includes('configure')) {
+        setError(errorMessage);
+      } else {
+        // Initialize with chat data if API fails (non-config errors)
+        setCustomerInfo({
+          phoneNumber: selectedChat.phoneNumber,
+          name: selectedChat.customerName,
+          email: '',
+          address: '',
+          notes: '',
+          tags: [],
+          totalOrders: 0,
+          totalSpent: 0,
+          lastContact: selectedChat.lastMessageTime,
+        });
+        setEditedInfo({
+          phoneNumber: selectedChat.phoneNumber,
+          name: selectedChat.customerName,
+          email: '',
+          address: '',
+          notes: '',
+          tags: [],
+          totalOrders: 0,
+          totalSpent: 0,
+          lastContact: selectedChat.lastMessageTime,
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -83,12 +94,15 @@ const CustomerInfoPanel = ({ chatId }) => {
 
   const handleSave = async () => {
     setLoading(true);
+    setError('');
     try {
       const res = await updateCustomerInfo(selectedChat.phoneNumber, editedInfo);
       setCustomerInfo(res.data);
       setIsEditing(false);
     } catch (error) {
       console.error('Failed to update customer info:', error);
+      const errorMessage = error.message || 'Failed to update customer info';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -130,6 +144,26 @@ const CustomerInfoPanel = ({ chatId }) => {
             </Box>
           )}
         </Box>
+
+        {error && (
+          <Alert
+            severity="error"
+            sx={{ mb: 2 }}
+            action={
+              onOpenConfig && (
+                <Button
+                  size="small"
+                  startIcon={<SettingsIcon />}
+                  onClick={onOpenConfig}
+                >
+                  Configure
+                </Button>
+              )
+            }
+          >
+            {error}
+          </Alert>
+        )}
 
         {loading && !customerInfo ? (
           <Typography variant="body2" color="text.secondary">
