@@ -7,7 +7,6 @@
     url('../assets/fonts/opensans-extrabold-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
-
 }
 
 @font-face {
@@ -16,7 +15,6 @@
     url('../assets/fonts/opensans-bold-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
-
 }
 
 @font-face {
@@ -25,7 +23,6 @@
     url('../assets/fonts/opensans-light-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
-
 }
 
 @font-face {
@@ -34,7 +31,6 @@
     url('../assets/fonts/opensans-regular-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
-
 }
 
 @font-face {
@@ -43,28 +39,134 @@
     url('../assets/fonts/opensans-semibold-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
-
 }
 
-$PrimaryColor : #0F61A9;
-$SecondaryColor : #212222;
-$SecondaryNewColor : #222222;
-$HeadingParaColor : #141414;
-$RequiredColor : #D32F2F;
-$TopMessageColor : #e5f6fd;
-$TopMessageFontColor: #11506b;
-$GreenBgColor: #2e7d32;
-$RedBgColor: #d32f2f;
-$GreyBgColor: #e0e0e0;
-$TableHeadBg : #eff2f7;
-$DashboardMainBg : #f2f6f9;
-$OrangeBgColor: #EF6C00;
-$FooterBgColor: #2F3139;
+// Modern Color Palette
+:root {
+  --primary-color: #1976d2;
+  --primary-light: #42a5f5;
+  --primary-dark: #1565c0;
+  --secondary-color: #9c27b0;
+  --secondary-light: #ba68c8;
+  --secondary-dark: #7b1fa2;
+  --accent-color: #00bcd4;
+  --success-color: #4caf50;
+  --warning-color: #ff9800;
+  --error-color: #f44336;
+  --background-default: #f5f7fa;
+  --background-paper: #ffffff;
+  --text-primary: #2c3e50;
+  --text-secondary: #546e7a;
+  --border-radius: 12px;
+  --border-radius-sm: 8px;
+  --border-radius-lg: 16px;
+  --transition-speed: 0.3s;
+}
 
-$BodyFont: 14px;
-$HeadingH1Font: 24px;
+// Gradient Utilities
+.gradient-primary {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+}
 
-/*--Mixins Starts Here--*/
+.gradient-secondary {
+  background: linear-gradient(135deg, var(--secondary-color) 0%, var(--secondary-light) 100%);
+}
+
+.gradient-accent {
+  background: linear-gradient(135deg, var(--accent-color) 0%, var(--primary-light) 100%);
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+// Glassmorphism Utilities
+.glass-effect {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+.glass-effect-dark {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+// Animation Keyframes
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+// Animation Classes
+.fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.5s ease-out;
+}
+
+.slide-in-right {
+  animation: slideInRight 0.5s ease-out;
+}
+
+.pulse-animation {
+  animation: pulse 2s infinite;
+}
+
+/*--Mixins--*/
 @mixin border-radius($val) {
   border-radius: $val;
   -webkit-border-radius: $val;
@@ -77,15 +179,23 @@ $HeadingH1Font: 24px;
   -ms-box-shadow: $val;
 }
 
+@mixin transition($val) {
+  transition: $val;
+  -webkit-transition: $val;
+  -ms-transition: $val;
+}
+
 body {
   top: 0 !important;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8eef3 100%);
+  min-height: 100vh;
 }
 
 body,
 .MuiGrid-root .MuiPaper-root {
-  font-size: $BodyFont;
-  color: $SecondaryNewColor;
-  font-family: 'open_sansregular', sans-serif !important;
+  font-size: 14px;
+  color: var(--text-primary);
+  font-family: 'open_sansregular', 'Open Sans', sans-serif !important;
 }
 
 label {
@@ -95,36 +205,40 @@ label {
 h1,
 p,
 label {
-  color: $SecondaryNewColor;
+  color: var(--text-primary);
 }
 
 h1 {
-  font-size: $HeadingH1Font;
-  font-weight: 400;
+  font-size: 24px;
+  font-weight: 600;
   margin-top: 0;
 }
 
 h2,
 h3 {
-  color: #000;
+  color: var(--text-primary);
   margin: 0px 0px 8px 0px;
+  font-weight: 600;
 }
 
 a {
-  color: $PrimaryColor;
+  color: var(--primary-color);
   text-decoration: none;
+  @include transition(all 0.3s ease);
 
   &:hover {
     text-decoration: none;
+    color: var(--primary-dark);
   }
 }
 
 p,
 label,
 a {
-  font-size: $BodyFont;
+  font-size: 14px;
 }
 
+// Utility Classes
 .align-right {
   text-align: right !important;
   display: flex;
@@ -142,9 +256,11 @@ a {
 .mar-16 {
   margin-top: 16px !important;
 }
-.mb-15{
-  margin-bottom: 15px!important;
+
+.mb-15 {
+  margin-bottom: 15px !important;
 }
+
 .mar-top-9 {
   margin-top: 9px;
   margin-bottom: 0;
@@ -164,8 +280,8 @@ a {
 
 ul {
   li {
-    font-size: $BodyFont;
-    color: #000;
+    font-size: 14px;
+    color: var(--text-primary);
   }
 }
 
@@ -174,17 +290,91 @@ p {
 }
 
 .required {
-  color: $RequiredColor;
+  color: var(--error-color);
 }
 
-.login-container {
-  position: 'absolute';
-  top: '50%';
-  right: '10%'; 
-  transform: 'translateY(-50%)';
+// Modern Card Styles
+.modern-card {
+  @include border-radius(var(--border-radius-lg));
+  @include boxShadow(0px 4px 20px rgba(0, 0, 0, 0.08));
+  @include transition(all 0.3s ease);
+  background: var(--background-paper);
+  padding: 24px;
+
+  &:hover {
+    @include boxShadow(0px 8px 30px rgba(0, 0, 0, 0.12));
+    transform: translateY(-4px);
+  }
 }
+
+// Modern Button Styles
+.modern-button {
+  @include border-radius(var(--border-radius-sm));
+  @include transition(all 0.3s ease);
+  padding: 10px 24px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-2px);
+    @include boxShadow(0px 4px 12px rgba(0, 0, 0, 0.15));
+  }
+
+  &.primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+    color: white;
+
+    &:hover {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+    }
+  }
+}
+
+// Scrollbar Styling
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+  border-radius: 10px;
+
+  &:hover {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+  }
+}
+
+// Login Page Specific Styles
+.login-container {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: shimmer 20s linear infinite;
+  }
+}
+
 .login-paper {
-  padding: '20px';
-  background-color: 'rgba(255, 255, 255, 0.8)';
-  backdrop-filter: 'blur(10px)';
+  position: relative;
+  z-index: 1;
 }

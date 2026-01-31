@@ -17,7 +17,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { addNotification, removeAllNotifications, removeNotification } from "../../../reduxcomponents/slices/notificationSlice";
 import { useNavigate } from "react-router-dom";
 
-const socketUrl = "http://localhost:8000";
+// export const PKG_URL = `${process.env.REACT_APP_BASE_URL}/cat-package`;
+const socketUrl = process.env.REACT_APP_BASE_URL;
 
 function Notification() {
   const dispatch = useDispatch();

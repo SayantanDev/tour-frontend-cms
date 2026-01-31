@@ -142,25 +142,31 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
         "& .MuiDrawer-paper": {
           width: fetchConfigData.drawerWidth,
           boxSizing: "border-box",
-          // pt: "64px",
           marginTop: "64px",
-          // background: 'linear-gradient(180deg, #1a237e, #3949ab)', // Blue gradient
-          color: '#fff',
+          background: '#e8e1e1',
+          color: '#2c3e50',
           borderRight: 'none',
+          boxShadow: '4px 0 20px rgba(0,0,0,0.1)',
         },
       }}
       variant="persistent"
       anchor="left"
       open={drawerOpen}
     >
-      {/* <Toolbar /> */}
-
       <List sx={{ p: 0 }}>
         {fetchConfigData.navigationStrings
           .filter((item) => checkPermission(item.module, "view"))
           .map((item) => {
             const Icon = iconMap[item.icon];
             const isActive = currentTab === item.label;
+
+            const showBadge =
+              (item.label === "Inquiry" && inquiryCount > 0) ||
+              (item.label === "Leads" && operationCount > 0);
+
+            const badgeCount =
+              item.label === "Inquiry" ? inquiryCount :
+                item.label === "Leads" ? operationCount : 0;
 
             return (
               <ListItem disablePadding key={item.link}>
@@ -169,32 +175,72 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
                   selected={isActive}
                   sx={{
                     px: 2,
-                    py: 1,
-                    borderRadius: 1,
+                    py: 1.5,
+                    borderRadius: 2,
                     mx: 1,
                     my: 0.5,
-                    backgroundColor: isActive ? '#00e676' : 'transparent', // Green highlight
-                    color: isActive ? '#1a237e' : '#fff',
+                    backgroundColor: isActive ? '#1976d2' : 'transparent',
+                    color: isActive ? '#fff' : '#2c3e50',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    transition: 'all 0.3s ease',
+                    '&::before': isActive ? {
+                      content: '""',
+                      position: 'absolute',
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: '4px',
+                      background: 'linear-gradient(180deg, #42a5f5 0%, #1976d2 100%)',
+                      borderRadius: '0 4px 4px 0',
+                    } : {},
                     '&:hover': {
-                      backgroundColor: isActive ? '#00c853' : 'rgba(255,255,255,0.1)',
+                      backgroundColor: isActive ? '#1565c0' : 'rgba(25, 118, 210, 0.1)',
+                      transform: 'translateX(4px)',
+                      boxShadow: isActive ? '0 4px 12px rgba(25, 118, 210, 0.4)' : 'none',
                     },
                   }}
                 >
                   <ListItemIcon
                     sx={{
-                      // color: isActive ? '#1a237e' : '#fff',
-                      minWidth: 36,
+                      color: isActive ? '#fff' : '#546e7a',
+                      minWidth: 40,
+                      transition: 'all 0.3s ease',
                     }}
                   >
                     {Icon && <Icon fontSize="small" />}
                   </ListItemIcon>
-                  <ListItemText
-                    primary={
-                      <Typography noWrap variant="body2" fontWeight={500}>
-                        {item.label}
-                      </Typography>
-                    }
-                  />
+
+                  {showBadge ? (
+                    <Badge
+                      badgeContent={badgeCount}
+                      color="error"
+                      sx={{
+                        '& .MuiBadge-badge': {
+                          right: -12,
+                          top: 10,
+                          fontWeight: 600,
+                          fontSize: '0.65rem',
+                        }
+                      }}
+                    >
+                      <ListItemText
+                        primary={
+                          <Typography noWrap variant="body2" fontWeight={isActive ? 600 : 500}>
+                            {item.label}
+                          </Typography>
+                        }
+                      />
+                    </Badge>
+                  ) : (
+                    <ListItemText
+                      primary={
+                        <Typography noWrap variant="body2" fontWeight={isActive ? 600 : 500}>
+                          {item.label}
+                        </Typography>
+                      }
+                    />
+                  )}
                 </ListItemButton>
               </ListItem>
             );
