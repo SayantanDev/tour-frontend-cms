@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   Box,
   Button,
@@ -19,6 +19,12 @@ import {
   IconButton,
   TablePagination,
 } from '@mui/material';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getPaginationRowModel,
+  flexRender,
+} from "@tanstack/react-table";
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import {
@@ -180,8 +186,84 @@ const AllPermissions = () => {
     }
   };
 
+  // Column definitions for @tanstack/react-table
+  const columns = useMemo(() => [
+    {
+      accessorKey: "module",
+      header: "Module",
+    },
+    {
+      accessorKey: "value",
+      header: "Values",
+      cell: ({ getValue }) => {
+        const value = getValue();
+        return Array.isArray(value) ? value.join(', ') : value;
+      },
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => {
+        const perm = row.original;
+        return (
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
+            <IconButton
+              color="primary"
+              size="small"
+              onClick={() => handleEditClick(perm)}
+            >
+              <EditIcon />
+            </IconButton>
+            <IconButton
+              color="error"
+              size="small"
+              onClick={() => handleDelete(perm._id)}
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Box>
+        );
+      },
+    },
+  ], [handleEditClick, handleDelete]);
+
+  // Table instance
+  const table = useReactTable({
+    data: filteredPermissions,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: rowsPerPage,
+        pageIndex: page,
+      },
+    },
+    state: {
+      pagination: {
+        pageIndex: page,
+        pageSize: rowsPerPage,
+      },
+    },
+    onPaginationChange: (updater) => {
+      const newPagination = typeof updater === "function" 
+        ? updater({ pageIndex: page, pageSize: rowsPerPage })
+        : updater;
+      setPage(newPagination.pageIndex);
+    },
+    manualPagination: false,
+  });
+
+  // Sync table pagination with state
+  useEffect(() => {
+    if (table.getState().pagination.pageIndex !== page) {
+      table.setPageIndex(page);
+    }
+  }, [page, table]);
+
   const handleChangePage = (event, newpage) => {
     setPage(newpage);
+    table.setPageIndex(newpage);
   }
 
   return (
@@ -226,51 +308,44 @@ const AllPermissions = () => {
       }}>
         <Table sx={{padding: '6px 12px'}} size='small'>
           <TableHead>
-            <TableRow>
-              <TableCell>
-                <b>Module</b>
-              </TableCell>
-              <TableCell>
-                <b>Values</b>
-              </TableCell>
-              <TableCell align="right">
-                <b>Actions</b>
-              </TableCell>
-            </TableRow>
+            {table.getHeaderGroups().map(headerGroup => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map(header => (
+                  <TableCell
+                    key={header.id}
+                    align={header.id === "actions" ? "right" : "left"}
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
           </TableHead>
           <TableBody>
-            {filteredPermissions.length > 0 ? (
-              filteredPermissions
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((perm) => (
-                  <TableRow key={perm._id}>
-                    <TableCell>{perm.module}</TableCell>
-                    <TableCell>
-                      {Array.isArray(perm.value)
-                        ? perm.value.join(', ')
-                        : perm.value}
+            {table.getRowModel().rows.length > 0 ? (
+              table.getRowModel().rows.map(row => (
+                <TableRow key={row.original._id}>
+                  {row.getVisibleCells().map(cell => (
+                    <TableCell
+                      key={cell.id}
+                      align={cell.column.id === "actions" ? "right" : "left"}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
-                    <TableCell align="right">
-                      <IconButton
-                        color="primary"
-                        size="small"
-                        onClick={() => handleEditClick(perm)}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        color="error"
-                        size="small"
-                        onClick={() => handleDelete(perm._id)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))
+                  ))}
+                </TableRow>
+              ))
             ) : (
               <TableRow>
-                <TableCell colSpan={3} align="center">
+                <TableCell colSpan={columns.length} align="center">
                   No permissions found
                 </TableCell>
               </TableRow>

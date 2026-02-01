@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Box, Typography, Button, Stack, TextField, FormControl, Select, MenuItem, InputLabel } from "@mui/material";
+import { useSelector, useDispatch } from "react-redux";
 import AddIcon from "@mui/icons-material/Add";
 
 import { getAllHotels, insertHotel, updateHotel, deleteHotel } from "../../api/hotelsAPI";
+import { setAllHotels } from "../../reduxcomponents/slices/hotelsSlice";
 import useSnackbar from "../../hooks/useSnackbar";
 import usePermissions from "../../hooks/UsePermissions";
 
@@ -49,6 +51,8 @@ const HotelsPage = () => {
 
   const { showSnackbar, SnackbarComponent } = useSnackbar();
   const getPermission = usePermissions();
+  const configData = useSelector((state) => state.config.configData || {});
+  const dispatch = useDispatch();
 
   const permissions = {
     edit: getPermission("hotel", "alter"),
@@ -62,11 +66,12 @@ const HotelsPage = () => {
       try {
         const list = await getAllHotels();
         setHotels(list);
+        dispatch(setAllHotels(list)); // Update Redux
       } catch (err) {
         console.error(err);
       }
     })();
-  }, []);
+  }, [dispatch]);
 
   /** HANDLERS **/
   const handleView = (hotel) => {
@@ -92,7 +97,9 @@ const HotelsPage = () => {
     if (!window.confirm("Are you sure?")) return;
     try {
       await deleteHotel(id);
-      setHotels(hotels.filter((h) => h._id !== id));
+      const updatedHotels = hotels.filter((h) => h._id !== id);
+      setHotels(updatedHotels);
+      dispatch(setAllHotels(updatedHotels)); // Update Redux
       showSnackbar("Hotel deleted", "success");
     } catch {
       showSnackbar("Error deleting hotel", "error");
@@ -101,15 +108,18 @@ const HotelsPage = () => {
 
   const handleSubmit = async (values) => {
     try {
+      let updatedHotels;
       if (drawerMode === "edit") {
         await updateHotel(selectedHotel._id, values);
-        setHotels(
-          hotels.map((h) => (h._id === selectedHotel._id ? { ...values, _id: h._id } : h))
-        );
+        updatedHotels = hotels.map((h) => (h._id === selectedHotel._id ? { ...values, _id: h._id } : h));
+        setHotels(updatedHotels);
+        dispatch(setAllHotels(updatedHotels)); // Update Redux
         showSnackbar("Hotel updated", "success");
       } else {
         const res = await insertHotel(values);
-        setHotels([...hotels, res.data]);
+        updatedHotels = [...hotels, res.data];
+        setHotels(updatedHotels);
+        dispatch(setAllHotels(updatedHotels)); // Update Redux
         showSnackbar("Hotel added", "success");
       }
 
@@ -165,7 +175,11 @@ const HotelsPage = () => {
           <InputLabel>Type</InputLabel>
           <Select value={type} onChange={(e) => setType(e.target.value)} label="Type">
             <MenuItem value="">All</MenuItem>
-            {[...new Set(hotels.map((h) => h.type))].map((t) => (
+            {configData?.additionalCosts?.hotel?.map((hotelType) => (
+              <MenuItem key={hotelType.type} value={hotelType.type}>
+                {hotelType.type}
+              </MenuItem>
+            )) || [...new Set(hotels.map((h) => h.type))].map((t) => (
               <MenuItem key={t} value={t}>{t}</MenuItem>
             ))}
           </Select>

@@ -1,12 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-    Container, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-    IconButton, Collapse, Box, Card, CardContent, Tooltip, CircularProgress, Grid, TextField, Checkbox,
-    TablePagination, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, MenuItem, Select,
-    OutlinedInput, InputLabel, FormControl, Chip, Stack
+    Container, Typography, Button, IconButton, Collapse, Box, Card, CardContent, Tooltip, CircularProgress, TextField, Checkbox,
+    Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, MenuItem, Select,
+    OutlinedInput, InputLabel, FormControl, Chip, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination
 } from "@mui/material";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
+import {
+    useReactTable,
+    getCoreRowModel,
+    getPaginationRowModel,
+    getExpandedRowModel,
+    flexRender,
+} from "@tanstack/react-table";
 import { getAllInquiries, InquiryUserAssign, InquiryUserRemove } from "../../api/inquiryAPI";
 import { getAllUsers } from "../../api/userAPI";
 import { useDispatch } from "react-redux";
@@ -86,8 +92,9 @@ const Inquiry = () => {
         );
     };
 
-    const handleChangePage = (event, newPage) => setPage(newPage);
-    const handleToggleView = (index) => setOpenRow(openRow === index ? null : index);
+    const handleChangePage = (event, newPage) => {
+        setPage(newPage);
+    };
 
     const handleInquiryClick = (inquiry) => {
         dispatch(setSelectedInquiry(inquiry));
@@ -152,8 +159,168 @@ const Inquiry = () => {
     const removableUserIds = assignedUsersPerInquiry.reduce((a, b) => a.filter(id => b.includes(id)), assignedUsersPerInquiry[0] || []);
     const removableUsers = userList.filter(user => removableUserIds.includes(user.id));
 
+    // Column definitions for @tanstack/react-table
+    const columns = useMemo(() => {
+        const cols = [];
+        
+        if (hasPermission("inquiry", "alter")) {
+            cols.push({
+                id: "select",
+                header: ({ table }) => (
+                    <Checkbox
+                        size="small"
+                        checked={table.getIsAllRowsSelected()}
+                        indeterminate={table.getIsSomeRowsSelected()}
+                        onChange={table.getToggleAllRowsSelectedHandler()}
+                    />
+                ),
+                cell: ({ row }) => (
+                    <Checkbox
+                        size="small"
+                        checked={row.getIsSelected()}
+                        onChange={row.getToggleSelectedHandler()}
+                    />
+                ),
+                enableSorting: false,
+                enableHiding: false,
+            });
+        }
+        
+        cols.push(
+            {
+                accessorKey: "guest_name",
+                header: "Name",
+            },
+            {
+                accessorKey: "guest_email",
+                header: "Email",
+            },
+            {
+                accessorKey: "guest_phone",
+                header: "Phone",
+            },
+            {
+                accessorKey: "arrival_date",
+                header: "Arrival Date",
+                cell: ({ getValue }) => new Date(getValue()).toLocaleDateString(),
+            }
+        );
+        
+        if (hasPermission("inquiry", "alter")) {
+            cols.push({
+                accessorKey: "assigned_users",
+                header: "Assigned Users",
+                cell: ({ row }) => getAssignedUserNames(row.original),
+            });
+        }
+        
+        cols.push(
+            {
+                id: "quote",
+                header: "Quote",
+                cell: ({ row }) => (
+                    <Button size="small" onClick={() => handleInquiryClick(row.original)}>
+                        Generate
+                    </Button>
+                ),
+                enableSorting: false,
+            },
+            {
+                id: "actions",
+                header: "Actions",
+                cell: ({ row }) => {
+                    const inquiry = row.original;
+                    return (
+                        <>
+                            <Tooltip title="View">
+                                <IconButton onClick={() => row.toggleExpanded()} size="small">
+                                    <Visibility fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                            {hasPermission("inquiry", "alter") && (
+                                <>
+                                    <Tooltip title="Edit">
+                                        <IconButton size="small">
+                                            <Edit fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Delete">
+                                        <IconButton onClick={() => handleOpenDeleteDialog(inquiry._id)} size="small">
+                                            <Delete fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                </>
+                            )}
+                        </>
+                    );
+                },
+                enableSorting: false,
+            }
+        );
+        
+        return cols;
+    }, [hasPermission, filteredInquiries, userList, handleInquiryClick, handleOpenDeleteDialog, getAssignedUserNames]);
+
+    // Row selection state for table
+    const [rowSelection, setRowSelection] = useState({});
+
+    // Table instance
+    const table = useReactTable({
+        data: filteredInquiries,
+        columns,
+        getCoreRowModel: getCoreRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        getExpandedRowModel: getExpandedRowModel(),
+        initialState: {
+            pagination: {
+                pageSize: rowsPerPage,
+                pageIndex: page,
+            },
+        },
+        state: {
+            expanded: openRow ? { [openRow]: true } : {},
+            rowSelection,
+            pagination: {
+                pageIndex: page,
+                pageSize: rowsPerPage,
+            },
+        },
+        enableRowSelection: true,
+        onRowSelectionChange: setRowSelection,
+        onExpandedChange: (updater) => {
+            const currentExpanded = openRow ? { [openRow]: true } : {};
+            const newExpanded = typeof updater === "function" 
+                ? updater(currentExpanded)
+                : updater;
+            const expandedKeys = Object.keys(newExpanded).filter(key => newExpanded[key]);
+            // Only allow one row to be expanded at a time
+            setOpenRow(expandedKeys.length > 0 ? expandedKeys[expandedKeys.length - 1] : null);
+        },
+        onPaginationChange: (updater) => {
+            const newPagination = typeof updater === "function" 
+                ? updater({ pageIndex: page, pageSize: rowsPerPage })
+                : updater;
+            setPage(newPagination.pageIndex);
+        },
+        getRowId: (row) => row._id,
+        manualPagination: false,
+    });
+
+    // Sync selected inquiries with table selection state
+    useEffect(() => {
+        const selectedIds = Object.keys(rowSelection)
+            .filter(key => rowSelection[key])
+            .map(key => {
+                // Find the inquiry by matching the row ID (which is the _id)
+                const inquiry = filteredInquiries.find(i => i._id === key);
+                return inquiry?._id;
+            })
+            .filter(Boolean);
+        setSelectedInquiries(selectedIds);
+    }, [rowSelection, filteredInquiries]);
+
     return (
-        <Container>
+        <Container maxWidth={false}>
             
             <Stack
                 direction="row"
@@ -209,105 +376,84 @@ const Inquiry = () => {
                 <Box display="flex" justifyContent="center"><CircularProgress /></Box>
             ) : (
                 <>
-                    <TableContainer component={Paper}>
-                        <Table size="small">
+                    <TableContainer component={Paper} sx={{ width: '100%' }}>
+                        <Table size="small" sx={{ width: '100%' }}>
                             <TableHead>
-                                <TableRow>
-                                    {hasPermission("inquiry", "alter") && (
-                                        <TableCell padding="checkbox">
-                                            <Checkbox
-                                                size="small"
-                                                checked={selectedInquiries.length === filteredInquiries.length}
-                                                onChange={(e) => setSelectedInquiries(e.target.checked ? filteredInquiries.map(i => i._id) : [])}
-                                            />
-                                        </TableCell>
-                                    )}
-                                    <TableCell>Name</TableCell>
-                                    <TableCell>Email</TableCell>
-                                    <TableCell>Phone</TableCell>
-                                    <TableCell>Arrival Date</TableCell>
-                                    {hasPermission("inquiry", "alter") && (
-                                        <TableCell>Assigned Users</TableCell>
-                                    )}
-                                    <TableCell sx={{ width: 100 }}>Quote</TableCell>
-                                    <TableCell sx={{ width: 150 }}>Actions</TableCell>
-                                </TableRow>
+                                {table.getHeaderGroups().map(headerGroup => (
+                                    <TableRow key={headerGroup.id}>
+                                        {headerGroup.headers.map(header => (
+                                            <TableCell
+                                                key={header.id}
+                                                sx={header.id === "select" ? { padding: "checkbox" } : {}}
+                                            >
+                                                {header.isPlaceholder
+                                                    ? null
+                                                    : flexRender(
+                                                        header.column.columnDef.header,
+                                                        header.getContext()
+                                                    )}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                ))}
                             </TableHead>
                             <TableBody>
-                                {                           filteredInquiries.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((inquiry, index) => (
-                                    <React.Fragment key={inquiry._id}>
-                                        <TableRow>
-                                            {hasPermission("inquiry", "alter") && (
-                                                <TableCell padding="checkbox">
-                                                    <Checkbox
-                                                        size="small"
-                                                        checked={selectedInquiries.includes(inquiry._id)}
-                                                        onChange={(e) => {
-                                                            const updated = e.target.checked
-                                                                ? [...selectedInquiries, inquiry._id]
-                                                                : selectedInquiries.filter(id => id !== inquiry._id);
-                                                            setSelectedInquiries(updated);
-                                                        }}
-                                                    />
-                                                </TableCell>
+                                {table.getRowModel().rows.map(row => {
+                                    const inquiry = row.original;
+                                    const isExpanded = row.getIsExpanded();
+                                    return (
+                                        <React.Fragment key={row.id}>
+                                            <TableRow>
+                                                {row.getVisibleCells().map(cell => (
+                                                    <TableCell
+                                                        key={cell.id}
+                                                        sx={cell.column.id === "select" ? { padding: "checkbox" } : {}}
+                                                    >
+                                                        {flexRender(
+                                                            cell.column.columnDef.cell,
+                                                            cell.getContext()
+                                                        )}
+                                                    </TableCell>
+                                                ))}
+                                            </TableRow>
+                                            {isExpanded && (
+                                                <TableRow>
+                                                    <TableCell
+                                                        colSpan={row.getVisibleCells().length}
+                                                        sx={{ paddingBottom: 0, paddingTop: 0 }}
+                                                    >
+                                                        <Collapse in={isExpanded}>
+                                                            <Box margin={2}>
+                                                                <Card variant="outlined">
+                                                                    <CardContent sx={{ padding: 1 }}>
+                                                                        <Typography variant="body2">Lead Source: {inquiry.lead_source}</Typography>
+                                                                        <Typography variant="body2">Message: {inquiry.guest_message}</Typography>
+                                                                        <Typography variant="body2">Verified: {inquiry.verifyed ? "Yes" : "No"}</Typography>
+                                                                        <Typography variant="body2">
+                                                                            Arrival: 
+                                                                            {new Date(inquiry.arrival_date).toLocaleString()}
+                                                                        </Typography>
+                                                                    </CardContent>
+                                                                </Card>
+                                                            </Box>
+                                                        </Collapse>
+                                                    </TableCell>
+                                                </TableRow>
                                             )}
-                                            <TableCell>{inquiry.guest_name}</TableCell>
-                                            <TableCell>{inquiry.guest_email}</TableCell>
-                                            <TableCell>{inquiry.guest_phone}</TableCell>
-                                            <TableCell>{new Date(inquiry.arrival_date).toLocaleDateString()}</TableCell>
-                                            {hasPermission("inquiry", "alter") && (
-                                                <TableCell>{getAssignedUserNames(inquiry)}</TableCell>
-                                            )}
-                                            <TableCell>
-                                                <Button size="small" onClick={() => handleInquiryClick(inquiry)}>Generate</Button>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Tooltip title="View">
-                                                    <IconButton onClick={() => handleToggleView(index)} size="small">
-                                                        <Visibility fontSize="small" />
-                                                    </IconButton>
-                                                </Tooltip>
-                                                {hasPermission("inquiry", "alter") && (
-                                                    <>
-                                                        <Tooltip title="Edit">
-                                                            <IconButton size="small">
-                                                                <Edit fontSize="small" />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                        <Tooltip title="Delete">
-                                                            <IconButton onClick={() => handleOpenDeleteDialog(inquiry._id)} size="small">
-                                                                <Delete fontSize="small" />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                    </>
-                                                )}
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow>
-                                            <TableCell colSpan={8} sx={{ paddingBottom: 0, paddingTop: 0 }}>
-                                                <Collapse in={openRow === index}>
-                                                    <Box margin={2}>
-                                                        <Card variant="outlined">
-                                                            <CardContent sx={{ padding: 1 }}>
-                                                                <Typography variant="body2">Lead Source: {inquiry.lead_source}</Typography>
-                                                                <Typography variant="body2">Message: {inquiry.guest_message}</Typography>
-                                                                <Typography variant="body2">Verified: {inquiry.verifyed ? "Yes" : "No"}</Typography>
-                                                                <Typography variant="body2">
-                                                                    Arrival: 
-                                                                    {new Date(inquiry.arrival_date).toLocaleString()}
-                                                                </Typography>
-                                                            </CardContent>
-                                                        </Card>
-                                                    </Box>
-                                                </Collapse>
-                                            </TableCell>
-                                        </TableRow>
-                                    </React.Fragment>
-                                ))}
+                                        </React.Fragment>
+                                    );
+                                })}
                             </TableBody>
                         </Table>
                     </TableContainer>
-                    <TablePagination component="div" count={filteredInquiries.length} page={page} onPageChange={handleChangePage} rowsPerPage={rowsPerPage} rowsPerPageOptions={[30]} />
+                    <TablePagination
+                        component="div"
+                        count={filteredInquiries.length}
+                        page={table.getState().pagination.pageIndex}
+                        onPageChange={handleChangePage}
+                        rowsPerPage={table.getState().pagination.pageSize}
+                        rowsPerPageOptions={[30]}
+                    />
                 </>
             )}
 

@@ -117,24 +117,6 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
   );
 
   return (
-    // <Drawer
-    //   sx={{
-    //     width: CONFIG_STR.drawerWidth,
-    //     flexShrink: 0,
-    //     "& .MuiDrawer-paper": {
-    //       width: CONFIG_STR.drawerWidth,
-    //       boxSizing: "border-box",
-    //       marginTop: "64px",
-    //       backgroundColor: "#fafafa",
-    //       borderRight: "1px solid #ddd",
-    //     },
-    //   }}
-    //   variant="persistent"
-    //   anchor="left"
-    //   open={drawerOpen}
-    // >
-    //   {drawer}
-    // </Drawer>
     <Drawer
       sx={{
         width: fetchConfigData.drawerWidth,
@@ -146,7 +128,6 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
           background: '#e8e1e1',
           color: '#2c3e50',
           borderRight: 'none',
-          boxShadow: '4px 0 20px rgba(0,0,0,0.1)',
         },
       }}
       variant="persistent"

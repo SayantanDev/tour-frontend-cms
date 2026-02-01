@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { Container, TextField, Button, Typography, Paper, Box } from '@mui/material';
+import { Container, TextField, Button, Typography, Paper, Box, InputAdornment, IconButton } from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { addLoginToken } from '../../reduxcomponents/slices/tokenSlice';
 import { loginUser } from '../../api/userAPI';
 import { setConfigData } from '../../reduxcomponents/slices/configSlice';
@@ -14,6 +15,13 @@ const Login = () => {
         email: '',
         password: '',
     });
+    const [showPassword, setShowPassword] = useState(false);
+
+    const handleClickShowPassword = () => setShowPassword((show) => !show);
+
+    const handleMouseDownPassword = (event) => {
+        event.preventDefault();
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -49,35 +57,22 @@ const Login = () => {
 
     return (
         <Box
-            className="login-container fade-in"
             sx={{
                 minHeight: '100vh',
+                width: '100%',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                position: 'relative',
-                overflow: 'hidden',
-                '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    top: '-50%',
-                    left: '-50%',
-                    width: '200%',
-                    height: '200%',
-                    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px)',
-                    backgroundSize: '50px 50px',
-                    animation: 'shimmer 20s linear infinite',
-                },
+                backgroundColor: 'transparent',
+                // Using transparent to let any global background image show through.
+                // If you want a specific background color, change this.
             }}
         >
             <Box
                 sx={{
-                    position: 'relative',
-                    zIndex: 1,
                     width: '100%',
-                    maxWidth: 450,
+                    maxWidth: 550, // Made wider as requested
                     px: 3,
                 }}
             >
@@ -86,39 +81,34 @@ const Login = () => {
                         src="/easo.png"
                         alt="EasoTrip Logo"
                         style={{
-                            maxWidth: '200px',
+                            maxWidth: '220px', // Slightly larger logo for wider form
                             width: '100%',
                             height: 'auto',
                             display: 'block',
                             margin: '0 auto',
-                            filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))',
                         }}
                     />
                 </Box>
 
                 <Paper
                     elevation={0}
-                    className="glass-effect"
                     sx={{
                         width: '100%',
-                        p: { xs: 3, sm: 4 },
-                        background: 'rgba(255, 255, 255, 0.95)',
-                        backdropFilter: 'blur(20px)',
-                        borderRadius: 4,
-                        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-                        border: '1px solid rgba(255, 255, 255, 0.18)',
+                        p: { xs: 3, sm: 5 }, // Increased padding
+                        borderRadius: 3,
+                        backgroundColor: '#ffffff',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                        border: '1px solid #edf2f7',
                     }}
                 >
                     <Typography
-                        variant="h4"
+                        variant="h5"
                         align="center"
                         gutterBottom
                         sx={{
                             fontWeight: 700,
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            mb: 3,
+                            color: '#1a202c',
+                            mb: 1,
                         }}
                     >
                         Welcome Back
@@ -127,9 +117,9 @@ const Login = () => {
                     <Typography
                         variant="body2"
                         align="center"
-                        sx={{ mb: 3, color: 'text.secondary' }}
+                        sx={{ mb: 4, color: '#718096' }}
                     >
-                        Sign in to access your tour management dashboard
+                        Please enter your details to sign in
                     </Typography>
 
                     <form onSubmit={handleSubmit} noValidate>
@@ -144,11 +134,19 @@ const Login = () => {
                             type="email"
                             autoComplete="email"
                             autoFocus
+                            variant="outlined"
                             sx={{
+                                mb: 2,
                                 '& .MuiOutlinedInput-root': {
-                                    backgroundColor: '#e8e1e1',
-                                    '&:hover': {
-                                        backgroundColor: '#e8e1e1',
+                                    backgroundColor: '#f8fafc',
+                                    '& fieldset': {
+                                        borderColor: '#e2e8f0',
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: '#cbd5e0',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: '#1976d2',
                                     },
                                 },
                             }}
@@ -161,13 +159,35 @@ const Login = () => {
                             name="password"
                             onChange={handleChange}
                             label="Password"
-                            type="password"
+                            type={showPassword ? 'text' : 'password'}
                             autoComplete="current-password"
+                            variant="outlined"
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            aria-label="toggle password visibility"
+                                            onClick={handleClickShowPassword}
+                                            onMouseDown={handleMouseDownPassword}
+                                            edge="end"
+                                        >
+                                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }}
                             sx={{
+                                mb: 3,
                                 '& .MuiOutlinedInput-root': {
-                                    backgroundColor: '#e8e1e1',
-                                    '&:hover': {
-                                        backgroundColor: '#e8e1e1',
+                                    backgroundColor: '#f8fafc',
+                                    '& fieldset': {
+                                        borderColor: '#e2e8f0',
+                                    },
+                                    '&:hover fieldset': {
+                                        borderColor: '#cbd5e0',
+                                    },
+                                    '&.Mui-focused fieldset': {
+                                        borderColor: '#1976d2',
                                     },
                                 },
                             }}
@@ -176,19 +196,16 @@ const Login = () => {
                             type="submit"
                             fullWidth
                             variant="contained"
+                            disableElevation
                             sx={{
-                                mt: 3,
-                                mb: 2,
                                 py: 1.5,
                                 fontSize: '1rem',
                                 fontWeight: 600,
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                boxShadow: '0 4px 15px 0 rgba(102, 126, 234, 0.4)',
-                                transition: 'all 0.3s ease',
+                                textTransform: 'none',
+                                borderRadius: 2,
+                                backgroundColor: '#1976d2',
                                 '&:hover': {
-                                    background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
-                                    boxShadow: '0 6px 20px 0 rgba(102, 126, 234, 0.6)',
-                                    transform: 'translateY(-2px)',
+                                    backgroundColor: '#1565c0',
                                 },
                             }}
                         >
@@ -201,9 +218,9 @@ const Login = () => {
                     variant="body2"
                     align="center"
                     sx={{
-                        mt: 3,
-                        color: 'rgba(255, 255, 255, 0.9)',
-                        textShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                        mt: 4,
+                        color: 'rgba(255, 255, 255, 0.9)', // Kept light for potential dark background
+                        textShadow: '0 1px 2px rgba(0,0,0,0.3)', // Added shadow for readability
                     }}
                 >
                     © 2026 EasoTrip. All rights reserved.

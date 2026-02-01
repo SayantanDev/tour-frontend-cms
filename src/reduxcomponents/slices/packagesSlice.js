@@ -5,8 +5,9 @@ const initialeditState = {
     fetchNewPackageInfo: {},
     fetchNewPackageItinerary: {},
     checkItinery: false,
-    checkReach: false, 
+    checkReach: false,
     loading: false,
+    allPackages: [],
 };
 
 const Packages = createSlice({
@@ -41,9 +42,12 @@ const Packages = createSlice({
         },
         removeSelectedPackage: (state, action) => {
             state.fetchSelectedPackage = {};
+        },
+        setAllPackages: (state, action) => {
+            state.allPackages = action.payload;
         }
     }
 });
 
-export const { setSelectedPackage, setNewPackageItinerary, setNewPackageInfo, removePackageInfo,removePackageItinerary,setCheckItinery,setCheckReach, removeSelectedPackage } = Packages.actions;
+export const { setSelectedPackage, setNewPackageItinerary, setNewPackageInfo, removePackageInfo, removePackageItinerary, setCheckItinery, setCheckReach, removeSelectedPackage, setAllPackages } = Packages.actions;
 export default Packages.reducer;

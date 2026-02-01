@@ -1,10 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { Container, Typography, Button, IconButton, Tooltip, Box, Chip, MenuItem, Menu, Modal, Grid, Paper, Divider, TextField, Grid2 } from "@mui/material";
-
+import React, { useEffect, useState, useMemo } from "react";
+import { Container, Typography, Button, IconButton, Tooltip, Box, Chip, MenuItem, Menu, Modal, Grid, Paper, Divider, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination } from "@mui/material";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getPaginationRowModel,
+  flexRender,
+} from "@tanstack/react-table";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import DataTable from "../../components/dataTable";
 import { getAllQueries, updateQueries } from "../../api/queriesAPI";
 import usePermissions from "../../hooks/UsePermissions";
 import NotAuthorized from "../NotAuthorized";
@@ -47,6 +51,9 @@ const Query = () => {
     const [statusQuery, setStatusQuery] = useState("");
     const [locationQuery, setLocationQuery] = useState("")
     const [editableRowId, setEditableRowId] = useState(null)
+    const [editedRowData, setEditedRowData] = useState({});
+    const [page, setPage] = useState(0);
+    const [rowsPerPage, setRowsPerPage] = useState(5);
     const navigate = useNavigate();
     useEffect(() => {
         if (!canView) return; // Stop fetching if the user cannot view
@@ -163,107 +170,287 @@ const Query = () => {
         return matchesSearch && matchesDate && matchesStatus && matchLocation;
     });
 
+    // Handle save edit
+    const handleSaveEdit = async (row) => {
+        try {
+            const editObj = {};
+            if (editedRowData.name !== undefined) {
+                editObj["guest_info.guest_name"] = editedRowData.name;
+            }
+            if (editedRowData.contact !== undefined) {
+                editObj["guest_info.guest_phone"] = editedRowData.contact;
+            }
+            if (editedRowData.bookingDate !== undefined) {
+                editObj["booking_date"] = editedRowData.bookingDate;
+            }
+            if (editedRowData.tourDate !== undefined) {
+                editObj["travel_date"] = editedRowData.tourDate;
+            }
+            if (editedRowData.cost !== undefined) {
+                editObj["cost"] = editedRowData.cost;
+            }
+            if (editedRowData.advancePayment !== undefined) {
+                editObj["advancePayment"] = editedRowData.advancePayment;
+            }
 
+            if (Object.keys(editObj).length > 0) {
+                await updateQueries(row.id, editObj);
+                setEditableRowId(null);
+                setEditedRowData({});
+                fetchQuery();
+            }
+        } catch (error) {
+            console.error("Update failed:", error);
+        }
+    };
 
-    const columns = [
+    // Column definitions for @tanstack/react-table
+    const columns = useMemo(() => [
         {
-            field: "name",
-            headerName: "Name",
-            width: 200,
-            editable: (params) => params.id === editableRowId,
-        },
-        {
-            field: "contact",
-            headerName: "Contact",
-            width: 110,
-            editable: (params) => params.id === editableRowId,
-        },
-        {
-            field: "bookingDate",
-            headerName: "Booking Date",
-            width: 130,
-            editable: (params) => params.id === editableRowId,
-        },
-        {
-            field: "tourDate",
-            headerName: "Tour Date",
-            width: 130,
-            editable: (params) => params.id === editableRowId,
-        },
-        {
-            field: "bookingStatus",
-            headerName: "Lead Stage",
-            width: 120,
-
-            renderCell: (params) => (
-                <>
-                    <Tooltip title={`${params.row.bookingStatus}`}>
-                        <Chip
-                            label={params.row.bookingStatus}
-                            onClick={(event) => handleClick(event, params.row.id)}
-                            color={getStatusColor(params.row.bookingStatus)}
-                            sx={{ cursor: "pointer", fontWeight: "bold" }}
+            accessorKey: "name",
+            header: "Name",
+            cell: ({ row }) => {
+                const rowData = row.original;
+                if (editableRowId === rowData.id) {
+                    return (
+                        <TextField
+                            size="small"
+                            value={editedRowData.name !== undefined ? editedRowData.name : rowData.name}
+                            onChange={(e) => setEditedRowData({ ...editedRowData, name: e.target.value })}
+                            sx={{ width: 200 }}
                         />
-                    </Tooltip>
-                    <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClosee}>
-                        <MenuItem onClick={() => handleStatusUpdate("Confirm")}>Confirm</MenuItem>
-                        <MenuItem onClick={() => handleStatusUpdate("Cancel")}>Cancel</MenuItem>
-                        <MenuItem onClick={() => handleStatusUpdate("FollowUp")}>Follow Up</MenuItem>
-                        <MenuItem onClick={() => handleStatusUpdate("Postponed")}>Postponed</MenuItem>
-                        <MenuItem onClick={() => handleStatusUpdate("Higher Priority")}>Higher Priority</MenuItem>
-                    </Menu>
-                </>
-            ),
+                    );
+                }
+                return rowData.name;
+            },
         },
         {
-            field: "cost",
-            headerName: "Cost",
-            width: 120,
-            editable: (params) => params.id === editableRowId
+            accessorKey: "contact",
+            header: "Contact",
+            cell: ({ row }) => {
+                const rowData = row.original;
+                if (editableRowId === rowData.id) {
+                    return (
+                        <TextField
+                            size="small"
+                            value={editedRowData.contact !== undefined ? editedRowData.contact : rowData.contact}
+                            onChange={(e) => setEditedRowData({ ...editedRowData, contact: e.target.value })}
+                            sx={{ width: 110 }}
+                        />
+                    );
+                }
+                return rowData.contact;
+            },
         },
         {
-            field: "advancePayment",
-            headerName: "Advance Payment",
-            width: 150,
-            editable: (params) => params.id === editableRowId
+            accessorKey: "bookingDate",
+            header: "Booking Date",
+            cell: ({ row }) => {
+                const rowData = row.original;
+                if (editableRowId === rowData.id) {
+                    return (
+                        <TextField
+                            type="date"
+                            size="small"
+                            value={editedRowData.bookingDate !== undefined ? editedRowData.bookingDate : rowData.bookingDate}
+                            onChange={(e) => setEditedRowData({ ...editedRowData, bookingDate: e.target.value })}
+                            InputLabelProps={{ shrink: true }}
+                            sx={{ width: 130 }}
+                        />
+                    );
+                }
+                return rowData.bookingDate;
+            },
         },
         {
-            field: "action",
-            headerName: "Action",
-            width: canEdit || canDelete ? 180 : 100,
-            renderCell: (params) => (
-                <Box sx={{ display: "flex", gap: 1 }}>
-                    <Tooltip title="View">
-                        <IconButton color="primary" size="small" onClick={() => handleView(params.row.id, params.row)}>
-                            <VisibilityIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
-                    {/* {canEdit && (
-                        <Tooltip title="Edit">
-                            <IconButton color="warning" size="small" onClick={() => handleEdit(params.row.id)}>
-                                <EditIcon fontSize="small" />
+            accessorKey: "tourDate",
+            header: "Tour Date",
+            cell: ({ row }) => {
+                const rowData = row.original;
+                if (editableRowId === rowData.id) {
+                    return (
+                        <TextField
+                            type="date"
+                            size="small"
+                            value={editedRowData.tourDate !== undefined ? editedRowData.tourDate : rowData.tourDate}
+                            onChange={(e) => setEditedRowData({ ...editedRowData, tourDate: e.target.value })}
+                            InputLabelProps={{ shrink: true }}
+                            sx={{ width: 130 }}
+                        />
+                    );
+                }
+                return rowData.tourDate;
+            },
+        },
+        {
+            accessorKey: "bookingStatus",
+            header: "Lead Stage",
+            cell: ({ row }) => {
+                const rowData = row.original;
+                return (
+                    <>
+                        <Tooltip title={`${rowData.bookingStatus}`}>
+                            <Chip
+                                label={rowData.bookingStatus}
+                                onClick={(event) => handleClick(event, rowData.id)}
+                                color={getStatusColor(rowData.bookingStatus)}
+                                sx={{ cursor: "pointer", fontWeight: "bold" }}
+                            />
+                        </Tooltip>
+                        <Menu anchorEl={anchorEl} open={Boolean(anchorEl) && selectedRow === rowData.id} onClose={handleClosee}>
+                            <MenuItem onClick={() => handleStatusUpdate("Confirm")}>Confirm</MenuItem>
+                            <MenuItem onClick={() => handleStatusUpdate("Cancel")}>Cancel</MenuItem>
+                            <MenuItem onClick={() => handleStatusUpdate("FollowUp")}>Follow Up</MenuItem>
+                            <MenuItem onClick={() => handleStatusUpdate("Postponed")}>Postponed</MenuItem>
+                            <MenuItem onClick={() => handleStatusUpdate("Higher Priority")}>Higher Priority</MenuItem>
+                        </Menu>
+                    </>
+                );
+            },
+        },
+        {
+            accessorKey: "cost",
+            header: "Cost",
+            cell: ({ row }) => {
+                const rowData = row.original;
+                if (editableRowId === rowData.id) {
+                    return (
+                        <TextField
+                            size="small"
+                            value={editedRowData.cost !== undefined ? editedRowData.cost : rowData.cost}
+                            onChange={(e) => setEditedRowData({ ...editedRowData, cost: e.target.value })}
+                            sx={{ width: 120 }}
+                        />
+                    );
+                }
+                return rowData.cost;
+            },
+        },
+        {
+            accessorKey: "advancePayment",
+            header: "Advance Payment",
+            cell: ({ row }) => {
+                const rowData = row.original;
+                if (editableRowId === rowData.id) {
+                    return (
+                        <TextField
+                            size="small"
+                            value={editedRowData.advancePayment !== undefined ? editedRowData.advancePayment : rowData.advancePayment}
+                            onChange={(e) => setEditedRowData({ ...editedRowData, advancePayment: e.target.value })}
+                            sx={{ width: 150 }}
+                        />
+                    );
+                }
+                return rowData.advancePayment;
+            },
+        },
+        {
+            id: "action",
+            header: "Action",
+            cell: ({ row }) => {
+                const rowData = row.original;
+                if (editableRowId === rowData.id) {
+                    return (
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                            <Button size="small" onClick={() => handleSaveEdit(rowData)}>Save</Button>
+                            <Button size="small" onClick={() => { setEditableRowId(null); setEditedRowData({}); }}>Cancel</Button>
+                        </Box>
+                    );
+                }
+                return (
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                        <Tooltip title="View">
+                            <IconButton color="primary" size="small" onClick={() => handleView(rowData.id, rowData)}>
+                                <VisibilityIcon fontSize="small" />
                             </IconButton>
                         </Tooltip>
-                    )} */}
-                    {canEdit && (
-                        <Tooltip title="open">
-                            <IconButton color="warning" size="small" onClick={() => handleEditOpen(params.row.id, params.row)}>
-                                <KeyboardArrowRightOutlinedIcon fontSize="small" />
-                            </IconButton>
-                        </Tooltip>
-                    )}
-                    {canDelete && (
-                        <Tooltip title="Delete">
-                            <IconButton color="error" size="small" onClick={() => handleDelete(params.row.id)}>
-                                <DeleteIcon fontSize="small" />
-                            </IconButton>
-                        </Tooltip>
-                    )}
+                        {canEdit && (
+                            <Tooltip title="open">
+                                <IconButton color="warning" size="small" onClick={() => handleEditOpen(rowData.id, rowData)}>
+                                    <KeyboardArrowRightOutlinedIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                        {canEdit && (
+                            <Tooltip title="Edit">
+                                <IconButton color="info" size="small" onClick={() => {
+                                    setEditableRowId(rowData.id);
+                                    setEditedRowData({
+                                        name: rowData.name,
+                                        contact: rowData.contact,
+                                        bookingDate: rowData.bookingDate,
+                                        tourDate: rowData.tourDate,
+                                        cost: rowData.cost,
+                                        advancePayment: rowData.advancePayment,
+                                    });
+                                }}>
+                                    <EditIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                        {canDelete && (
+                            <Tooltip title="Delete">
+                                <IconButton color="error" size="small" onClick={() => handleDelete(rowData.id)}>
+                                    <DeleteIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                    </Box>
+                );
+            },
+        },
+    ], [editableRowId, editedRowData, anchorEl, selectedRow, canEdit, canDelete, handleClick, handleClosee, handleStatusUpdate, handleView, handleEditOpen, handleDelete, getStatusColor]);
 
-                </Box>
-            ),
+    // Table instance
+    const table = useReactTable({
+        data: rows,
+        columns,
+        getCoreRowModel: getCoreRowModel(),
+        getPaginationRowModel: getPaginationRowModel(),
+        initialState: {
+            pagination: {
+                pageSize: rowsPerPage,
+                pageIndex: page,
+            },
         },
-    ];
+        state: {
+            pagination: {
+                pageIndex: page,
+                pageSize: rowsPerPage,
+            },
+        },
+        onPaginationChange: (updater) => {
+            const newPagination = typeof updater === "function" 
+                ? updater({ pageIndex: page, pageSize: rowsPerPage })
+                : updater;
+            setPage(newPagination.pageIndex);
+            setRowsPerPage(newPagination.pageSize);
+        },
+        manualPagination: false,
+    });
+
+    // Sync table pagination with state
+    useEffect(() => {
+        if (table.getState().pagination.pageIndex !== page) {
+            table.setPageIndex(page);
+        }
+        if (table.getState().pagination.pageSize !== rowsPerPage) {
+            table.setPageSize(rowsPerPage);
+        }
+    }, [page, rowsPerPage, table]);
+
+    const handleChangePage = (e, newPage) => {
+        setPage(newPage);
+        table.setPageIndex(newPage);
+    };
+
+    const handleChangeRowsPerPage = (e) => {
+        const newRowsPerPage = parseInt(e.target.value, 10);
+        setRowsPerPage(newRowsPerPage);
+        setPage(0);
+        table.setPageSize(newRowsPerPage);
+        table.setPageIndex(0);
+    };
 
 
     const rows = NewFilteredQuery.map((item) => ({
@@ -349,10 +536,65 @@ const Query = () => {
                 </Box>
 
                 {/* Data Table */}
-                <Grid2 sx={{ height: 500, backgroundColor: "white", boxShadow: 3, borderRadius: 2, overflow: "hidden" }}>
-                    <DataTable rows={rows} columns={columns} loading={loading} setEditableRowId={setEditableRowId} />
-
-                </Grid2>
+                <Paper sx={{ boxShadow: 3, borderRadius: 2, overflow: "hidden" }}>
+                    <TableContainer sx={{ maxHeight: 500 }}>
+                        <Table stickyHeader size="small">
+                            <TableHead>
+                                {table.getHeaderGroups().map(headerGroup => (
+                                    <TableRow key={headerGroup.id}>
+                                        {headerGroup.headers.map(header => (
+                                            <TableCell key={header.id}>
+                                                {header.isPlaceholder
+                                                    ? null
+                                                    : flexRender(
+                                                        header.column.columnDef.header,
+                                                        header.getContext()
+                                                    )}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                ))}
+                            </TableHead>
+                            <TableBody>
+                                {loading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={columns.length} align="center">
+                                            Loading...
+                                        </TableCell>
+                                    </TableRow>
+                                ) : table.getRowModel().rows.length > 0 ? (
+                                    table.getRowModel().rows.map(row => (
+                                        <TableRow key={row.original.id} hover>
+                                            {row.getVisibleCells().map(cell => (
+                                                <TableCell key={cell.id}>
+                                                    {flexRender(
+                                                        cell.column.columnDef.cell,
+                                                        cell.getContext()
+                                                    )}
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={columns.length} align="center">
+                                            No queries found
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                    <TablePagination
+                        component="div"
+                        count={rows.length}
+                        page={page}
+                        onPageChange={handleChangePage}
+                        rowsPerPage={rowsPerPage}
+                        onRowsPerPageChange={handleChangeRowsPerPage}
+                        rowsPerPageOptions={[5, 10]}
+                    />
+                </Paper>
                 <CreateUpdateDialog
                     open={dialogOpen}
                     onClose={handleClose}

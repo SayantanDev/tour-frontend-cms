@@ -1,4 +1,5 @@
 import { Grid, Button, TextField, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+import { useSelector } from "react-redux";
 import { Formik, Form } from "formik";
 import TextFieldValidated from "./TextFieldValidated";
 import SectionCategories from "./SectionCategories";
@@ -11,6 +12,7 @@ const HotelForm = ({
   onSubmit,
   onCancel,
 }) => {
+  const configData = useSelector((state) => state.config.configData || {});
   return (
     <Formik
       initialValues={initialValues}
@@ -42,7 +44,11 @@ const HotelForm = ({
                   onBlur={handleBlur}
                   error={touched.type && Boolean(errors.type)}
                 >
-                  {["Hotel", "Homestay", "Resort", "Guest House", "Villa", "Pension"].map((t) => (
+                  {configData?.additionalCosts?.hotel?.map((hotelType) => (
+                    <MenuItem key={hotelType.type} value={hotelType.type}>
+                      {hotelType.type}
+                    </MenuItem>
+                  )) || ["Hotel", "Homestay", "Resort", "Guest House", "Villa", "Pension"].map((t) => (
                     <MenuItem key={t} value={t}>{t}</MenuItem>
                   ))}
                 </Select>

@@ -14,7 +14,12 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+} from "@tanstack/react-table";
 import { deleteUserPermission, getAllUserPermission, updateUserPermission } from "../../api/userPermissionAPI";
 import { getAllPermission } from "../../api/permissionsAPI";
 import ReadMoreIcon from "@mui/icons-material/ReadMore";
@@ -203,7 +208,51 @@ const AllUserPermissions = () => {
 
   const effectiveUserPermissions = allUserPermissions.filter((data) => data.role !== 'Admin')
 
+  // Column definitions for @tanstack/react-table
+  const columns = useMemo(() => [
+    {
+      accessorKey: "role",
+      header: "Role",
+    },
+    {
+      id: "permissions",
+      header: "Permissions",
+      cell: ({ row }) => {
+        const singlePerm = row.original;
+        return (
+          <IconButton
+            color="primary"
+            onClick={() => handleOpenDialog(singlePerm._id, singlePerm.role)}
+          >
+            <ReadMoreIcon />
+          </IconButton>
+        );
+      },
+    },
+    {
+      id: "action",
+      header: "Action",
+      cell: ({ row }) => {
+        const singlePerm = row.original;
+        return (
+          <IconButton
+            color="error"
+            size="small"
+            onClick={() => handleDelete(singlePerm._id)}
+          >
+            <DeleteIcon />
+          </IconButton>
+        );
+      },
+    },
+  ], [handleOpenDialog, handleDelete]);
 
+  // Table instance
+  const table = useReactTable({
+    data: effectiveUserPermissions,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
 
   const handleSearchChange = (e) => {
     const term = e.target.value.toLowerCase();
@@ -241,35 +290,42 @@ const AllUserPermissions = () => {
       <TableContainer>
         <Table>
           <TableHead>
-            <TableRow>
-              <TableCell>Role</TableCell>
-              <TableCell>Permissions</TableCell>
-              <TableCell>Action</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {effectiveUserPermissions.map((singlePerm, index) => (
-              <TableRow key={index}>
-                <TableCell>{singlePerm.role}</TableCell>
-                <TableCell>
-                  <IconButton
-                    color="primary"
-                    onClick={() => handleOpenDialog(singlePerm._id, singlePerm.role)}
-                  >
-                    <ReadMoreIcon />
-                  </IconButton>
-                </TableCell>
-                <TableCell>
-                  <IconButton
-                    color="error"
-                    size="small"
-                    onClick={() => handleDelete(singlePerm._id)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
+            {table.getHeaderGroups().map(headerGroup => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map(header => (
+                  <TableCell key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableCell>
+                ))}
               </TableRow>
             ))}
+          </TableHead>
+          <TableBody>
+            {table.getRowModel().rows.length > 0 ? (
+              table.getRowModel().rows.map(row => (
+                <TableRow key={row.original._id}>
+                  {row.getVisibleCells().map(cell => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} align="center">
+                  No user permissions found
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>

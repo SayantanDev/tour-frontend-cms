@@ -8,6 +8,7 @@ import configReducer from "./configSlice"
 import placeReducer from "./placesSlice"
 import ctgReducer from "./ctgpackageSlice"
 import whatsappReducer from "./whatsappSlice"
+import hotelsReducer from "./hotelsSlice"
 import { combineReducers } from "redux";
 
 const rootReducer = combineReducers({
@@ -21,6 +22,7 @@ const rootReducer = combineReducers({
 	place: placeReducer,
 	ctgpakage: ctgReducer,
 	whatsapp: whatsappReducer,
+	hotels: hotelsReducer,
 })
 
 export default rootReducer;

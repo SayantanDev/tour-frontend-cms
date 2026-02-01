@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Container, Typography, IconButton, Tooltip, Box, Chip, MenuItem,
   Modal, Paper, TextField, Button, Table, TableBody,
@@ -8,6 +8,12 @@ import {
   DialogContent,
   DialogActions
 } from "@mui/material";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getPaginationRowModel,
+  flexRender,
+} from "@tanstack/react-table";
 import { deleteQueries, getAllQueries, updateQueries } from "../../api/queriesAPI";
 import usePermissions from "../../hooks/UsePermissions";
 import { useDispatch } from "react-redux";
@@ -233,6 +239,242 @@ const Query = () => {
     }
   };
 
+  // Column definitions for @tanstack/react-table
+  const columns = useMemo(() => {
+    const cols = [
+      {
+        accessorKey: "guest_info.guest_name",
+        header: "Name",
+        cell: ({ row }) => {
+          const rowData = row.original;
+          if (editingRowId === rowData._id) {
+            return (
+              <TextField
+                size="small"
+                value={editedRowData.guest_name}
+                onChange={(e) => setEditedRowData({ ...editedRowData, guest_name: e.target.value })}
+              />
+            );
+          }
+          return rowData.guest_info?.guest_name || "";
+        },
+      },
+      {
+        accessorKey: "guest_info.guest_phone",
+        header: "Contact",
+        cell: ({ row }) => {
+          const rowData = row.original;
+          if (editingRowId === rowData._id) {
+            return (
+              <TextField
+                size="small"
+                value={editedRowData.guest_phone}
+                onChange={(e) => setEditedRowData({ ...editedRowData, guest_phone: e.target.value })}
+              />
+            );
+          }
+          return rowData.guest_info?.guest_phone || "";
+        },
+      },
+      {
+        accessorKey: "lead_stage",
+        header: "Status",
+        cell: ({ row }) => {
+          const rowData = row.original;
+          if (editingRowId === rowData._id) {
+            return (
+              <Select
+                size="small"
+                value={editedRowData.lead_stage}
+                onChange={(e) => setEditedRowData({ ...editedRowData, lead_stage: e.target.value })}
+              >
+                {["Confirm", "Cancel", "FollowUp", "Postponed", "Higher Priority"].map((status) => (
+                  <MenuItem key={status} value={status}>{status}</MenuItem>
+                ))}
+              </Select>
+            );
+          }
+          return <Chip label={rowData.lead_stage} color={getStatusColor(rowData.lead_stage)} />;
+        },
+      },
+      {
+        accessorKey: "cost",
+        header: "Cost",
+        cell: ({ row }) => {
+          const rowData = row.original;
+          if (editingRowId === rowData._id) {
+            return (
+              <TextField
+                size="small"
+                value={editedRowData.cost}
+                onChange={(e) => setEditedRowData({ ...editedRowData, cost: e.target.value })}
+              />
+            );
+          }
+          return rowData.cost || "N/A";
+        },
+      },
+      {
+        accessorKey: "advance",
+        header: "Advance",
+        cell: ({ row }) => {
+          const rowData = row.original;
+          if (editingRowId === rowData._id) {
+            return (
+              <TextField
+                size="small"
+                value={editedRowData.advance}
+                onChange={(e) => setEditedRowData({ ...editedRowData, advance: e.target.value })}
+              />
+            );
+          }
+          return rowData.advance ? `${rowData.advance}` : "0";
+        },
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const rowData = row.original;
+          if (editingRowId === rowData._id) {
+            return (
+              <>
+                <Button onClick={() => handleSaveEdit(rowData._id)} size="small">Save</Button>
+                <Button onClick={() => { setEditingRowId(null); setEditedRowData({}); }} size="small">Cancel</Button>
+              </>
+            );
+          }
+          return (
+            <>
+              <Tooltip title="Edit">
+                <IconButton onClick={() => {
+                  setEditingRowId(rowData._id);
+                  setEditedRowData({
+                    guest_name: rowData.guest_info?.guest_name || "",
+                    guest_phone: rowData.guest_info?.guest_phone || "",
+                    cost: rowData.cost || "",
+                    advance: rowData.advance || "",
+                    lead_stage: rowData.lead_stage || "",
+                  });
+                }}>
+                  <Typography color="success">Edit</Typography>
+                </IconButton>
+              </Tooltip>
+              {rowData.advance > 0 && (
+                <Tooltip title="Manage Operation">
+                  <IconButton onClick={() => handleEditOpen(rowData.operation_id)}>
+                    <Typography color="primary">Manage</Typography>
+                  </IconButton>
+                </Tooltip>
+              )}
+              {checkPermission("queries", "assuser") && (
+                <Tooltip title="Assign Users">
+                  <IconButton onClick={() => openUserModal(rowData)}>
+                    <Typography color="secondary">Assign Users</Typography>
+                  </IconButton>
+                </Tooltip>
+              )}
+            </>
+          );
+        },
+      },
+    ];
+
+    if (checkPermission("operation", "change-request")) {
+      cols.push({
+        id: "changeRequest",
+        header: "Change Request",
+        cell: ({ row }) => {
+          const rowData = row.original;
+          return (
+            <>
+              <Tooltip title="View Rejected Changes">
+                <IconButton onClick={() => openRejectedChangeModal(rowData.operation_id)}>
+                  <Typography color="error">Rejected</Typography>
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="View Changes Request">
+                <IconButton onClick={() => openChangeRequestModal(rowData.operation_id)}>
+                  <Button size="small">CRV</Button>
+                </IconButton>
+              </Tooltip>
+            </>
+          );
+        },
+      });
+    }
+
+    if (checkPermission("queries", "delete")) {
+      cols.push({
+        id: "delete",
+        header: "Delete",
+        cell: ({ row }) => {
+          const rowData = row.original;
+          return (
+            <Tooltip title="Delete">
+              <IconButton onClick={() => handleOpenDeleteDialog(rowData)}>
+                <Typography color="error">Delete</Typography>
+              </IconButton>
+            </Tooltip>
+          );
+        },
+      });
+    }
+
+    return cols;
+  }, [editingRowId, editedRowData, checkPermission, handleSaveEdit, handleEditOpen, openUserModal, openRejectedChangeModal, openChangeRequestModal, handleOpenDeleteDialog, getStatusColor]);
+
+  // Table instance
+  const table = useReactTable({
+    data: filteredRows,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: rowsPerPage,
+        pageIndex: page,
+      },
+    },
+    state: {
+      pagination: {
+        pageIndex: page,
+        pageSize: rowsPerPage,
+      },
+    },
+    onPaginationChange: (updater) => {
+      const newPagination = typeof updater === "function" 
+        ? updater({ pageIndex: page, pageSize: rowsPerPage })
+        : updater;
+      setPage(newPagination.pageIndex);
+      setRowsPerPage(newPagination.pageSize);
+    },
+    manualPagination: false,
+  });
+
+  // Sync table pagination with state
+  useEffect(() => {
+    if (table.getState().pagination.pageIndex !== page) {
+      table.setPageIndex(page);
+    }
+    if (table.getState().pagination.pageSize !== rowsPerPage) {
+      table.setPageSize(rowsPerPage);
+    }
+  }, [page, rowsPerPage, table]);
+
+  const handleChangePage = (e, newPage) => {
+    setPage(newPage);
+    table.setPageIndex(newPage);
+  };
+
+  const handleChangeRowsPerPage = (e) => {
+    const newRowsPerPage = parseInt(e.target.value, 10);
+    setRowsPerPage(newRowsPerPage);
+    setPage(0);
+    table.setPageSize(newRowsPerPage);
+    table.setPageIndex(0);
+  };
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" gutterBottom>Leads</Typography>
@@ -315,119 +557,42 @@ const Query = () => {
       >
         <Table size="small">
           <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Contact</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Cost</TableCell>
-              <TableCell>Advance</TableCell>
-              <TableCell>Actions</TableCell>
-              {checkPermission("operation", "change-request") && (<TableCell>Change Request</TableCell>)}
-              {checkPermission("queries", "delete") && (<TableCell>Delete</TableCell>)}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
-              <TableRow key={row._id} hover>
-                <TableCell>
-                  {editingRowId === row._id ? (
-                    <TextField size="small" value={editedRowData.guest_name} onChange={(e) => setEditedRowData({ ...editedRowData, guest_name: e.target.value })} />
-                  ) : row.guest_info?.guest_name}
-                </TableCell>
-                <TableCell>
-                  {editingRowId === row._id ? (
-                    <TextField size="small" value={editedRowData.guest_phone} onChange={(e) => setEditedRowData({ ...editedRowData, guest_phone: e.target.value })} />
-                  ) : row.guest_info?.guest_phone}
-                </TableCell>
-                <TableCell>
-                  {editingRowId === row._id ? (
-                    <Select size="small" value={editedRowData.lead_stage} onChange={(e) => setEditedRowData({ ...editedRowData, lead_stage: e.target.value })}>
-                      {["Confirm", "Cancel", "FollowUp", "Postponed", "Higher Priority"].map((status) => (
-                        <MenuItem key={status} value={status}>{status}</MenuItem>
-                      ))}
-                    </Select>
-                  ) : (
-                    <Chip label={row.lead_stage} color={getStatusColor(row.lead_stage)} />
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editingRowId === row._id ? (
-                    <TextField size="small" value={editedRowData.cost} onChange={(e) => setEditedRowData({ ...editedRowData, cost: e.target.value })} />
-                  ) : row.cost || "N/A"}
-                </TableCell>
-                <TableCell>
-                  {editingRowId === row._id ? (
-                    <TextField size="small" value={editedRowData.advance} onChange={(e) => setEditedRowData({ ...editedRowData, advance: e.target.value })} />
-                  ) : row.advance ? `${row.advance}` : "0"}
-                </TableCell>
-
-                <TableCell>
-                  {editingRowId === row._id ? (
-                    <>
-                      <Button onClick={() => handleSaveEdit(row._id)} size="small">Save</Button>
-                      <Button onClick={() => { setEditingRowId(null); setEditedRowData({}); }} size="small">Cancel</Button>
-                    </>
-                  ) : (
-                    <>
-                      <Tooltip title="Edit">
-                        <IconButton onClick={() => {
-                          setEditingRowId(row._id);
-                          setEditedRowData({
-                            guest_name: row.guest_info?.guest_name || "",
-                            guest_phone: row.guest_info?.guest_phone || "",
-                            cost: row.cost || "",
-                            advance: row.advance || "",
-                            lead_stage: row.lead_stage || "",
-                          });
-                        }}>
-                          <Typography color="success">Edit</Typography>
-                        </IconButton>
-                      </Tooltip>
-                      {row.advance > 0 &&
-                        <Tooltip title="Manage Operation">
-                          <IconButton onClick={() => handleEditOpen(row.operation_id)}>
-                            <Typography color="primary">Manage</Typography>
-                          </IconButton>
-                        </Tooltip>
-                      }
-
-                      {checkPermission("queries", "assuser") && (
-                        <Tooltip title="Assign Users">
-                          <IconButton onClick={() => openUserModal(row)}>
-                            <Typography color="secondary">Assign Users</Typography>
-                          </IconButton>
-                        </Tooltip>
-                      )}
-
-                    </>
-                  )}
-                </TableCell>
-                {checkPermission("operation", "change-request") && (
-                  <TableCell>
-                    <Tooltip title="View Rejected Changes">
-                      <IconButton onClick={() => openRejectedChangeModal(row.operation_id)}>
-                        <Typography color="error">Rejected</Typography>
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="View Changes Request">
-                      <IconButton onClick={() => openChangeRequestModal(row.operation_id)}>
-                        <Button size="small">CRV</Button>
-                        {/* <Typography color="error">Rejected</Typography> */}
-                      </IconButton>
-                    </Tooltip>
+            {table.getHeaderGroups().map(headerGroup => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map(header => (
+                  <TableCell key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                   </TableCell>
-                )}
-                {checkPermission("queries", "delete") && (
-                  <TableCell>
-                    <Tooltip title="Delete">
-                      <IconButton onClick={() => handleOpenDeleteDialog(row)}>
-                        <Typography color="error">Delete</Typography>
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                )}
+                ))}
               </TableRow>
             ))}
+          </TableHead>
+          <TableBody>
+            {table.getRowModel().rows.length > 0 ? (
+              table.getRowModel().rows.map(row => (
+                <TableRow key={row.original._id} hover>
+                  {row.getVisibleCells().map(cell => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} align="center">
+                  No queries found
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
 
@@ -435,9 +600,9 @@ const Query = () => {
           component="div"
           count={filteredRows.length}
           page={page}
-          onPageChange={(e, newPage) => setPage(newPage)}
+          onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={(e) => setRowsPerPage(parseInt(e.target.value, 10))}
+          onRowsPerPageChange={handleChangeRowsPerPage}
           rowsPerPageOptions={[5, 10, 25]}
           size="small"
         />
