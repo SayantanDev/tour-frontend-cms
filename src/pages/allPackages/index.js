@@ -68,14 +68,14 @@ const AllPackages = () => {
   const location = useLocation();
 
 
-   useEffect(() => {
-      const params = new URLSearchParams(location.search);
-      const zoneFromURL = params.get("zone");
-      
-      setFilterLocation(zoneFromURL ?? null);
-    
-    }, [location.search]);
-  
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const zoneFromURL = params.get("zone");
+
+    setFilterLocation(zoneFromURL ?? null);
+
+  }, [location.search]);
+
   // NEW: filters
   const [filterVerified, setFilterVerified] = useState('All'); // 'All' | 'Verified' | 'Not Verified'
   const [filterDateField, setFilterDateField] = useState('created'); // 'created' | 'updated'
@@ -89,7 +89,6 @@ const AllPackages = () => {
 
   // NEW: track which rows are updating "ranking"
   const [rankingLoading, setRankingLoading] = useState({});
-  const [selectedId, setSelectedId] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [costDialogdata, setCostDialogData] = useState({
     singleCost: null,
@@ -98,7 +97,7 @@ const AllPackages = () => {
     valueCost: [],
   });
   const [openConfirm, setOpenConfirm] = useState({ isVisible: false, section: "", target: "" });
-  
+
 
   const handleOpenConfirm = (section, target) => {
     setOpenConfirm({ isVisible: true, section, target });
@@ -121,7 +120,7 @@ const AllPackages = () => {
       updated.valueCost = updated.valueCost.filter((d) => d.Type !== target);
     }
     setCostDialogData(updated);
-    handleCloseConfirm();  
+    handleCloseConfirm();
   }
 
   // Hooks
@@ -224,11 +223,11 @@ const AllPackages = () => {
   console.log(filteredPackages);
 
   // actions
-  const handleView = (id) => {
+  const handleView = React.useCallback((id) => {
     navigate(`/packages/view/${id}`);
-  };
+  }, [navigate]);
 
-  const handleEdit = async (id) => {
+  const handleEdit = React.useCallback(async (id) => {
     try {
       const singleData = await getSinglePackages(id);
       dispatch(setSelectedPackage(singleData.data));
@@ -236,14 +235,14 @@ const AllPackages = () => {
     } catch (error) {
       console.error('Failed to fetch single package', error);
     }
-  };
+  }, [dispatch, navigate]);
 
   const createNewPackage = () => {
     dispatch(removeSelectedPackage());
     navigate(`/packages/createandedit`);
   };
 
-  const handleToggleVerified = async (row, nextVal) => {
+  const handleToggleVerified = React.useCallback(async (row, nextVal) => {
     const id = row.id;
     setToggleLoading(prev => ({ ...prev, [id]: true }));
 
@@ -268,10 +267,10 @@ const AllPackages = () => {
     } finally {
       setToggleLoading(prev => ({ ...prev, [id]: false }));
     }
-  };
+  }, []);
 
   // NEW: change ranking
-  const handleChangeRanking = async (row, nextVal) => {
+  const handleChangeRanking = React.useCallback(async (row, nextVal) => {
     const id = row.id;
     const newRanking = Number(nextVal);
 
@@ -297,30 +296,23 @@ const AllPackages = () => {
     } finally {
       setRankingLoading(prev => ({ ...prev, [id]: false }));
     }
-  };
+  }, [allPackages]);
 
 
 
-  const handleImageUpload = (id) => {
+  const handleImageUpload = React.useCallback((id) => {
     navigate(`/upload/package/${id}`);
-  };
+  }, [navigate]);
 
 
   const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
 
-  const handleOpenDialog = (id) => {
-
-    setSelectedId(id);
+  const handleOpenDialog = React.useCallback((id) => {
     console.log(id);
-
-
-
 
     // have to check this portion
     const currentUser = filteredPackages.find((user) => user.id === id);
-
-
 
     const costData = {
       singleCost: currentUser.raw.details.cost.singleCost,
@@ -345,19 +337,15 @@ const AllPackages = () => {
 
     }
 
-
-
-
     setCostDialogData(costData);
     console.log(costData);
 
     setOpenDialog(true);
-  };
+  }, [filteredPackages]);
 
-  const handleCloseDialog = (id) => {
+  const handleCloseDialog = React.useCallback((id) => {
     setOpenDialog(false);
-    setSelectedId(null);
-  }
+  }, []);
 
   // Column definitions for @tanstack/react-table (must be after all handler functions)
   const columns = useMemo(() => [
@@ -461,7 +449,7 @@ const AllPackages = () => {
       cell: ({ row }) => {
         const rowData = row.original;
         return (
-          <PaymentsIcon 
+          <PaymentsIcon
             color="primary"
             onClick={() => handleOpenDialog(rowData.id)}
             sx={{ cursor: 'pointer' }}
@@ -479,7 +467,7 @@ const AllPackages = () => {
             {getPermission('packages', 'alter-image') &&
               <Tooltip title="Image Upload">
                 <IconButton color="success" onClick={() => handleImageUpload(rowData.id)}>
-                  <DriveFolderUploadIcon /> 
+                  <DriveFolderUploadIcon />
                 </IconButton>
               </Tooltip>}
             {getPermission('packages', 'view') &&
@@ -524,7 +512,7 @@ const AllPackages = () => {
       },
     },
     onPaginationChange: (updater) => {
-      const newPagination = typeof updater === "function" 
+      const newPagination = typeof updater === "function"
         ? updater({ pageIndex: page, pageSize: rowsPerPage })
         : updater;
       setPage(newPagination.pageIndex);
@@ -547,7 +535,7 @@ const AllPackages = () => {
     setPage(newPage);
     table.setPageIndex(newPage);
   };
-  const handleChangeRowsPerPage = (event) => { 
+  const handleChangeRowsPerPage = (event) => {
     const newRowsPerPage = +event.target.value;
     setRowsPerPage(newRowsPerPage);
     setPage(0);
@@ -556,7 +544,7 @@ const AllPackages = () => {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ py: 2 }}>
+    <Container maxWidth={false} sx={{ py: 2 }}>
       <Typography variant="h6" sx={{ mb: 2 }}>All Packages</Typography>
 
       {/* Filters */}
@@ -660,7 +648,7 @@ const AllPackages = () => {
       </Box>
 
       {/* Table */}
-      <Paper>
+      <Paper sx={{ overflow: "hidden" }}>
         <TableContainer>
           <Table size="small">
             <TableHead>
@@ -674,9 +662,9 @@ const AllPackages = () => {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableCell>
                   ))}
                 </TableRow>

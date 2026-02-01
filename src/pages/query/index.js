@@ -22,7 +22,6 @@ import { useNavigate } from "react-router-dom";
 import useSnackbar from "../../hooks/useSnackbar";
 import { getAllUsers } from "../../api/userAPI";
 import { getChangeRequest, getRejectedChanges, handleChangeRequestApproval } from "../../api/operationAPI";
-import { Delete } from '@mui/icons-material';
 
 const Query = () => {
   const checkPermission = usePermissions();
@@ -63,12 +62,7 @@ const Query = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [queryToDelete, setQueryToDelete] = useState(null);
 
-  useEffect(() => {
-    fetchUsers();
-    if (canView) fetchQuery();
-  }, [canView]);
-
-  const fetchQuery = async () => {
+  const fetchQuery = React.useCallback(async () => {
     try {
       const response = await getAllQueries();
       const sortedData = response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -79,7 +73,7 @@ const Query = () => {
     } finally {
       // setLoading(false);
     }
-  };
+  }, []);
 
   const fetchUsers = async () => {
     try {
@@ -91,12 +85,17 @@ const Query = () => {
     }
   };
 
+  useEffect(() => {
+    fetchUsers();
+    if (canView) fetchQuery();
+  }, [canView, fetchQuery]);
+
   const formatDate = (date) => {
     const d = new Date(date);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
-  const handleSaveEdit = async (id) => {
+  const handleSaveEdit = React.useCallback(async (id) => {
     try {
       const updatedFields = {};
       if (editedRowData.guest_name !== undefined) updatedFields.guest_name = editedRowData.guest_name;
@@ -114,9 +113,9 @@ const Query = () => {
     } catch (error) {
       console.error("Update failed:", error);
     }
-  };
+  }, [editedRowData, fetchQuery, showSnackbar]);
 
-  const getStatusColor = (status) => {
+  const getStatusColor = React.useCallback((status) => {
     switch (status) {
       case "Confirm": return "success";
       case "Cancel": return "default";
@@ -125,13 +124,13 @@ const Query = () => {
       case "Higher Priority": return "error";
       default: return "default";
     }
-  };
+  }, []);
 
-  const handleEditOpen = async (id) => {
+  const handleEditOpen = React.useCallback(async (id) => {
     // const res = await fetchOperationByQueries(id);
     dispatch(setSelectedquerie({ id }));
     navigate("/query/view");
-  };
+  }, [dispatch, navigate]);
 
   const filteredRows = filteredQuery.filter((item) => {
     const searchLower = searchQuery.toLowerCase();
@@ -146,18 +145,18 @@ const Query = () => {
       (!locationQuery || item.destination === locationQuery)
     );
   });
-  const handleOpenDeleteDialog = (row) => {
+  const handleOpenDeleteDialog = React.useCallback((row) => {
     setQueryToDelete(row);
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
 
-  const openUserModal = (row) => {
+  const openUserModal = React.useCallback((row) => {
     setSelectedQueryId(row._id);
     const assigned = row.manage_teams?.map(mt => mt.user_id) || [];
     setAssignedUsers(assigned);
     setUserModalOpen(true);
-  };
+  }, []);
 
   const saveUserAssignments = async () => {
     try {
@@ -180,7 +179,7 @@ const Query = () => {
     }
   };
 
-  const openChangeRequestModal = async (queryId) => {
+  const openChangeRequestModal = React.useCallback(async (queryId) => {
     try {
       const res = await getChangeRequest(queryId);
       console.log("getChangeRequest response : ", res);
@@ -192,7 +191,7 @@ const Query = () => {
       console.error("Failed to fetch change requests", err);
       showSnackbar("Failed to load change requests", "error");
     }
-  };
+  }, [showSnackbar]);
   const handleChangeRequestAction = async (changeId, action, reason = "") => {
     try {
       const body = { status: action };
@@ -208,7 +207,7 @@ const Query = () => {
       showSnackbar("Action failed", "error");
     }
   };
-  const openRejectedChangeModal = async (operationId) => {
+  const openRejectedChangeModal = React.useCallback(async (operationId) => {
     try {
       const res = await getRejectedChanges(operationId);
       console.log("");
@@ -220,7 +219,7 @@ const Query = () => {
       console.error("Failed to load rejected changes", err);
       showSnackbar("Failed to load rejected changes", "error");
     }
-  };
+  }, [showSnackbar]);
   const handleDeleteQuery = async () => {
     try {
       const res = await deleteQueries(queryToDelete._id);
@@ -443,7 +442,7 @@ const Query = () => {
       },
     },
     onPaginationChange: (updater) => {
-      const newPagination = typeof updater === "function" 
+      const newPagination = typeof updater === "function"
         ? updater({ pageIndex: page, pageSize: rowsPerPage })
         : updater;
       setPage(newPagination.pageIndex);
@@ -476,7 +475,7 @@ const Query = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth={false} sx={{ py: 4 }}>
       <Typography variant="h4" gutterBottom>Leads</Typography>
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 3 }}>
         <TextField label="Search" size="small" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
@@ -553,7 +552,7 @@ const Query = () => {
 
       <TableContainer
         component={Paper}
-        sx={{ borderRadius: 2, boxShadow: 1, overflowX: "auto", mb: 2 }}
+        sx={{ boxShadow: 1, overflowX: "auto", mb: 2 }}
       >
         <Table size="small">
           <TableHead>
@@ -564,9 +563,9 @@ const Query = () => {
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                   </TableCell>
                 ))}
               </TableRow>

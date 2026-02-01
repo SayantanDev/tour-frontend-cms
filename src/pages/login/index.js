@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { Container, TextField, Button, Typography, Paper, Box, InputAdornment, IconButton } from '@mui/material';
+import { TextField, Button, Typography, Paper, Box, InputAdornment, IconButton, Checkbox, FormControlLabel } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { addLoginToken } from '../../reduxcomponents/slices/tokenSlice';
 import { loginUser } from '../../api/userAPI';
@@ -16,6 +16,20 @@ const Login = () => {
         password: '',
     });
     const [showPassword, setShowPassword] = useState(false);
+    const [rememberMe, setRememberMe] = useState(true);
+
+    // Initialize from local storage if remember me was previously checked
+    React.useEffect(() => {
+        const rememberedEmail = localStorage.getItem("rememberedEmail");
+        const rememberedPassword = localStorage.getItem("rememberedPassword");
+        if (rememberedEmail && rememberedPassword) {
+            setLoginData({
+                email: rememberedEmail,
+                password: rememberedPassword
+            });
+            setRememberMe(true);
+        }
+    }, []);
 
     const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -30,6 +44,16 @@ const Login = () => {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+
+        // Handle Remember Me logic
+        if (rememberMe) {
+            localStorage.setItem("rememberedEmail", loginData.email);
+            localStorage.setItem("rememberedPassword", loginData.password);
+        } else {
+            localStorage.removeItem("rememberedEmail");
+            localStorage.removeItem("rememberedPassword");
+        }
+
         try {
             const res = await loginUser(loginData);
             // Save tokens in localStorage (for axios interceptor)
@@ -192,6 +216,19 @@ const Login = () => {
                                 },
                             }}
                         />
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-start', width: '100%', mb: 2 }}>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        value="remember"
+                                        color="primary"
+                                        checked={rememberMe}
+                                        onChange={(e) => setRememberMe(e.target.checked)}
+                                    />
+                                }
+                                label="Remember me"
+                            />
+                        </Box>
                         <Button
                             type="submit"
                             fullWidth
