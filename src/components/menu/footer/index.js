@@ -3,7 +3,7 @@ import { Typography, Box } from "@mui/material";
 
 const RootLayout = () => {
     const year = new Date().getFullYear();
-    
+
     return (
         <Box
             component="footer"
@@ -23,5 +23,5 @@ const RootLayout = () => {
         </Box>
     );
 }
-  
+
 export default RootLayout;

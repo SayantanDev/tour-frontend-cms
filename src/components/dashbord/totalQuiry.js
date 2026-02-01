@@ -15,7 +15,7 @@ function TotalQuiry() {
   useEffect(() => {
     const fetchQuery = async () => {
       try {
-        const response = await getAllQueries();
+        const response = await getAllQueries(1, 30);
         const sortedData = response.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         setFilteredQuery(sortedData);
       } catch (error) {

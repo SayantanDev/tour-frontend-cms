@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-    Container, Typography, Button, IconButton, Collapse, Box, Card, CardContent, Tooltip, CircularProgress, TextField, Checkbox,
+    Container, Typography, Button, IconButton, Collapse, Box, Card, CardContent, Tooltip, CircularProgress, Checkbox,
     Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, MenuItem, Select,
-    OutlinedInput, InputLabel, FormControl, Chip, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TablePagination
+    OutlinedInput, InputLabel, FormControl, Chip, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper
 } from "@mui/material";
 import { Visibility, Edit, Delete } from "@mui/icons-material";
 import {
@@ -13,7 +13,7 @@ import {
     getExpandedRowModel,
     flexRender,
 } from "@tanstack/react-table";
-import { getAllInquiries, InquiryUserAssign, InquiryUserRemove } from "../../api/inquiryAPI";
+import { getAllInquiries, InquiryUserAssign, InquiryUserRemove, deleteInquiry } from "../../api/inquiryAPI";
 import { getAllUsers } from "../../api/userAPI";
 import { useDispatch } from "react-redux";
 import { setSelectedInquiry } from "../../reduxcomponents/slices/inquirySlice";
@@ -27,12 +27,12 @@ const Inquiry = () => {
     const hasPermission = usePermissions();
 
     const [inquiries, setInquiries] = useState([]);
-    const [filteredInquiries, setFilteredInquiries] = useState([]);
-    const [searchQuery, setSearchQuery] = useState("");
+    // const [searchQuery, setSearchQuery] = useState("");
     const [openRow, setOpenRow] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [page, setPage] = useState(0);
-    const rowsPerPage = 30;
+    const [loading, setLoading] = useState(false);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const ROWS_PER_PAGE = 20;
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [selectedInquiryId, setSelectedInquiryId] = useState(null);
@@ -43,12 +43,21 @@ const Inquiry = () => {
     const [selectedUserIds, setSelectedUserIds] = useState([]);
     const [userList, setUserList] = useState([]);
 
-    const fetchInquiries = async () => {
+    const fetchInquiries = async (pageNum = 1) => {
+        setLoading(true);
         try {
-            const response = await getAllInquiries();
-            const sortedData = response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-            setInquiries(sortedData);
-            setFilteredInquiries(sortedData);
+            const response = await getAllInquiries(pageNum, ROWS_PER_PAGE);
+            const newData = response.data || [];
+
+            setInquiries(prev => {
+                if (pageNum === 1) return newData;
+                // Filter out duplicates just in case
+                const existingIds = new Set(prev.map(i => i._id));
+                const uniqueNew = newData.filter(i => !existingIds.has(i._id));
+                return [...prev, ...uniqueNew];
+            });
+
+            setHasMore(response.pagination?.hasNextPage || false);
         } catch (error) {
             console.error("Error fetching inquiries:", error);
         } finally {
@@ -57,7 +66,7 @@ const Inquiry = () => {
     };
 
     useEffect(() => {
-        fetchInquiries();
+        fetchInquiries(1);
         const fetchUsers = async () => {
             try {
                 const response = await getAllUsers();
@@ -70,7 +79,16 @@ const Inquiry = () => {
         fetchUsers();
     }, []);
 
-    const getAssignedUserNames = (inquiry) => {
+    const handleScroll = (e) => {
+        const { scrollTop, scrollHeight, clientHeight } = e.target;
+        if (scrollHeight - scrollTop <= clientHeight + 50 && hasMore && !loading) {
+            const nextPage = page + 1;
+            setPage(nextPage);
+            fetchInquiries(nextPage);
+        }
+    };
+
+    const getAssignedUserNames = React.useCallback((inquiry) => {
         if (!inquiry.manage_teams || inquiry.manage_teams.length === 0) return "-";
         return inquiry.manage_teams
             .map(team => {
@@ -78,49 +96,37 @@ const Inquiry = () => {
                 return user ? user.fullName : "Unknown";
             })
             .join(", ");
-    };
+    }, [userList]);
 
-    const handleSearch = (event) => {
-        const query = event.target.value.toLowerCase();
-        setSearchQuery(query);
-        setFilteredInquiries(
-            inquiries.filter((inquiry) =>
-                inquiry.guest_name.toLowerCase().includes(query) ||
-                inquiry.guest_email.toLowerCase().includes(query) ||
-                inquiry.guest_phone.includes(query)
-            )
-        );
-    };
 
-    const handleChangePage = (event, newPage) => {
-        setPage(newPage);
-    };
 
-    const handleInquiryClick = (inquiry) => {
+    const handleInquiryClick = React.useCallback((inquiry) => {
         dispatch(setSelectedInquiry(inquiry));
         navigate(`/createItinerary`);
-    };
+    }, [dispatch, navigate]);
 
-    const handleOpenDeleteDialog = (inquiryId) => {
+    const handleOpenDeleteDialog = React.useCallback((inquiryId) => {
         setSelectedInquiryId(inquiryId);
         setDeleteDialogOpen(true);
+    }, []);
+
+    const handleCloseDeleteDialog = () => {
+        setDeleteDialogOpen(false);
+        setSelectedInquiryId(null);
     };
 
-    // const handleCloseDeleteDialog = () => {
-    //     // setDeleteDialogOpen(false);
-    //     setSelectedInquiryId(null);
-    // };
-
-    // const handleConfirmDelete = async () => {
-    //     try {
-    //         await deleteInquiry(selectedInquiryId);
-    //         await fetchInquiries();
-    //     } catch (error) {
-    //         console.error("Error deleting inquiry:", error);
-    //     } finally {
-    //         handleCloseDeleteDialog();
-    //     }
-    // };
+    const handleConfirmDelete = async () => {
+        try {
+            await deleteInquiry(selectedInquiryId);
+            showSnackbar("Inquiry deleted successfully", "success");
+            await fetchInquiries();
+        } catch (error) {
+            console.error("Error deleting inquiry:", error);
+            showSnackbar("Failed to delete inquiry", "error");
+        } finally {
+            handleCloseDeleteDialog();
+        }
+    };
 
     const handleAssignUser = async () => {
         try {
@@ -162,7 +168,7 @@ const Inquiry = () => {
     // Column definitions for @tanstack/react-table
     const columns = useMemo(() => {
         const cols = [];
-        
+
         if (hasPermission("inquiry", "alter")) {
             cols.push({
                 id: "select",
@@ -185,7 +191,7 @@ const Inquiry = () => {
                 enableHiding: false,
             });
         }
-        
+
         cols.push(
             {
                 accessorKey: "guest_name",
@@ -205,7 +211,7 @@ const Inquiry = () => {
                 cell: ({ getValue }) => new Date(getValue()).toLocaleDateString(),
             }
         );
-        
+
         if (hasPermission("inquiry", "alter")) {
             cols.push({
                 accessorKey: "assigned_users",
@@ -213,7 +219,7 @@ const Inquiry = () => {
                 cell: ({ row }) => getAssignedUserNames(row.original),
             });
         }
-        
+
         cols.push(
             {
                 id: "quote",
@@ -257,53 +263,43 @@ const Inquiry = () => {
                 enableSorting: false,
             }
         );
-        
+
         return cols;
-    }, [hasPermission, filteredInquiries, userList, handleInquiryClick, handleOpenDeleteDialog, getAssignedUserNames]);
+    }, [hasPermission, handleInquiryClick, handleOpenDeleteDialog, getAssignedUserNames]);
 
     // Row selection state for table
     const [rowSelection, setRowSelection] = useState({});
 
     // Table instance
     const table = useReactTable({
-        data: filteredInquiries,
+        data: inquiries,
         columns,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         getExpandedRowModel: getExpandedRowModel(),
         initialState: {
             pagination: {
-                pageSize: rowsPerPage,
-                pageIndex: page,
+                pageSize: inquiries.length > 0 ? inquiries.length : 10, // Show all fetched
+                pageIndex: 0,
             },
         },
         state: {
             expanded: openRow ? { [openRow]: true } : {},
             rowSelection,
-            pagination: {
-                pageIndex: page,
-                pageSize: rowsPerPage,
-            },
         },
         enableRowSelection: true,
         onRowSelectionChange: setRowSelection,
         onExpandedChange: (updater) => {
             const currentExpanded = openRow ? { [openRow]: true } : {};
-            const newExpanded = typeof updater === "function" 
+            const newExpanded = typeof updater === "function"
                 ? updater(currentExpanded)
                 : updater;
             const expandedKeys = Object.keys(newExpanded).filter(key => newExpanded[key]);
             // Only allow one row to be expanded at a time
             setOpenRow(expandedKeys.length > 0 ? expandedKeys[expandedKeys.length - 1] : null);
         },
-        onPaginationChange: (updater) => {
-            const newPagination = typeof updater === "function" 
-                ? updater({ pageIndex: page, pageSize: rowsPerPage })
-                : updater;
-            setPage(newPagination.pageIndex);
-        },
         getRowId: (row) => row._id,
-        manualPagination: false,
+        manualPagination: true, // We handle pagination via scroll
     });
 
     // Sync selected inquiries with table selection state
@@ -312,16 +308,16 @@ const Inquiry = () => {
             .filter(key => rowSelection[key])
             .map(key => {
                 // Find the inquiry by matching the row ID (which is the _id)
-                const inquiry = filteredInquiries.find(i => i._id === key);
+                const inquiry = inquiries.find(i => i._id === key);
                 return inquiry?._id;
             })
             .filter(Boolean);
         setSelectedInquiries(selectedIds);
-    }, [rowSelection, filteredInquiries]);
+    }, [rowSelection, inquiries]);
 
     return (
-        <Container maxWidth={false}>
-            
+        <Container maxWidth={false} sx={{ height: 'calc(100vh - 100px)', display: 'flex', flexDirection: 'column' }}>
+
             <Stack
                 direction="row"
                 alignItems="center"
@@ -335,39 +331,31 @@ const Inquiry = () => {
 
                 <Stack direction="row" spacing={1} flexWrap="wrap">
                     <Button variant="contained" size="small" onClick={() => navigate("/createItinerary")}>
-                    Create New Inquiry
+                        Create New Inquiry
                     </Button>
                     {hasPermission("inquiry", "alter") && (
-                    <>
-                        <Button
-                        variant="outlined"
-                        size="small"
-                        disabled={!selectedInquiries.length}
-                        onClick={() => setAssignDialogOpen(true)}
-                        >
-                        Assign User
-                        </Button>
-                        <Button
-                        variant="outlined"
-                        size="small"
-                        disabled={!selectedInquiries.length}
-                        onClick={() => setUserRemoveDialogOpen(true)}
-                        >
-                        Remove User
-                        </Button>
-                    </>
+                        <>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                disabled={!selectedInquiries.length}
+                                onClick={() => setAssignDialogOpen(true)}
+                            >
+                                Assign User
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                disabled={!selectedInquiries.length}
+                                onClick={() => setUserRemoveDialogOpen(true)}
+                            >
+                                Remove User
+                            </Button>
+                        </>
                     )}
                 </Stack>
 
-                <Box sx={{ minWidth: 250, flexGrow: 1, maxWidth: 300 }}>
-                    <TextField
-                    size="small"
-                    label="Search by Name, Email, or Phone"
-                    fullWidth
-                    value={searchQuery}
-                    onChange={handleSearch}
-                    />
-                </Box>
+
             </Stack>
 
 
@@ -376,15 +364,22 @@ const Inquiry = () => {
                 <Box display="flex" justifyContent="center"><CircularProgress /></Box>
             ) : (
                 <>
-                    <TableContainer component={Paper} sx={{ width: '100%' }}>
-                        <Table size="small" sx={{ width: '100%' }}>
+                    <TableContainer
+                        component={Paper}
+                        sx={{ width: '100%', flexGrow: 1, overflowY: 'auto' }}
+                        onScroll={handleScroll}
+                    >
+                        <Table size="small" stickyHeader sx={{ width: '100%' }}>
                             <TableHead>
                                 {table.getHeaderGroups().map(headerGroup => (
                                     <TableRow key={headerGroup.id}>
                                         {headerGroup.headers.map(header => (
                                             <TableCell
                                                 key={header.id}
-                                                sx={header.id === "select" ? { padding: "checkbox" } : {}}
+                                                sx={{
+                                                    backgroundColor: 'background.paper',
+                                                    ...(header.id === "select" ? { padding: "checkbox" } : {})
+                                                }}
                                             >
                                                 {header.isPlaceholder
                                                     ? null
@@ -430,7 +425,7 @@ const Inquiry = () => {
                                                                         <Typography variant="body2">Message: {inquiry.guest_message}</Typography>
                                                                         <Typography variant="body2">Verified: {inquiry.verifyed ? "Yes" : "No"}</Typography>
                                                                         <Typography variant="body2">
-                                                                            Arrival: 
+                                                                            Arrival:
                                                                             {new Date(inquiry.arrival_date).toLocaleString()}
                                                                         </Typography>
                                                                     </CardContent>
@@ -443,17 +438,16 @@ const Inquiry = () => {
                                         </React.Fragment>
                                     );
                                 })}
+                                {loading && (
+                                    <TableRow>
+                                        <TableCell colSpan={columns.length} align="center" sx={{ py: 3 }}>
+                                            <CircularProgress size={24} />
+                                        </TableCell>
+                                    </TableRow>
+                                )}
                             </TableBody>
                         </Table>
                     </TableContainer>
-                    <TablePagination
-                        component="div"
-                        count={filteredInquiries.length}
-                        page={table.getState().pagination.pageIndex}
-                        onPageChange={handleChangePage}
-                        rowsPerPage={table.getState().pagination.pageSize}
-                        rowsPerPageOptions={[30]}
-                    />
                 </>
             )}
 
@@ -508,6 +502,21 @@ const Inquiry = () => {
                 <DialogActions>
                     <Button onClick={() => setUserRemoveDialogOpen(false)}>Cancel</Button>
                     <Button onClick={handleRemoveUser} sx={{ color: 'red' }}>Remove</Button>
+                </DialogActions>
+            </Dialog>
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={deleteDialogOpen} onClose={handleCloseDeleteDialog}>
+                <DialogTitle>Confirm Delete</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to delete this inquiry? This action cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDeleteDialog}>Cancel</Button>
+                    <Button onClick={handleConfirmDelete} color="error" variant="contained">
+                        Delete
+                    </Button>
                 </DialogActions>
             </Dialog>
             <SnackbarComponent />

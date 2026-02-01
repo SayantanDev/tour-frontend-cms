@@ -5,9 +5,9 @@ const theme = createTheme({
         mode: 'light',
 
         primary: {
-            main: '#6366f1',        // Indigo 500
+            main: '#7a7cd1ff',        // Indigo 500
             light: '#a5b4fc',       // Indigo 300
-            dark: '#4f46e5',        // Indigo 600
+            dark: '#6963daff',        // Indigo 600
             contrastText: '#ffffff',
         },
 
@@ -128,7 +128,7 @@ const theme = createTheme({
                     transition: 'all 0.25s ease',
                 },
                 contained: {
-                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                    background: 'linear-gradient(135deg, #7a7cd1ff, #8b5cf6)',
                     boxShadow: '0px 8px 20px rgba(99,102,241,0.3)',
                     '&:hover': {
                         background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
@@ -178,10 +178,10 @@ const theme = createTheme({
                             borderColor: 'rgba(0,0,0,0.15)',
                         },
                         '&:hover fieldset': {
-                            borderColor: '#6366f1',
+                            borderColor: '#7a7cd1ff',
                         },
                         '&.Mui-focused fieldset': {
-                            borderColor: '#6366f1',
+                            borderColor: '#7a7cd1ff',
                             boxShadow: '0px 0px 0px 4px rgba(99,102,241,0.15)',
                         },
                     },
@@ -192,7 +192,7 @@ const theme = createTheme({
         MuiAppBar: {
             styleOverrides: {
                 root: {
-                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                    background: 'linear-gradient(135deg, #7a7cd1ff, #8b5cf6)',
                     boxShadow: '0px 8px 28px rgba(99,102,241,0.35)',
                 },
             },
@@ -202,7 +202,7 @@ const theme = createTheme({
             styleOverrides: {
                 root: {
                     '& .MuiTableCell-head': {
-                        backgroundColor: '#6366f1',
+                        backgroundColor: '#7a7cd1ff',
                         color: '#ffffff',
                         fontWeight: 600,
                         letterSpacing: '0.06em',
@@ -229,7 +229,7 @@ const theme = createTheme({
                     fontWeight: 600,
                 },
                 colorPrimary: {
-                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                    background: 'linear-gradient(135deg, #7a7cd1ff, #8b5cf6)',
                     color: '#fff',
                 },
                 colorSecondary: {
@@ -254,7 +254,7 @@ const theme = createTheme({
                 indicator: {
                     height: 4,
                     borderRadius: 4,
-                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                    background: 'linear-gradient(135deg, #7a7cd1ff, #8b5cf6)',
                 },
             },
         },

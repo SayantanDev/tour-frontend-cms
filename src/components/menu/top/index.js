@@ -31,6 +31,7 @@ const Top = ({ toggleDrawer }) => {
                     background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
                     boxShadow: '0px 4px 20px rgba(25, 118, 210, 0.3)',
                     backdropFilter: 'blur(10px)',
+                    borderRadius: 0,
                 }}
             >
                 <Toolbar sx={{ minHeight: '64px !important' }}>

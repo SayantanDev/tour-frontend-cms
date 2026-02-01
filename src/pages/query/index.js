@@ -1,19 +1,10 @@
 import React, { useEffect, useState, useMemo } from "react";
 import {
-  Container, Typography, IconButton, Tooltip, Box, Chip, MenuItem,
-  Modal, Paper, TextField, Button, Table, TableBody,
-  TableCell, TableContainer, TableHead, TableRow, TablePagination, Select, Checkbox,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions
+  Container, Typography, IconButton, Tooltip, Box, Chip, MenuItem, Modal, Paper,
+  TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Select, Checkbox, Dialog, DialogTitle, DialogContent, DialogActions
 } from "@mui/material";
-import {
-  useReactTable,
-  getCoreRowModel,
-  getPaginationRowModel,
-  flexRender,
-} from "@tanstack/react-table";
+import { useReactTable, getCoreRowModel, getPaginationRowModel, flexRender } from "@tanstack/react-table";
 import { deleteQueries, getAllQueries, updateQueries } from "../../api/queriesAPI";
 import usePermissions from "../../hooks/UsePermissions";
 import { useDispatch } from "react-redux";
@@ -32,14 +23,15 @@ const Query = () => {
   const { showSnackbar, SnackbarComponent } = useSnackbar();
 
   // const [query, setQuery] = useState([]);
-  const [filteredQuery, setFilteredQuery] = useState([]);
-  // const [loading, setLoading] = useState(true);
+  const [queries, setQueries] = useState([]);
+  // const [filteredQuery, setFilteredQuery] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [dateQuery, setDateQuery] = useState("");
   const [statusQuery, setStatusQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [editingRowId, setEditingRowId] = useState(null);
   const [editedRowData, setEditedRowData] = useState({});
 
@@ -62,16 +54,28 @@ const Query = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [queryToDelete, setQueryToDelete] = useState(null);
 
-  const fetchQuery = React.useCallback(async () => {
+  const fetchQuery = React.useCallback(async (pageNum = 1) => {
+    setLoading(true);
     try {
-      const response = await getAllQueries();
-      const sortedData = response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      // setQuery(sortedData);
-      setFilteredQuery(sortedData);
+      const response = await getAllQueries(pageNum, 30);
+      // const sortedData = response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); 
+      // Server should ideally handle sorting with pagination
+      const newData = response.data || [];
+
+      setQueries(prev => {
+        if (pageNum === 1) return newData;
+        // Filter out duplicates if any
+        const existingIds = new Set(prev.map(i => i._id));
+        const uniqueNew = newData.filter(i => !existingIds.has(i._id));
+        return [...prev, ...uniqueNew];
+      });
+
+      setHasMore(response.pagination?.hasNextPage || false);
+      setHasMore(response.pagination?.hasNextPage || false);
     } catch (error) {
       console.error("Error fetching query:", error);
     } finally {
-      // setLoading(false);
+      setLoading(false);
     }
   }, []);
 
@@ -87,8 +91,17 @@ const Query = () => {
 
   useEffect(() => {
     fetchUsers();
-    if (canView) fetchQuery();
-  }, [canView, fetchQuery]);
+    if (canView) fetchQuery(1);
+  }, [canView]);
+
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    if (scrollHeight - scrollTop <= clientHeight + 50 && hasMore && !loading) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchQuery(nextPage);
+    }
+  };
 
   const formatDate = (date) => {
     const d = new Date(date);
@@ -127,24 +140,9 @@ const Query = () => {
   }, []);
 
   const handleEditOpen = React.useCallback(async (id) => {
-    // const res = await fetchOperationByQueries(id);
     dispatch(setSelectedquerie({ id }));
     navigate("/query/view");
   }, [dispatch, navigate]);
-
-  const filteredRows = filteredQuery.filter((item) => {
-    const searchLower = searchQuery.toLowerCase();
-    const name = item.guest_info?.guest_name?.toLowerCase() || "";
-    const phone = item.guest_info?.guest_phone?.toLowerCase() || "";
-    const bookingDate = formatDate(item.created_at);
-    const tourDate = formatDate(item.travel_date);
-    return (
-      (name.includes(searchLower) || phone.includes(searchLower)) &&
-      (!dateQuery || bookingDate === dateQuery || tourDate === dateQuery) &&
-      (!statusQuery || item.lead_stage === statusQuery) &&
-      (!locationQuery || item.destination === locationQuery)
-    );
-  });
   const handleOpenDeleteDialog = React.useCallback((row) => {
     setQueryToDelete(row);
     setDeleteDialogOpen(true);
@@ -225,7 +223,7 @@ const Query = () => {
       const res = await deleteQueries(queryToDelete._id);
       if (res.success) {
         showSnackbar("Query deleted successfully", "success");
-        fetchQuery();
+        setQueries(prev => prev.filter(q => q._id !== queryToDelete._id));
       } else {
         showSnackbar("Failed to delete query", "error");
       }
@@ -425,57 +423,21 @@ const Query = () => {
 
   // Table instance
   const table = useReactTable({
-    data: filteredRows,
+    data: queries,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: {
       pagination: {
-        pageSize: rowsPerPage,
-        pageIndex: page,
+        pageSize: queries.length > 0 ? queries.length : 10,
+        pageIndex: 0,
       },
     },
-    state: {
-      pagination: {
-        pageIndex: page,
-        pageSize: rowsPerPage,
-      },
-    },
-    onPaginationChange: (updater) => {
-      const newPagination = typeof updater === "function"
-        ? updater({ pageIndex: page, pageSize: rowsPerPage })
-        : updater;
-      setPage(newPagination.pageIndex);
-      setRowsPerPage(newPagination.pageSize);
-    },
-    manualPagination: false,
+    manualPagination: true,
   });
 
-  // Sync table pagination with state
-  useEffect(() => {
-    if (table.getState().pagination.pageIndex !== page) {
-      table.setPageIndex(page);
-    }
-    if (table.getState().pagination.pageSize !== rowsPerPage) {
-      table.setPageSize(rowsPerPage);
-    }
-  }, [page, rowsPerPage, table]);
-
-  const handleChangePage = (e, newPage) => {
-    setPage(newPage);
-    table.setPageIndex(newPage);
-  };
-
-  const handleChangeRowsPerPage = (e) => {
-    const newRowsPerPage = parseInt(e.target.value, 10);
-    setRowsPerPage(newRowsPerPage);
-    setPage(0);
-    table.setPageSize(newRowsPerPage);
-    table.setPageIndex(0);
-  };
-
   return (
-    <Container maxWidth={false} sx={{ py: 4 }}>
+    <Container maxWidth={false} sx={{ height: 'calc(100vh - 100px)', display: 'flex', flexDirection: 'column' }}>
       <Typography variant="h4" gutterBottom>Leads</Typography>
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 3 }}>
         <TextField label="Search" size="small" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
@@ -491,75 +453,18 @@ const Query = () => {
           ))}
         </TextField>
       </Box>
-      {/* <Container> */}
-      {/* <Stack
-        direction="row"
-        alignItems="center"
-        spacing={2}
-        flexWrap="wrap"
-        sx={{ mb: 3 }}
-      >
-        <Typography variant="h4" color="warning" sx={{ whiteSpace: 'nowrap' }}>
-          Leads
-        </Typography>
-
-        <TextField
-          label="Search"
-          size="small"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-
-        <TextField
-          type="date"
-          label="Date"
-          size="small"
-          value={dateQuery}
-          onChange={(e) => setDateQuery(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-        />
-
-        <TextField
-          select
-          label="Status"
-          size="small"
-          value={statusQuery}
-          onChange={(e) => setStatusQuery(e.target.value)}
-          sx={{ minWidth: 160 }}
-        >
-          {["", "Confirm", "Cancel", "FollowUp", "Postponed", "Higher Priority"].map((status) => (
-            <MenuItem key={status} value={status}>
-              {status || "All"}
-            </MenuItem>
-          ))}
-        </TextField>
-
-        <TextField
-          select
-          label="Location"
-          size="small"
-          value={locationQuery}
-          onChange={(e) => setLocationQuery(e.target.value)}
-          sx={{ minWidth: 160 }}
-        >
-          {["", "Darjeeling", "Sikkim", "North Sikkim", "Sandakphu"].map((loc) => (
-            <MenuItem key={loc} value={loc}>
-              {loc || "All"}
-            </MenuItem>
-          ))}
-        </TextField>
-      </Stack> */}
 
       <TableContainer
         component={Paper}
-        sx={{ boxShadow: 1, overflowX: "auto", mb: 2 }}
+        sx={{ flexGrow: 1, overflowY: "auto", mb: 2 }}
+        onScroll={handleScroll}
       >
-        <Table size="small">
+        <Table size="small" stickyHeader>
           <TableHead>
             {table.getHeaderGroups().map(headerGroup => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
-                  <TableCell key={header.id}>
+                  <TableCell key={header.id} sx={{ backgroundColor: 'background.paper' }}>
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -594,17 +499,6 @@ const Query = () => {
             )}
           </TableBody>
         </Table>
-
-        <TablePagination
-          component="div"
-          count={filteredRows.length}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[5, 10, 25]}
-          size="small"
-        />
       </TableContainer>
 
 
