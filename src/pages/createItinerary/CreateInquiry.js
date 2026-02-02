@@ -80,9 +80,11 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     // Package Suggestions
     const [packageSuggestions, setPackageSuggestions] = useState([]);
     const [uniqueLocations, setUniqueLocations] = useState([]);
+    const [itinerary, setItinerary] = useState([]);
 
     // Tab state for hotel selection
     const [selectedDay, setSelectedDay] = useState(0);
+    const [season, setSeason] = useState('Normal Season');
 
     // Fetch packages and hotels on mount
     useEffect(() => {
@@ -266,6 +268,15 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         }
         if (pkg.duration) {
             setTripDetails(prev => ({ ...prev, duration: pkg.duration.toString() }));
+        }
+
+        // Set editable short itinerary
+        if (pkg.details?.shortItinerary && Array.isArray(pkg.details.shortItinerary)) {
+            setItinerary(pkg.details.shortItinerary.map(day =>
+                typeof day === 'string' ? day : day?.tagValue || day?.tagName || ''
+            ));
+        } else {
+            setItinerary([]);
         }
 
         // Extract locations from shortItinerary and pre-populate hotel selections
@@ -616,9 +627,31 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
                 {/* Guest Information */}
                 <Paper sx={{ p: 3, mb: 3 }}>
-                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                        Guest Information
-                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            Guest Information
+                        </Typography>
+                        <Button
+                            size="small"
+                            color="warning"
+                            onClick={() => {
+                                setGuestInfo({
+                                    guest_name: '',
+                                    guest_email: '',
+                                    guest_phone: '',
+                                    country_code: '+91'
+                                });
+                                setTripDetails(prev => ({
+                                    ...prev,
+                                    pax: '',
+                                    kids_above_5: 0,
+                                    kids_below_5: 0
+                                }));
+                            }}
+                        >
+                            Reset
+                        </Button>
+                    </Box>
                     <Grid container spacing={2}>
                         <Grid item xs={12} md={6}>
                             <TextField
@@ -724,10 +757,31 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 </Paper>
 
                 {/* Trip Details */}
+                {/* Trip Details */}
                 <Paper sx={{ p: 3, mb: 3 }}>
-                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                        Trip Details
-                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            Trip Details
+                        </Typography>
+                        <Button
+                            size="small"
+                            color="warning"
+                            onClick={() => {
+                                setTripDetails(prev => ({
+                                    ...prev,
+                                    location: '',
+                                    keywords: '',
+                                    car_name: '',
+                                    car_count: '',
+                                    travel_date: '',
+                                    duration: ''
+                                }));
+                                setStayInfo({ rooms: '', hotel: '' });
+                            }}
+                        >
+                            Reset
+                        </Button>
+                    </Box>
                     <Grid container spacing={2}>
                         <Grid item xs={12} md={6}>
                             <Autocomplete
@@ -799,42 +853,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                                 onChange={handleTripDetailsChange}
                             />
                         </Grid>
-                    </Grid>
-                </Paper>
-
-                {/* Selected Package Info */}
-                {selectedPackage && (
-                    <Paper sx={{ p: 3, mb: 3, backgroundColor: '#e3f2fd' }}>
-                        <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
-                            Selected Package
-                        </Typography>
-                        <Box sx={{ mb: 2 }}>
-                            <Chip label={selectedPackage.label} color="primary" sx={{ mr: 1 }} />
-                            <Chip label={selectedPackage.location} />
-                        </Box>
-
-                        {/* Short Itinerary */}
-                        {selectedPackage?.details?.shortItinerary && selectedPackage.details.shortItinerary.length > 0 && (
-                            <Box sx={{ mt: 2 }}>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-                                    Short Itinerary:
-                                </Typography>
-                                {selectedPackage.details.shortItinerary.map((day, index) => (
-                                    <Typography key={index} variant="body2" sx={{ mb: 0.5, pl: 1 }}>
-                                        <strong>Day {index + 1}:</strong> {typeof day === 'string' ? day : day?.tagValue || day?.tagName || 'N/A'}
-                                    </Typography>
-                                ))}
-                            </Box>
-                        )}
-                    </Paper>
-                )}
-
-                {/* Stay Information */}
-                <Paper sx={{ p: 3, mb: 3 }}>
-                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                        Stay Information
-                    </Typography>
-                    <Grid container spacing={2}>
                         <Grid item xs={12} md={6}>
                             <TextField
                                 fullWidth
@@ -870,12 +888,102 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     </Grid>
                 </Paper>
 
+                {/* Selected Package Info */}
+                {selectedPackage && (
+                    <Paper sx={{ p: 3, mb: 3, backgroundColor: '#e3f2fd' }}>
+                        <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+                            Selected Package
+                        </Typography>
+                        <Box sx={{ mb: 2 }}>
+                            <Chip label={selectedPackage.label} color="primary" sx={{ mr: 1 }} />
+                            <Chip label={selectedPackage.location} />
+                        </Box>
+
+
+                    </Paper>
+                )}
+
+                {/* Short Itinerary */}
+                {selectedPackage && itinerary.length > 0 && (
+                    <Paper sx={{ p: 3, mb: 3 }}>
+                        <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                            Short Itinerary
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            {itinerary.map((day, index) => (
+                                <Grid container key={index} alignItems="flex-start" spacing={2}>
+                                    <Grid item xs={12} md={2} sx={{ pt: '24px !important' }}>
+                                        <Typography variant="subtitle1" fontWeight={600}>
+                                            Day {index + 1} :
+                                        </Typography>
+                                    </Grid>
+                                    <Grid item xs={12} md={10}>
+                                        <TextField
+                                            fullWidth
+                                            multiline
+                                            minRows={1}
+                                            value={day}
+                                            onChange={(e) => {
+                                                const newItinerary = [...itinerary];
+                                                newItinerary[index] = e.target.value;
+                                                setItinerary(newItinerary);
+                                            }}
+                                            placeholder={`Enter details for Day ${index + 1}`}
+                                        />
+                                    </Grid>
+                                </Grid>
+                            ))}
+                        </Box>
+                    </Paper>
+                )}
+
+
+
                 {/* Hotel Selection by Day */}
                 {tripDetails.duration > 0 && allHotels.length > 0 && (
                     <Paper sx={{ p: 3, mb: 3 }}>
-                        <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                            Select Hotels Day-Wise
-                        </Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                Select Hotels Day-Wise
+                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                <FormControl size="small" sx={{ minWidth: 200 }}>
+                                    <InputLabel>Season</InputLabel>
+                                    <Select
+                                        value={season}
+                                        label="Season"
+                                        onChange={(e) => setSeason(e.target.value)}
+                                    >
+                                        <MenuItem value="Peak Season">Peak Season</MenuItem>
+                                        <MenuItem value="Normal Season">Normal Season</MenuItem>
+                                    </Select>
+                                </FormControl>
+                                <Button
+                                    size="small"
+                                    color="warning"
+                                    onClick={() => {
+                                        setSeason('Normal Season');
+                                        setHotelSelections(prev => {
+                                            const nextState = {};
+                                            Object.keys(prev).forEach(key => {
+                                                if (prev[key]) {
+                                                    // Preserve location and availableHotels, reset choices
+                                                    nextState[key] = {
+                                                        ...prev[key],
+                                                        hotelId: '',
+                                                        roomType: '',
+                                                        mealPlan: ''
+                                                    };
+                                                }
+                                            });
+                                            return nextState;
+                                        });
+                                    }}
+                                >
+                                    Reset
+                                </Button>
+                            </Box>
+                        </Box>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                             {Array.from({ length: parseInt(tripDetails.duration) }, (_, dayIndex) => (
                                 <Box
@@ -893,10 +1001,11 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                                     {/* Day Label on Left */}
                                     <Box
                                         sx={{
-                                            minWidth: 100,
+                                            minWidth: 80,
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'flex-start',
+                                            pt: 2.5
                                         }}
                                     >
                                         <Typography
@@ -916,74 +1025,85 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                                     <Box sx={{ flex: 1 }}>
                                         <Grid container spacing={2}>
                                             {/* Step 1: Location Selection */}
-                                            <Grid item xs={12} md={4}>
+                                            <Grid item xs={12} md={3}>
                                                 <TextField
                                                     fullWidth
                                                     label="Location"
                                                     value={hotelSelections[dayIndex]?.location || ''}
                                                     // disabled
-                                                    helperText="Location from package itinerary"
+                                                    helperText="Location from package"
                                                     size="small"
                                                 />
                                             </Grid>
 
                                             {/* Step 2: Hotel Selection */}
-                                            <Grid item xs={12} md={5}>
-                                                <FormControl fullWidth disabled={!hotelSelections[dayIndex]?.location} size="small">
-                                                    <InputLabel>Select Hotel</InputLabel>
-                                                    <Select
-                                                        value={hotelSelections[dayIndex]?.hotelId || ''}
-                                                        onChange={(e) => {
-                                                            const selectedHotel = allHotels.find(h => h._id === e.target.value);
-                                                            setHotelSelections({
-                                                                ...hotelSelections,
-                                                                [dayIndex]: {
-                                                                    ...hotelSelections[dayIndex],
-                                                                    hotelId: e.target.value,
-                                                                    price: selectedHotel?.price || 0,
-                                                                }
-                                                            });
-                                                        }}
-                                                        label="Select Hotel"
-                                                    >
-                                                        {(hotelSelections[dayIndex]?.availableHotels || [])
-                                                            .filter(hotel => {
-                                                                // Optional: Still filter by hotel type if specified
-                                                                const matchesType = !stayInfo.hotel ||
-                                                                    hotel.type?.toLowerCase() === stayInfo.hotel.toLowerCase();
-                                                                return matchesType;
-                                                            })
-                                                            .map((hotel) => (
-                                                                <MenuItem key={hotel._id} value={hotel._id}>
-                                                                    {hotel.hotel_name} ({hotel.sub_destination})
-                                                                </MenuItem>
-                                                            ))}
-                                                    </Select>
-                                                </FormControl>
-                                            </Grid>
-
-                                            {/* Step 3: Price Display */}
                                             <Grid item xs={12} md={3}>
-                                                <TextField
+                                                <Autocomplete
                                                     fullWidth
-                                                    label="Price"
-                                                    type="number"
-                                                    value={hotelSelections[dayIndex]?.price || 0}
-                                                    onChange={(e) => {
-                                                        const newPrice = parseFloat(e.target.value) || 0;
+                                                    size="small"
+                                                    options={allHotels}
+                                                    getOptionLabel={(option) => `${option.hotel_name} (${option.sub_destination || option.location})`}
+                                                    value={allHotels.find(h => h._id === hotelSelections[dayIndex]?.hotelId) || null}
+                                                    onChange={(event, newValue) => {
                                                         setHotelSelections({
                                                             ...hotelSelections,
                                                             [dayIndex]: {
                                                                 ...hotelSelections[dayIndex],
-                                                                price: newPrice,
+                                                                hotelId: newValue?._id || '',
                                                             }
                                                         });
                                                     }}
-                                                    InputProps={{
-                                                        startAdornment: <Typography sx={{ mr: 1 }}>₹</Typography>,
-                                                    }}
-                                                    size="small"
+                                                    renderInput={(params) => <TextField {...params} label="Select Hotel" />}
                                                 />
+                                            </Grid>
+
+                                            {/* Step 3: Room Type */}
+                                            <Grid item xs={12} md={3}>
+                                                <FormControl fullWidth size="small">
+                                                    <InputLabel>Room Type</InputLabel>
+                                                    <Select
+                                                        value={hotelSelections[dayIndex]?.roomType || ''}
+                                                        label="Room Type"
+                                                        onChange={(e) => {
+                                                            setHotelSelections({
+                                                                ...hotelSelections,
+                                                                [dayIndex]: {
+                                                                    ...hotelSelections[dayIndex],
+                                                                    roomType: e.target.value,
+                                                                }
+                                                            });
+                                                        }}
+                                                    >
+                                                        <MenuItem value="a">a</MenuItem>
+                                                        <MenuItem value="b">b</MenuItem>
+                                                        <MenuItem value="c">c</MenuItem>
+                                                    </Select>
+                                                </FormControl>
+                                            </Grid>
+
+                                            {/* Step 4: Meal Plan */}
+                                            <Grid item xs={12} md={3}>
+                                                <FormControl fullWidth size="small">
+                                                    <InputLabel>Meal Plan</InputLabel>
+                                                    <Select
+                                                        value={hotelSelections[dayIndex]?.mealPlan || ''}
+                                                        label="Meal Plan"
+                                                        onChange={(e) => {
+                                                            setHotelSelections({
+                                                                ...hotelSelections,
+                                                                [dayIndex]: {
+                                                                    ...hotelSelections[dayIndex],
+                                                                    mealPlan: e.target.value,
+                                                                }
+                                                            });
+                                                        }}
+                                                    >
+                                                        <MenuItem value="EP">EP (No Meals)</MenuItem>
+                                                        <MenuItem value="CP">CP (Breakfast)</MenuItem>
+                                                        <MenuItem value="HB">HB (Breakfast & Dinner)</MenuItem>
+                                                        <MenuItem value="AP">AP (All Meals)</MenuItem>
+                                                    </Select>
+                                                </FormControl>
                                             </Grid>
                                         </Grid>
 
@@ -991,10 +1111,10 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                                         {hotelSelections[dayIndex]?.hotelId && (
                                             <Box sx={{ mt: 2, p: 1.5, backgroundColor: '#e3f2fd', borderRadius: 1 }}>
                                                 <Typography variant="body2">
-                                                    <strong>Day {dayIndex + 1}:</strong>{' '}
+                                                    <strong>Selected:</strong>{' '}
                                                     {allHotels.find(h => h._id === hotelSelections[dayIndex]?.hotelId)?.hotel_name || 'N/A'}
-                                                    {' '}in {hotelSelections[dayIndex]?.location}
-                                                    {' '}@ ₹{hotelSelections[dayIndex]?.price || 0}/-
+                                                    {hotelSelections[dayIndex]?.roomType && ` • Room: ${hotelSelections[dayIndex].roomType}`}
+                                                    {hotelSelections[dayIndex]?.mealPlan && ` • Plan: ${hotelSelections[dayIndex].mealPlan}`}
                                                 </Typography>
                                             </Box>
                                         )}
