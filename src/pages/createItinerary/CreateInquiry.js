@@ -1,40 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/material.css';
 import {
-    Box,
-    Grid,
-    Paper,
-    TextField,
-    Button,
-    Typography,
-    Autocomplete,
-    IconButton,
-    Collapse,
-    Card,
-    CardContent,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Chip,
-    Alert,
-    Snackbar,
-    CircularProgress,
-    Backdrop,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Skeleton,
+    Box, Grid, Paper, TextField, Button, Typography, Autocomplete, IconButton,
+    Collapse, Card, CardContent, FormControl, InputLabel, Select, MenuItem, Chip,
+    Alert, Snackbar, CircularProgress, Backdrop, Dialog, DialogTitle, DialogContent,
+    DialogActions, Skeleton,
 } from '@mui/material';
 import {
-    ChevronLeft,
-    ChevronRight,
-    Save,
-    Clear,
-    PictureAsPdf,
-    Email,
-    SaveAlt,
-    Edit as EditIcon,
+    ChevronLeft, ChevronRight, Save, Clear, PictureAsPdf,
+    Email, SaveAlt, Edit as EditIcon,
 } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { getAllPackages } from '../../api/packageAPI';
@@ -52,6 +27,16 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     const allHotels = useSelector((state) => state.hotels.allHotels || []);
     const configData = useSelector((state) => state.config.configData || {});
     const pdfRef = useRef(null);
+    const guestNameRef = useRef(null);
+
+    // Focus guest name on open
+    useEffect(() => {
+        if (!existingInquiry) {
+            setTimeout(() => {
+                guestNameRef.current?.focus();
+            }, 500);
+        }
+    }, [existingInquiry]);
 
     // UI States
     const [pdfOpen, setPdfOpen] = useState(true);
@@ -70,10 +55,14 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         guest_name: '',
         guest_email: '',
         guest_phone: '',
+        country_code: '+91'
     });
 
     const [tripDetails, setTripDetails] = useState({
         pax: '',
+        adults: '',
+        kids_above_5: 0,
+        kids_below_5: 0,
         car_name: '',
         car_count: '',
         location: '',
@@ -344,13 +333,14 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             return false;
         }
 
-        if (!guestInfo.guest_phone.trim() || !/^\d{10}$/.test(guestInfo.guest_phone)) {
-            showSnackbar('Please enter a valid 10-digit phone number', 'error');
+        // Basic validation for phone number length
+        if (!guestInfo.guest_phone.trim() || guestInfo.guest_phone.length < 7) {
+            showSnackbar('Please enter a valid phone number', 'error');
             return false;
         }
 
         if (!tripDetails.pax || parseInt(tripDetails.pax) < 1) {
-            showSnackbar('Please enter valid number of passengers', 'error');
+            showSnackbar('Please enter valid number of guests', 'error');
             return false;
         }
 
@@ -376,9 +366,12 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             guest_info: {
                 guest_name: guestInfo.guest_name,
                 guest_email: guestInfo.guest_email,
-                guest_phone: guestInfo.guest_phone,
+                guest_phone: `${guestInfo.country_code}${guestInfo.guest_phone}`,
             },
             pax: parseInt(tripDetails.pax),
+            adults: parseInt(tripDetails.adults) || 0,
+            kids_above_5: parseInt(tripDetails.kids_above_5) || 0,
+            kids_below_5: parseInt(tripDetails.kids_below_5) || 0,
             car_details: {
                 car_name: tripDetails.car_name || '',
                 car_count: parseInt(tripDetails.car_count) || 0,
@@ -640,6 +633,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                                 onChange={handleGuestInfoChange}
                                 required
                                 error={!guestInfo.guest_name && snackbar.open}
+                                inputRef={guestNameRef}
                             />
                         </Grid>
                         <Grid item xs={12} md={6}>
@@ -656,28 +650,110 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                             />
                         </Grid>
                         <Grid item xs={12} md={6}>
-                            <TextField
-                                fullWidth
-                                label="Guest Phone"
-                                name="guest_phone"
-                                value={guestInfo.guest_phone}
-                                onChange={handleGuestInfoChange}
-                                required
-                                error={!guestInfo.guest_phone && snackbar.open}
-                                helperText="10-digit phone number"
-                            />
+                            <Grid container spacing={1}>
+                                <Grid item xs={4}>
+                                    <PhoneInput
+                                        country={'in'}
+                                        value={guestInfo.country_code}
+                                        onChange={(phone, country) => {
+                                            setGuestInfo({ ...guestInfo, country_code: `+${country.dialCode}` });
+                                        }}
+                                        inputStyle={{
+                                            width: '100%',
+                                            height: '56px',
+                                            fontSize: '16px',
+                                            paddingLeft: '48px',
+                                            borderRadius: '4px',
+                                            borderColor: 'rgba(0, 0, 0, 0.23)',
+                                            backgroundColor: '#fff'
+                                        }}
+                                        containerStyle={{
+                                            marginTop: '0px',
+                                            marginBottom: '0px',
+                                        }}
+                                        dropdownStyle={{
+                                            zIndex: 1000
+                                        }}
+                                        specialLabel="Code"
+                                        disableDropdown={false}
+                                        enableAreaCodes={true}
+                                    />
+                                </Grid>
+                                <Grid item xs={8}>
+                                    <TextField
+                                        fullWidth
+                                        label="Phone Number"
+                                        name="guest_phone"
+                                        value={guestInfo.guest_phone}
+                                        onChange={handleGuestInfoChange}
+                                        required
+                                        error={!guestInfo.guest_phone && snackbar.open}
+                                        type="tel"
+                                    />
+                                </Grid>
+                            </Grid>
+                            {!guestInfo.guest_phone && snackbar.open && (
+                                <Typography variant="caption" color="error" sx={{ ml: 1.5, mt: 0.5 }}>
+                                    Phone number is required
+                                </Typography>
+                            )}
                         </Grid>
                         <Grid item xs={12} md={6}>
-                            <TextField
-                                fullWidth
-                                label="Number of Passengers (PAX)"
-                                name="pax"
-                                type="number"
-                                value={tripDetails.pax}
-                                onChange={handleTripDetailsChange}
-                                required
-                                error={!tripDetails.pax && snackbar.open}
-                            />
+                            <Grid container spacing={2}>
+                                <Grid item xs={4}>
+                                    <TextField
+                                        fullWidth
+                                        label="Adults"
+                                        name="adults"
+                                        type="number"
+                                        value={tripDetails.adults}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const adults = parseInt(val) || 0;
+                                            const kidsAbove5 = parseInt(tripDetails.kids_above_5) || 0;
+                                            setTripDetails({
+                                                ...tripDetails,
+                                                adults: val,
+                                                pax: adults + kidsAbove5
+                                            });
+                                        }}
+                                        required
+                                        error={!tripDetails.adults && snackbar.open}
+                                    />
+                                </Grid>
+                                <Grid item xs={4}>
+                                    <TextField
+                                        fullWidth
+                                        label="Kid(s) (>5)"
+                                        name="kids_above_5"
+                                        type="number"
+                                        value={tripDetails.kids_above_5}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const kidsAbove5 = parseInt(val) || 0;
+                                            const adults = parseInt(tripDetails.adults) || 0;
+                                            setTripDetails({
+                                                ...tripDetails,
+                                                kids_above_5: val,
+                                                pax: adults + kidsAbove5
+                                            });
+                                        }}
+                                    />
+                                </Grid>
+                                <Grid item xs={4}>
+                                    <TextField
+                                        fullWidth
+                                        label="Infant(s) (<5)"
+                                        name="kids_below_5"
+                                        type="number"
+                                        value={tripDetails.kids_below_5}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setTripDetails({ ...tripDetails, kids_below_5: val });
+                                        }}
+                                    />
+                                </Grid>
+                            </Grid>
                         </Grid>
                     </Grid>
                 </Paper>
