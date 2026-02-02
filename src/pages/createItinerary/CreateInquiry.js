@@ -60,9 +60,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
     const [tripDetails, setTripDetails] = useState({
         pax: '',
-        adults: '',
         kids_above_5: 0,
-        kids_below_5: 0,
         car_name: '',
         car_count: '',
         location: '',
@@ -369,9 +367,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 guest_phone: `${guestInfo.country_code}${guestInfo.guest_phone}`,
             },
             pax: parseInt(tripDetails.pax),
-            adults: parseInt(tripDetails.adults) || 0,
             kids_above_5: parseInt(tripDetails.kids_above_5) || 0,
-            kids_below_5: parseInt(tripDetails.kids_below_5) || 0,
             car_details: {
                 car_name: tripDetails.car_name || '',
                 car_count: parseInt(tripDetails.car_count) || 0,
@@ -700,57 +696,26 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                         </Grid>
                         <Grid item xs={12} md={6}>
                             <Grid container spacing={2}>
-                                <Grid item xs={4}>
+                                <Grid item xs={6}>
                                     <TextField
                                         fullWidth
                                         label="Adults"
-                                        name="adults"
+                                        name="pax"
                                         type="number"
-                                        value={tripDetails.adults}
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            const adults = parseInt(val) || 0;
-                                            const kidsAbove5 = parseInt(tripDetails.kids_above_5) || 0;
-                                            setTripDetails({
-                                                ...tripDetails,
-                                                adults: val,
-                                                pax: adults + kidsAbove5
-                                            });
-                                        }}
+                                        value={tripDetails.pax}
+                                        onChange={(e) => setTripDetails({ ...tripDetails, pax: e.target.value })}
                                         required
-                                        error={!tripDetails.adults && snackbar.open}
+                                        error={!tripDetails.pax && snackbar.open}
                                     />
                                 </Grid>
-                                <Grid item xs={4}>
+                                <Grid item xs={6}>
                                     <TextField
                                         fullWidth
                                         label="Kid(s) (>5)"
                                         name="kids_above_5"
                                         type="number"
                                         value={tripDetails.kids_above_5}
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            const kidsAbove5 = parseInt(val) || 0;
-                                            const adults = parseInt(tripDetails.adults) || 0;
-                                            setTripDetails({
-                                                ...tripDetails,
-                                                kids_above_5: val,
-                                                pax: adults + kidsAbove5
-                                            });
-                                        }}
-                                    />
-                                </Grid>
-                                <Grid item xs={4}>
-                                    <TextField
-                                        fullWidth
-                                        label="Infant(s) (<5)"
-                                        name="kids_below_5"
-                                        type="number"
-                                        value={tripDetails.kids_below_5}
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            setTripDetails({ ...tripDetails, kids_below_5: val });
-                                        }}
+                                        onChange={(e) => setTripDetails({ ...tripDetails, kids_above_5: e.target.value })}
                                     />
                                 </Grid>
                             </Grid>
