@@ -23,25 +23,20 @@ import {
   Pagination,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { getSinglePlace, deletePlace, updatePlaceRanking } from "../../api/placeApi";
+import { getAllplaces, getSinglePlace, deletePlace } from "../../api/placeApi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { removeSelectedPlace, setSelectedPlace, removePlaceFromStore, updatePlaceInStore } from "../../reduxcomponents/slices/placesSlice";
+import { removeSelectedPlace, setSelectedPlace } from "../../reduxcomponents/slices/placesSlice";
 import useSnackbar from "../../hooks/useSnackbar";
 import CheckIcon from "@mui/icons-material/Check";
-// import { handleChangeRanking } from "../allPackages/rankingUtil"; // Replaced by inline function
+import { handleChangeRanking } from "../allPackages/rankingUtil"; // adjust path
 import usePermissions from "../../hooks/UsePermissions";
-import useAppData from "../../hooks/useAppData";
 
 const AllPlaces = () => {
   const { showSnackbar, SnackbarComponent } = useSnackbar();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const getPermission = usePermissions();
-
-  // Use centralized data hook - data loaded by DataInitializer
-  const { allPlaces: reduxPlaces } = useAppData({ autoFetch: false });
-
   const [allPlaces, setAllPlaces] = useState([]);
   const [filteredPlaces, setFilteredPlaces] = useState([]);
   const [rankingLoading, setRankingLoading] = useState({});
@@ -58,13 +53,7 @@ const AllPlaces = () => {
     }
   }, [location.search]);
 
-  // Sync local state with Redux data
-  useEffect(() => {
-    if (reduxPlaces && reduxPlaces.length > 0) {
-      setAllPlaces(reduxPlaces);
-      setFilteredPlaces(reduxPlaces);
-    }
-  }, [reduxPlaces]);
+
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(9);
@@ -82,6 +71,16 @@ const AllPlaces = () => {
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
   const [menuPlaceId, setMenuPlaceId] = useState(null);
   const menuOpen = Boolean(menuAnchorEl);
+
+  useEffect(() => {
+    getAllplaces()
+      .then((res) => {
+        setAllPlaces(res);
+        setFilteredPlaces(res);
+      }).catch((err) => {
+        console.error("Failed to fetch places", err);
+      });
+  }, []);
 
   const zones = [...new Set(allPlaces.map((place) => place.zone))];
 
@@ -110,31 +109,6 @@ const AllPlaces = () => {
     setFilteredPlaces(filtered);
   }, [searchTerm, selectedZone, rankingFilter, allPlaces]);
 
-  // Implementation of handleChangeRanking using Redux
-  const handleChangeRanking = async (place, nextVal) => {
-    const id = place._id;
-    const newRanking = Number(nextVal);
-
-    // Optimistic update
-    const updatedPlace = { ...place, ranking: newRanking };
-    dispatch(updatePlaceInStore(updatedPlace));
-
-    setRankingLoading(prev => ({ ...prev, [id]: true }));
-
-    try {
-      await updatePlaceRanking(id, { ranking: newRanking });
-      dispatch(updatePlaceInStore({ ...updatedPlace, updated_at: new Date().toISOString() }));
-      showSnackbar("Ranking updated", "success");
-    } catch (err) {
-      console.error("Failed to update ranking", err);
-      showSnackbar("Failed to update ranking", "error");
-      // Revert
-      dispatch(updatePlaceInStore(place));
-    } finally {
-      setRankingLoading(prev => ({ ...prev, [id]: false }));
-    }
-  };
-
   const handleEdit = async (id) => {
     const response = await getSinglePlace(id);
     dispatch(setSelectedPlace(response));
@@ -153,7 +127,7 @@ const AllPlaces = () => {
   const confirmDelete = async () => {
     try {
       await deletePlace(deleteId);
-      dispatch(removePlaceFromStore(deleteId)); // Update Redux
+      setAllPlaces((prev) => prev.filter((place) => place._id !== deleteId));
       setConfirmOpen(false);
       showSnackbar("Place Deleted successfully", "success");
     } catch (err) {
@@ -318,10 +292,14 @@ const AllPlaces = () => {
                         onChange={(e) =>
                           handleChangeRanking(
                             place,
-                            e.target.value
+                            e.target.value,
+                            allPlaces,
+                            setAllPlaces,
+                            rankingLoading,
+                            setRankingLoading
                           )
                         }
-                        disabled={rankingLoading[place._id]}
+                        disabled={rankingLoading[place.id]}
                         sx={{
                           minWidth: 80,
                           height: 32,
@@ -369,7 +347,7 @@ const AllPlaces = () => {
               {[9, 18, 27].map((option) => (
                 <MenuItem key={option} value={option}>
                   {option}
-                </MenuItem>
+                </MenuItem> 
               ))}
             </Select>
           </Box>

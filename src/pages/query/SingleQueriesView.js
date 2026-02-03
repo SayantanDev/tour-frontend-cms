@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 
 import {
   Box, Button, Divider, Drawer, Grid, IconButton, Paper, Table, TableBody, TableCell, TableContainer,
@@ -13,7 +13,7 @@ import { useSelector } from 'react-redux';
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
 import { getAllHotels } from '../../api/hotelsAPI';
 import { getAllVehicle } from '../../api/vehicleAPI';
-import { addChangeRequest, getQueriesByoperation, getSingleOperation, updateFollowupDetails } from '../../api/operationAPI';
+import { addChangeRequest, addChangeRequestForItineray, getQueriesByoperation, getSingleOperation, updateFollowupDetails } from '../../api/operationAPI';
 // import { fetchOperationByQueries } from '../../api/queriesAPI';
 import useSnackbar from '../../hooks/useSnackbar';
 import usePermissions from '../../hooks/UsePermissions';
@@ -59,15 +59,15 @@ function SingleQueriesView() {
   const [guestInfo, setGuestInfo] = useState({});
   const [changeRequestOpen, setChangeRequestOpen] = useState(false);
   const [description, setDescription] = useState('');
-
+  const [editHistory, setEditHistory] = useState([]);
 
   const [verifyPopupOpen, setVerifyPopupOpen] = useState(false);
   const [verifyStatus, setVerifyStatus] = useState('');
   const [rejectedReason, setRejectedReason] = useState('');
-
+  const [verifyIndex, setVerifyIndex] = useState(null); // index of the itinerary row
   const [rejectedViewOpen, setRejectedViewOpen] = useState(false);
 
-  const fetchOperationData = useCallback(async () => {
+  const detchOperationData = async () => {
     const operationData = await getSingleOperation(fetchSelectedquerie.id);
     // setOperation(operationData);
 
@@ -113,19 +113,19 @@ function SingleQueriesView() {
           : '',
     }
     setGuestInfo(guestAndStayData);
-  }, [fetchSelectedquerie.id]);
+  }
 
   useEffect(() => {
-    fetchOperationData();
+    detchOperationData();
     getAllHotels().then(setHotels);
     getAllVehicle().then(setVehicles);
-  }, [fetchOperationData]);
+  }, []);
 
   const handleGuestChange = (e) => {
     setGuestInfo({ ...guestInfo, [e.target.name]: e.target.value });
   };
 
-  const openEditDrawer = useCallback((row, index) => {
+  const openEditDrawer = (row, index) => {
     setEditRow(row);
     setEditIndex(index);
     setDrawerOpen(true);
@@ -135,7 +135,7 @@ function SingleQueriesView() {
 
     const owner = vehicles.find(v => v.vehicles.some(veh => veh.vehicle_name === row.vehicleName));
     setDriverOptions(owner?.drivers || []);
-  }, [hotels, vehicles]);
+  };
 
   const handleEditChange = (e) => {
     setEditRow({ ...editRow, [e.target.name]: e.target.value });
@@ -175,7 +175,8 @@ function SingleQueriesView() {
       return;
     }
 
-
+    // ⬇️ Store in edit history
+    setEditHistory((prev) => [...prev, changedFields]);
 
     // ⬇️ Set status to "pending" only for this changed row
     updatedRow.status = "Pending";
@@ -380,9 +381,9 @@ function SingleQueriesView() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </strong>
                   </TableCell>
                 ))}

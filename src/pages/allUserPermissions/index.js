@@ -14,7 +14,7 @@ import {
   useMediaQuery,
   useTheme,
 } from "@mui/material";
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -47,20 +47,20 @@ const AllUserPermissions = () => {
   });
 
   // ===================== FETCH FUNCTIONS =====================
-  // ===================== FETCH FUNCTIONS =====================
-  const fetchUserPermissions = useCallback(async () => {
+  const fetchUserPermissions = async () => {
     try {
       const res = await getAllUserPermission();
       const items = res?.items || [];
-      // console.log(items);
+      console.log(items);
+      
 
       setAllUserPermissions(items);
     } catch (error) {
       console.error("Error fetching user permissions:", error);
     }
-  }, []);
+  };
 
-  const fetchPermissions = useCallback(async () => {
+  const fetchPermissions = async () => {
     try {
       const res = await getAllPermission();
       const items = res?.items || [];
@@ -69,7 +69,7 @@ const AllUserPermissions = () => {
     } catch (error) {
       console.error("Error fetching permissions:", error);
     }
-  }, []);
+  };
 
   useEffect(() => {
     fetchUserPermissions();
@@ -77,18 +77,24 @@ const AllUserPermissions = () => {
   }, []);
 
   // ===================== HANDLE DIALOG =====================
-  const handleOpenDialog = useCallback((id, role) => {
+  const handleOpenDialog = (id, role) => {
 
     setSelectedId(id);
     setSelectedRole(role);
 
+    console.log(allUserPermissions);
+
+
+
     const currentUser = allUserPermissions.find((user) => user._id === id);
     const savedPermission = currentUser?.permission || [];
+
 
     // Generate permission dialog structure based on allPermissions
     const permissionData = allPermissions.map((perm) => {
       const savedModule = savedPermission.find((sp) => sp.module === perm.module);
       const savedValues = savedModule?.value || [];
+
 
       return {
         module: perm.module,
@@ -104,15 +110,15 @@ const AllUserPermissions = () => {
     setOpenDialog(true);
     setFilteredPermissions(permissionData);
     setSearchTerm("");
-  }, [allUserPermissions, allPermissions]);
+  };
 
-  const handleCloseDialog = useCallback(() => {
+  const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedRole(null);
     setSelectedId(null);
-  }, []);
+  };
 
-  const handleSavePermissions = useCallback(async () => {
+  const handleSavePermissions = async () => {
     try {
       if (!selectedId) return;
       const updatedPermissionArr = filteredPermissions.filter((mod) => mod.enabled).map((mod) => ({
@@ -125,6 +131,8 @@ const AllUserPermissions = () => {
       };
 
       await updateUserPermission(selectedId, payload);
+
+
 
       setAllUserPermissions((prev) =>
         prev.map((user) =>
@@ -145,19 +153,19 @@ const AllUserPermissions = () => {
         severity: "error",
       });
     }
-  }, [selectedId, filteredPermissions]);
+  };
 
 
   // ===================== HANDLE CHECKBOX LOGIC =====================
-  const handleModuleToggle = useCallback((moduleName) => {
+  const handleModuleToggle = (moduleName) => {
     setFilteredPermissions((prev) =>
       prev.map((m) =>
         m.module === moduleName ? { ...m, enabled: !m.enabled } : m
       )
     );
-  }, []);
+  };
 
-  const handleValueChange = useCallback((moduleName, valueName) => {
+  const handleValueChange = (moduleName, valueName) => {
     setFilteredPermissions((prev) =>
       prev.map((m) =>
         m.module === moduleName
@@ -171,17 +179,17 @@ const AllUserPermissions = () => {
           : m
       )
     );
-  }, []);
+  };
 
 
   //Delete Permissions
 
-  const handleDelete = useCallback(async (id) => {
+  const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this permission?'))
       return;
     try {
       await deleteUserPermission(id);
-      await fetchUserPermissions(); // Note: Check if this causes loop if fetchUserPermissions is unstable (it is currently)
+      await fetchUserPermissions();
       setSnackbar({
         open: true,
         message: 'Permission deleted!',
@@ -196,11 +204,9 @@ const AllUserPermissions = () => {
         severity: 'error',
       });
     }
-  }, []); // fetchUserPermissions and fetchPermissions are defined in component body and unstable
+  };
 
-  const effectiveUserPermissions = useMemo(() =>
-    allUserPermissions.filter((data) => data.role !== 'Admin'),
-    [allUserPermissions]);
+  const effectiveUserPermissions = allUserPermissions.filter((data) => data.role !== 'Admin')
 
   // Column definitions for @tanstack/react-table
   const columns = useMemo(() => [
@@ -213,7 +219,6 @@ const AllUserPermissions = () => {
       header: "Permissions",
       cell: ({ row }) => {
         const singlePerm = row.original;
-        // Use a stable click handler or just inline if handles are stable
         return (
           <IconButton
             color="primary"
@@ -292,9 +297,9 @@ const AllUserPermissions = () => {
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                   </TableCell>
                 ))}
               </TableRow>

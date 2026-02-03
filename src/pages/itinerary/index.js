@@ -13,17 +13,10 @@ import {
     getExpandedRowModel,
     flexRender,
 } from "@tanstack/react-table";
-import { InquiryUserAssign, InquiryUserRemove, deleteInquiry } from "../../api/inquiryAPI";
+import { getAllInquiries, InquiryUserAssign, InquiryUserRemove, deleteInquiry } from "../../api/inquiryAPI";
 import { getAllUsers } from "../../api/userAPI";
-import { useDispatch, useSelector } from "react-redux";
-import {
-    setSelectedInquiry,
-    fetchInquiries,
-    selectAllInquiries,
-    selectInquiriesPagination,
-    selectInquiriesLoading,
-    removeInquiryFromStore
-} from "../../reduxcomponents/slices/inquirySlice";
+import { useDispatch } from "react-redux";
+import { setSelectedInquiry } from "../../reduxcomponents/slices/inquirySlice";
 import useSnackbar from "../../hooks/useSnackbar";
 import usePermissions from "../../hooks/UsePermissions";
 
@@ -33,17 +26,12 @@ const Inquiry = () => {
     const { showSnackbar, SnackbarComponent } = useSnackbar();
     const hasPermission = usePermissions();
 
-    // Redux state
-    const inquiries = useSelector(selectAllInquiries);
-    const { hasNextPage } = useSelector(selectInquiriesPagination);
-    const loading = useSelector(selectInquiriesLoading);
-
-    // const [inquiries, setInquiries] = useState([]);
+    const [inquiries, setInquiries] = useState([]);
     // const [searchQuery, setSearchQuery] = useState("");
     const [openRow, setOpenRow] = useState(null);
-    // const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
-    // const [hasMore, setHasMore] = useState(true);
+    const [hasMore, setHasMore] = useState(true);
     const ROWS_PER_PAGE = 20;
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -55,12 +43,30 @@ const Inquiry = () => {
     const [selectedUserIds, setSelectedUserIds] = useState([]);
     const [userList, setUserList] = useState([]);
 
-    const fetchInquiriesData = (pageNum = 1) => {
-        dispatch(fetchInquiries({ page: pageNum, limit: ROWS_PER_PAGE }));
+    const fetchInquiries = async (pageNum = 1) => {
+        setLoading(true);
+        try {
+            const response = await getAllInquiries(pageNum, ROWS_PER_PAGE);
+            const newData = response.data || [];
+
+            setInquiries(prev => {
+                if (pageNum === 1) return newData;
+                // Filter out duplicates just in case
+                const existingIds = new Set(prev.map(i => i._id));
+                const uniqueNew = newData.filter(i => !existingIds.has(i._id));
+                return [...prev, ...uniqueNew];
+            });
+
+            setHasMore(response.pagination?.hasNextPage || false);
+        } catch (error) {
+            console.error("Error fetching inquiries:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
-        fetchInquiriesData(1);
+        fetchInquiries(1);
         const fetchUsers = async () => {
             try {
                 const response = await getAllUsers();
@@ -75,10 +81,10 @@ const Inquiry = () => {
 
     const handleScroll = (e) => {
         const { scrollTop, scrollHeight, clientHeight } = e.target;
-        if (scrollHeight - scrollTop <= clientHeight + 50 && hasNextPage && !loading) {
+        if (scrollHeight - scrollTop <= clientHeight + 50 && hasMore && !loading) {
             const nextPage = page + 1;
             setPage(nextPage);
-            fetchInquiriesData(nextPage);
+            fetchInquiries(nextPage);
         }
     };
 
@@ -113,7 +119,7 @@ const Inquiry = () => {
         try {
             await deleteInquiry(selectedInquiryId);
             showSnackbar("Inquiry deleted successfully", "success");
-            dispatch(removeInquiryFromStore(selectedInquiryId));
+            await fetchInquiries();
         } catch (error) {
             console.error("Error deleting inquiry:", error);
             showSnackbar("Failed to delete inquiry", "error");
@@ -128,7 +134,7 @@ const Inquiry = () => {
             setSelectedInquiries([]);
             setSelectedUserIds([]);
             setAssignDialogOpen(false);
-            dispatch(fetchInquiries({ page: page, limit: ROWS_PER_PAGE })); // Re-fetch to show new assignments
+            await fetchInquiries();
             showSnackbar(res.message, "success");
         } catch (err) {
             console.error(err);
@@ -141,7 +147,7 @@ const Inquiry = () => {
             setSelectedInquiries([]);
             setSelectedUserIds([]);
             setUserRemoveDialogOpen(false);
-            dispatch(fetchInquiries({ page: page, limit: ROWS_PER_PAGE })); // Re-fetch
+            await fetchInquiries();
         } catch (err) {
             console.error(err);
         }

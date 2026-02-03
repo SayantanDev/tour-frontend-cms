@@ -16,15 +16,13 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
 import DriveFolderUploadIcon from '@mui/icons-material/DriveFolderUpload';
 import PackageDialog from '../../components/packages/PackageDialog';
-import { getSinglePackages, verifyPackage, updatePackageRanking } from '../../api/packageAPI';
+import { getAllPackages, getSinglePackages, verifyPackage, updatePackageRanking } from '../../api/packageAPI';
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { removeSelectedPackage, setSelectedPackage, updatePackageInStore } from "../../reduxcomponents/slices/packagesSlice";
+import { removeSelectedPackage, setSelectedPackage } from "../../reduxcomponents/slices/packagesSlice";
 import usePermissions from "../../hooks/UsePermissions";
 import PaymentsIcon from '@mui/icons-material/Payments';
 import CostDialogbox from "../../components/packages/costDialogbox";
-import useAppData from "../../hooks/useAppData";
-
 // --------- helpers ----------
 const formatDate = (iso) => {
   if (!iso) return "—";
@@ -55,9 +53,6 @@ const safeDuration = (pkg) => pkg?.details?.header?.h2 ?? "—";
 
 // ========== Component ==========
 const AllPackages = () => {
-  // Use centralized data hook
-  const { allPackages: reduxPackages } = useAppData({ autoFetch: false });
-
   const [allPackages, setAllPackages] = useState([]);
   const [filteredPackages, setFilteredPackages] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -72,12 +67,6 @@ const AllPackages = () => {
   //navigatyion from dashboard
   const location = useLocation();
 
-  // Sync local state with Redux data
-  useEffect(() => {
-    if (reduxPackages && reduxPackages.length > 0) {
-      setAllPackages(reduxPackages);
-    }
-  }, [reduxPackages]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -139,8 +128,16 @@ const AllPackages = () => {
   const dispatch = useDispatch();
   const getPermission = usePermissions();
 
-  // initial fetch - REMOVED (handled by useAppData and useEffect sync)
-
+  // initial fetch
+  useEffect(() => {
+    getAllPackages()
+      .then((res) => {
+        setAllPackages(res.data || []);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch packages', err);
+      });
+  }, []);
 
   const uniqueLocations = useMemo(
     () => [...new Set(allPackages.map(pkg => pkg.location).filter(Boolean))],
@@ -249,33 +246,28 @@ const AllPackages = () => {
     const id = row.id;
     setToggleLoading(prev => ({ ...prev, [id]: true }));
 
-    // Optimistic update via Redux
-    const pkg = allPackages.find(p => p._id === id);
-    if (pkg) {
-      dispatch(updatePackageInStore({ ...pkg, verified: nextVal }));
-    }
+    // optimistic UI
+    setAllPackages(prev =>
+      prev.map(p => (p._id === id ? { ...p, verified: nextVal } : p))
+    );
 
     try {
       const objD = { verified: nextVal };
       await verifyPackage(id, objD); // <-- backend update
-      // Update with new timestamp
-      if (pkg) {
-        dispatch(updatePackageInStore({
-          ...pkg,
-          verified: nextVal,
-          updated_at: new Date().toISOString()
-        }));
-      }
+      // reflect updated_at immediately
+      setAllPackages(prev =>
+        prev.map(p => (p._id === id ? { ...p, updated_at: new Date().toISOString() } : p))
+      );
     } catch (err) {
       console.error("Failed to update verified", err);
-      // Revert on error
-      if (pkg) {
-        dispatch(updatePackageInStore({ ...pkg, verified: !nextVal }));
-      }
+      // revert on error
+      setAllPackages(prev =>
+        prev.map(p => (p._id === id ? { ...p, verified: !nextVal } : p))
+      );
     } finally {
       setToggleLoading(prev => ({ ...prev, [id]: false }));
     }
-  }, [allPackages, dispatch]);
+  }, []);
 
   // NEW: change ranking
   const handleChangeRanking = React.useCallback(async (row, nextVal) => {
@@ -284,33 +276,27 @@ const AllPackages = () => {
 
     setRankingLoading(prev => ({ ...prev, [id]: true }));
 
-    // Optimistic update via Redux
-    const pkg = allPackages.find(p => p._id === id);
-    if (pkg) {
-      dispatch(updatePackageInStore({ ...pkg, ranking: newRanking }));
-    }
+    // optimistic UI
+    const prevSnapshot = allPackages;
+    setAllPackages(prev =>
+      prev.map(p => (p._id === id ? { ...p, ranking: newRanking } : p))
+    );
 
     try {
       // Assume API signature: updatePackageRanking(id, { ranking: number })
       await updatePackageRanking(id, { ranking: newRanking });
       // bump updated_at
-      if (pkg) {
-        dispatch(updatePackageInStore({
-          ...pkg,
-          ranking: newRanking,
-          updated_at: new Date().toISOString()
-        }));
-      }
+      setAllPackages(prev =>
+        prev.map(p => (p._id === id ? { ...p, updated_at: new Date().toISOString() } : p))
+      );
     } catch (err) {
       console.error("Failed to update ranking", err);
-      // Revert on error
-      if (pkg) {
-        dispatch(updatePackageInStore({ ...pkg, ranking: pkg?.ranking || 0 }));
-      }
+      // revert on error
+      setAllPackages(prevSnapshot);
     } finally {
       setRankingLoading(prev => ({ ...prev, [id]: false }));
     }
-  }, [allPackages, dispatch]);
+  }, [allPackages]);
 
 
 

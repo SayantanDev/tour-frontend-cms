@@ -11,24 +11,21 @@ import {
     ChevronLeft, ChevronRight, Save, Clear, PictureAsPdf,
     Email, SaveAlt, Edit as EditIcon,
 } from '@mui/icons-material';
-
-import useAppData from '../../hooks/useAppData';
+import { useDispatch, useSelector } from 'react-redux';
+import { getAllPackages } from '../../api/packageAPI';
+import { getAllHotels } from '../../api/hotelAPI';
+import { setAllHotels } from '../../reduxcomponents/slices/hotelsSlice';
+import { setAllPackages } from '../../reduxcomponents/slices/packagesSlice';
 import axios from '../../api/interceptor';
 import PdfPreview from './PdfPreview';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
 const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
-
-    // Use centralized data hook - data is already loaded by DataInitializer
-    const {
-        allPackages,
-        allHotels,
-        configData,
-        uniqueLocations,
-        isInitialLoading,
-    } = useAppData({ autoFetch: false }); // autoFetch false since DataInitializer handles it
-
+    const dispatch = useDispatch();
+    const allPackages = useSelector((state) => state.package.allPackages || []);
+    const allHotels = useSelector((state) => state.hotels.allHotels || []);
+    const configData = useSelector((state) => state.config.configData || {});
     const pdfRef = useRef(null);
     const guestNameRef = useRef(null);
 
@@ -44,6 +41,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     // UI States
     const [pdfOpen, setPdfOpen] = useState(true);
     const [loading, setLoading] = useState(false);
+    const [dataLoading, setDataLoading] = useState(true);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
     const [emailDialogOpen, setEmailDialogOpen] = useState(false);
     const [emailAddress, setEmailAddress] = useState('');
@@ -81,11 +79,18 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
     // Package Suggestions
     const [packageSuggestions, setPackageSuggestions] = useState([]);
+    const [uniqueLocations, setUniqueLocations] = useState([]);
     const [itinerary, setItinerary] = useState([]);
 
     // Tab state for hotel selection
     const [selectedDay, setSelectedDay] = useState(0);
     const [season, setSeason] = useState('Normal Season');
+
+    // Fetch packages and hotels on mount
+    useEffect(() => {
+        fetchData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Load existing inquiry data if in edit mode
     useEffect(() => {
@@ -95,6 +100,30 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [existingInquiry]);
 
+    const fetchData = async () => {
+        setDataLoading(true);
+        try {
+            const [packagesRes, hotelsRes] = await Promise.all([
+                getAllPackages(),
+                getAllHotels(),
+            ]);
+
+            // Save to Redux
+            dispatch(setAllPackages(packagesRes.data));
+            dispatch(setAllHotels(hotelsRes.data));
+
+            // Extract unique locations from packages
+            const locations = [...new Set(packagesRes.data.map(pkg => pkg.location))].filter(Boolean);
+            setUniqueLocations(locations);
+
+            showSnackbar('Data loaded successfully', 'success');
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            showSnackbar('Failed to load data. Please refresh.', 'error');
+        } finally {
+            setDataLoading(false);
+        }
+    };
 
     const loadExistingInquiry = (inquiry) => {
         // Load guest info
@@ -533,7 +562,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         setSnackbar({ ...snackbar, open: false });
     };
 
-    if (isInitialLoading) {
+    if (dataLoading) {
         return (
             <Box sx={{ p: 3 }}>
                 <Skeleton variant="rectangular" height={60} sx={{ mb: 2 }} />
