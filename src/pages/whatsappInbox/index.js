@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Box, Grid, Paper, Typography, IconButton, Tooltip, Button } from '@mui/material';
+import { Box, Typography, IconButton, Tooltip } from '@mui/material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PersonIcon from '@mui/icons-material/Person';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -29,7 +29,7 @@ const WhatsappInbox = () => {
   const { loggedinUser } = useSelector((state) => state.loggedinUser);
   const [socket, setSocket] = useState(null);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
-  const [rightPanelOpen, setRightPanelOpen] = useState(true);
+  const [rightPanelOpen] = useState(true);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
 
   // Initialize socket connection

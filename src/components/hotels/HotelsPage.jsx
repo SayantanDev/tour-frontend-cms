@@ -3,10 +3,11 @@ import { Box, Typography, Button, Stack, TextField, FormControl, Select, MenuIte
 import { useSelector, useDispatch } from "react-redux";
 import AddIcon from "@mui/icons-material/Add";
 
-import { getAllHotels, insertHotel, updateHotel, deleteHotel } from "../../api/hotelsAPI";
-import { setAllHotels } from "../../reduxcomponents/slices/hotelsSlice";
+import { insertHotel, updateHotel, deleteHotel } from "../../api/hotelsAPI";
+import { setAllHotels, addHotel, updateHotelInStore, removeHotel } from "../../reduxcomponents/slices/hotelsSlice";
 import useSnackbar from "../../hooks/useSnackbar";
 import usePermissions from "../../hooks/UsePermissions";
+import useAppData from "../../hooks/useAppData";
 
 import HotelsList from "./HotelsList";
 import HotelDrawer from "./HotelDrawer";
@@ -38,6 +39,9 @@ const emptyHotel = {
 };
 
 const HotelsPage = () => {
+  // Get hotels from Redux via useAppData hook
+  const { allHotels, configData } = useAppData({ autoFetch: false });
+
   const [hotels, setHotels] = useState([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState("view");
@@ -51,7 +55,6 @@ const HotelsPage = () => {
 
   const { showSnackbar, SnackbarComponent } = useSnackbar();
   const getPermission = usePermissions();
-  const configData = useSelector((state) => state.config.configData || {});
   const dispatch = useDispatch();
 
   const permissions = {
@@ -60,18 +63,10 @@ const HotelsPage = () => {
     add: getPermission("hotel", "add-hotel"),
   };
 
-  // Fetch hotels
+  // Sync local state with Redux data
   useEffect(() => {
-    (async () => {
-      try {
-        const list = await getAllHotels();
-        setHotels(list);
-        dispatch(setAllHotels(list)); // Update Redux
-      } catch (err) {
-        console.error(err);
-      }
-    })();
-  }, [dispatch]);
+    setHotels(allHotels);
+  }, [allHotels]);
 
   /** HANDLERS **/
   const handleView = (hotel) => {
@@ -97,9 +92,7 @@ const HotelsPage = () => {
     if (!window.confirm("Are you sure?")) return;
     try {
       await deleteHotel(id);
-      const updatedHotels = hotels.filter((h) => h._id !== id);
-      setHotels(updatedHotels);
-      dispatch(setAllHotels(updatedHotels)); // Update Redux
+      dispatch(removeHotel(id)); // Update Redux with specific action
       showSnackbar("Hotel deleted", "success");
     } catch {
       showSnackbar("Error deleting hotel", "error");
@@ -108,18 +101,13 @@ const HotelsPage = () => {
 
   const handleSubmit = async (values) => {
     try {
-      let updatedHotels;
       if (drawerMode === "edit") {
         await updateHotel(selectedHotel._id, values);
-        updatedHotels = hotels.map((h) => (h._id === selectedHotel._id ? { ...values, _id: h._id } : h));
-        setHotels(updatedHotels);
-        dispatch(setAllHotels(updatedHotels)); // Update Redux
+        dispatch(updateHotelInStore({ ...values, _id: selectedHotel._id })); // Update Redux
         showSnackbar("Hotel updated", "success");
       } else {
         const res = await insertHotel(values);
-        updatedHotels = [...hotels, res.data];
-        setHotels(updatedHotels);
-        dispatch(setAllHotels(updatedHotels)); // Update Redux
+        dispatch(addHotel(res.data)); // Add to Redux
         showSnackbar("Hotel added", "success");
       }
 
