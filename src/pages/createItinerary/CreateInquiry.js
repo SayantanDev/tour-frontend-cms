@@ -725,6 +725,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     tripDetails={tripDetails}
                     handleTripDetailsChange={handleTripDetailsChange}
                     setTripDetails={setTripDetails}
+                    selectedPackage={selectedPackage}
                     stayInfo={stayInfo}
                     handleStayInfoChange={handleStayInfoChange}
                     setStayInfo={setStayInfo}
@@ -735,7 +736,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 />
 
                 {/* Selected Package Info */}
-                <SelectedPackageCard selectedPackage={selectedPackage} />
+                {/* <SelectedPackageCard selectedPackage={selectedPackage} /> */}
 
                 {/* Short Itinerary */}
                 <ItineraryCard

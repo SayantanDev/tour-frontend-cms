@@ -117,6 +117,7 @@ const GuestInfoCard = ({
                                 onChange={(e) => setTripDetails({ ...tripDetails, pax: e.target.value })}
                                 required
                                 error={!tripDetails.pax && snackbar.open}
+                                inputProps={{ min: 0 }}
                             />
                         </Grid>
                         <Grid item xs={6}>
@@ -127,6 +128,7 @@ const GuestInfoCard = ({
                                 type="number"
                                 value={tripDetails.kids_above_5}
                                 onChange={(e) => setTripDetails({ ...tripDetails, kids_above_5: e.target.value })}
+                                inputProps={{ min: 0 }}
                             />
                         </Grid>
                     </Grid>

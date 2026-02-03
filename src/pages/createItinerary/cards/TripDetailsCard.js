@@ -1,12 +1,13 @@
 import React from 'react';
 import {
-    Paper, Box, Typography, Button, Grid, TextField, Autocomplete, FormControl, InputLabel, Select, MenuItem
+    Paper, Box, Typography, Button, Grid, TextField, Autocomplete, FormControl, InputLabel, Select, MenuItem, Chip, Stack
 } from '@mui/material';
 
 const TripDetailsCard = ({
     tripDetails,
     handleTripDetailsChange,
     setTripDetails,
+    selectedPackage,
     stayInfo,
     handleStayInfoChange,
     setStayInfo,
@@ -18,9 +19,20 @@ const TripDetailsCard = ({
     return (
         <Paper sx={{ p: 3, mb: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    Trip Details
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        Trip Details
+                    </Typography>
+                    <Stack direction="row" spacing={1}>
+                        {tripDetails.location && <Chip label={`Location: ${tripDetails.location}`} size="small" color="primary" variant="outlined" />}
+                        <Chip label={`Package: ${selectedPackage?.label || 'Custom Package'}`} size="small" color="primary" variant="outlined" />
+                        {tripDetails.car_name && <Chip label={`Car: ${tripDetails.car_name}`} size="small" color="primary" variant="outlined" />}
+                        {tripDetails.car_count > 0 && <Chip label={`Count: ${tripDetails.car_count}`} size="small" color="primary" variant="outlined" />}
+                        {tripDetails.duration > 0 && <Chip label={`Days: ${tripDetails.duration}`} size="small" color="primary" variant="outlined" />}
+                        {stayInfo.rooms > 0 && <Chip label={`Rooms: ${stayInfo.rooms}`} size="small" color="primary" variant="outlined" />}
+                        {stayInfo.hotel && <Chip label={`Hotel: ${stayInfo.hotel}`} size="small" color="primary" variant="outlined" />}
+                    </Stack>
+                </Box>
                 <Button
                     size="small"
                     color="warning"

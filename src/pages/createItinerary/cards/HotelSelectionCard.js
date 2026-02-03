@@ -15,7 +15,7 @@ const HotelSelectionCard = ({
     handleHotelChange
 }) => {
     if (!tripDetails.duration || tripDetails.duration <= 0 || allHotels.length === 0) return null;
-    console.log("====hotelSelections=====>", hotelSelections);
+    console.log("====hotelSelections=====>", allHotels);
     return (
         <Paper sx={{ p: 3, mb: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -30,8 +30,8 @@ const HotelSelectionCard = ({
                             label="Season"
                             onChange={handleSeasonChange}
                         >
-                            <MenuItem value="Peak Season">Peak Season</MenuItem>
-                            <MenuItem value="Normal Season">Normal Season</MenuItem>
+                            <MenuItem value="off_season_price">Off Season</MenuItem>
+                            <MenuItem value="season_price">Season</MenuItem>
                         </Select>
                     </FormControl>
                     <Button
@@ -113,7 +113,7 @@ const HotelSelectionCard = ({
 
                                 {/* Step 3: Room Type */}
                                 <Grid item xs={12} md={3}>
-                                    <FormControl fullWidth size="small" disabled={!season}>
+                                    <FormControl fullWidth size="small" disabled={!season || allHotels.find(h => h._id === hotelSelections[dayIndex]?.hotelId)?.type === 'Homestay'}>
                                         <InputLabel>Room Type</InputLabel>
                                         <Select
                                             value={hotelSelections[dayIndex]?.roomType || ''}
@@ -122,9 +122,9 @@ const HotelSelectionCard = ({
                                                 handleHotelChange(dayIndex, 'roomType', e.target.value);
                                             }}
                                         >
-                                            <MenuItem value="a">a</MenuItem>
-                                            <MenuItem value="b">b</MenuItem>
-                                            <MenuItem value="c">c</MenuItem>
+                                            {allHotels.find(h => h._id === hotelSelections[dayIndex]?.hotelId)?.category?.map((cat, index) => (
+                                                <MenuItem key={index} value={cat.room_cat}>{cat.room_cat}</MenuItem>
+                                            ))}
                                         </Select>
                                     </FormControl>
                                 </Grid>
@@ -140,10 +140,10 @@ const HotelSelectionCard = ({
                                                 handleHotelChange(dayIndex, 'mealPlan', e.target.value);
                                             }}
                                         >
-                                            <MenuItem value="EP">EP (No Meals)</MenuItem>
-                                            <MenuItem value="CP">CP (Breakfast)</MenuItem>
-                                            <MenuItem value="HB">HB (Breakfast & Dinner)</MenuItem>
-                                            <MenuItem value="AP">AP (All Meals)</MenuItem>
+                                            <MenuItem value="ep_plan">EP (No Meals)</MenuItem>
+                                            <MenuItem value="cp_plan">CP (Breakfast)</MenuItem>
+                                            <MenuItem value="hb_plan">HB (Breakfast & Dinner)</MenuItem>
+                                            <MenuItem value="ap_plan">AP (All Meals)</MenuItem>
                                         </Select>
                                     </FormControl>
                                 </Grid>
