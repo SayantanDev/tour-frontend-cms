@@ -23,13 +23,13 @@ import {
   Pagination,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { getSinglePlace, deletePlace } from "../../api/placeApi";
+import { getSinglePlace, deletePlace, updatePlaceRanking } from "../../api/placeApi";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { removeSelectedPlace, setSelectedPlace, removePlaceFromStore } from "../../reduxcomponents/slices/placesSlice";
+import { removeSelectedPlace, setSelectedPlace, removePlaceFromStore, updatePlaceInStore } from "../../reduxcomponents/slices/placesSlice";
 import useSnackbar from "../../hooks/useSnackbar";
 import CheckIcon from "@mui/icons-material/Check";
-import { handleChangeRanking } from "../allPackages/rankingUtil"; // adjust path
+// import { handleChangeRanking } from "../allPackages/rankingUtil"; // Replaced by inline function
 import usePermissions from "../../hooks/UsePermissions";
 import useAppData from "../../hooks/useAppData";
 
@@ -109,6 +109,31 @@ const AllPlaces = () => {
 
     setFilteredPlaces(filtered);
   }, [searchTerm, selectedZone, rankingFilter, allPlaces]);
+
+  // Implementation of handleChangeRanking using Redux
+  const handleChangeRanking = async (place, nextVal) => {
+    const id = place._id;
+    const newRanking = Number(nextVal);
+
+    // Optimistic update
+    const updatedPlace = { ...place, ranking: newRanking };
+    dispatch(updatePlaceInStore(updatedPlace));
+
+    setRankingLoading(prev => ({ ...prev, [id]: true }));
+
+    try {
+      await updatePlaceRanking(id, { ranking: newRanking });
+      dispatch(updatePlaceInStore({ ...updatedPlace, updated_at: new Date().toISOString() }));
+      showSnackbar("Ranking updated", "success");
+    } catch (err) {
+      console.error("Failed to update ranking", err);
+      showSnackbar("Failed to update ranking", "error");
+      // Revert
+      dispatch(updatePlaceInStore(place));
+    } finally {
+      setRankingLoading(prev => ({ ...prev, [id]: false }));
+    }
+  };
 
   const handleEdit = async (id) => {
     const response = await getSinglePlace(id);
@@ -293,14 +318,10 @@ const AllPlaces = () => {
                         onChange={(e) =>
                           handleChangeRanking(
                             place,
-                            e.target.value,
-                            allPlaces,
-                            setAllPlaces,
-                            rankingLoading,
-                            setRankingLoading
+                            e.target.value
                           )
                         }
-                        disabled={rankingLoading[place.id]}
+                        disabled={rankingLoading[place._id]}
                         sx={{
                           minWidth: 80,
                           height: 32,

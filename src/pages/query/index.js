@@ -5,10 +5,18 @@ import {
   Select, Checkbox, Dialog, DialogTitle, DialogContent, DialogActions
 } from "@mui/material";
 import { useReactTable, getCoreRowModel, getPaginationRowModel, flexRender } from "@tanstack/react-table";
-import { deleteQueries, getAllQueries, updateQueries } from "../../api/queriesAPI";
+import { deleteQueries, updateQueries } from "../../api/queriesAPI";
 import usePermissions from "../../hooks/UsePermissions";
-import { useDispatch } from "react-redux";
-import { setSelectedquerie } from "../../reduxcomponents/slices/queriesSlice";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  setSelectedquerie,
+  fetchQueries,
+  selectAllQueries,
+  selectQueriesLoading,
+  selectQueriesPagination,
+  updateQueryInStore,
+  removeQueryFromStore
+} from "../../reduxcomponents/slices/queriesSlice";
 import { useNavigate } from "react-router-dom";
 import useSnackbar from "../../hooks/useSnackbar";
 import { getAllUsers } from "../../api/userAPI";
@@ -19,19 +27,21 @@ const Query = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const canView = checkPermission("queries", "view");
-  // const canEdit = checkPermission("queries", "alter");
   const { showSnackbar, SnackbarComponent } = useSnackbar();
 
+  // Redux state
+  const queries = useSelector(selectAllQueries);
+  const loading = useSelector(selectQueriesLoading);
+  const { hasNextPage } = useSelector(selectQueriesPagination);
+
   // const [query, setQuery] = useState([]);
-  const [queries, setQueries] = useState([]);
+
   // const [filteredQuery, setFilteredQuery] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [dateQuery, setDateQuery] = useState("");
   const [statusQuery, setStatusQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const [editingRowId, setEditingRowId] = useState(null);
   const [editedRowData, setEditedRowData] = useState({});
 
@@ -54,30 +64,9 @@ const Query = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [queryToDelete, setQueryToDelete] = useState(null);
 
-  const fetchQuery = React.useCallback(async (pageNum = 1) => {
-    setLoading(true);
-    try {
-      const response = await getAllQueries(pageNum, 30);
-      // const sortedData = response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); 
-      // Server should ideally handle sorting with pagination
-      const newData = response.data || [];
-
-      setQueries(prev => {
-        if (pageNum === 1) return newData;
-        // Filter out duplicates if any
-        const existingIds = new Set(prev.map(i => i._id));
-        const uniqueNew = newData.filter(i => !existingIds.has(i._id));
-        return [...prev, ...uniqueNew];
-      });
-
-      setHasMore(response.pagination?.hasNextPage || false);
-      setHasMore(response.pagination?.hasNextPage || false);
-    } catch (error) {
-      console.error("Error fetching query:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const fetchQuery = React.useCallback((pageNum = 1) => {
+    dispatch(fetchQueries({ page: pageNum, limit: 30 }));
+  }, [dispatch]);
 
   const fetchUsers = async () => {
     try {
@@ -92,20 +81,21 @@ const Query = () => {
   useEffect(() => {
     fetchUsers();
     if (canView) fetchQuery(1);
-  }, [canView]);
+
+    // Cleanup on unmount
+    return () => {
+      // Optional: clear queries if desired, or keep them cached
+      // dispatch(resetQueries());
+    };
+  }, [canView, fetchQuery]);
 
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;
-    if (scrollHeight - scrollTop <= clientHeight + 50 && hasMore && !loading) {
+    if (scrollHeight - scrollTop <= clientHeight + 50 && hasNextPage && !loading) {
       const nextPage = page + 1;
       setPage(nextPage);
       fetchQuery(nextPage);
     }
-  };
-
-  const formatDate = (date) => {
-    const d = new Date(date);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
   const handleSaveEdit = React.useCallback(async (id) => {
@@ -117,16 +107,21 @@ const Query = () => {
       if (editedRowData.advance !== undefined) updatedFields.advance = editedRowData.advance;
       if (editedRowData.lead_stage !== undefined) updatedFields.lead_stage = editedRowData.lead_stage;
 
+      // Optimistic update
+      dispatch(updateQueryInStore({ _id: id, ...updatedFields }));
+
       const response = await updateQueries(id, updatedFields);
       if (response.success) showSnackbar(response.message, "success");
 
-      fetchQuery();
+      // fetchQuery(); // No need to re-fetch if updated optimistically or we can refetch single item if API supported it
       setEditingRowId(null);
       setEditedRowData({});
     } catch (error) {
       console.error("Update failed:", error);
+      showSnackbar("Update failed", "error");
+      fetchQuery(page); // Revert on failure
     }
-  }, [editedRowData, fetchQuery, showSnackbar]);
+  }, [editedRowData, dispatch, showSnackbar, page, fetchQuery]);
 
   const getStatusColor = React.useCallback((status) => {
     switch (status) {
@@ -223,7 +218,7 @@ const Query = () => {
       const res = await deleteQueries(queryToDelete._id);
       if (res.success) {
         showSnackbar("Query deleted successfully", "success");
-        setQueries(prev => prev.filter(q => q._id !== queryToDelete._id));
+        dispatch(removeQueryFromStore(queryToDelete._id));
       } else {
         showSnackbar("Failed to delete query", "error");
       }
