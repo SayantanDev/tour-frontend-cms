@@ -288,15 +288,14 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     // Extract destination from tagValue (e.g., "Gorkhey to Srikhola" -> "Srikhola")
                     const parts = item.tagValue.split(' to ');
                     const destination = parts.length > 1 ? parts[1].trim() : parts[0].trim();
-                    console.log('destination===>', destination)
+
                     // Find hotels at this destination
                     const hotelsAtDestination = allHotels.filter(hotel =>
                         hotel.location?.toLowerCase().includes(destination.toLowerCase()) ||
                         hotel.sub_destination?.toLowerCase().includes(destination.toLowerCase()) ||
                         hotel.destination?.toLowerCase().includes(destination.toLowerCase())
                     );
-                    console.log('destination===>', destination)
-                    console.log('hotelsAtDestination===>', hotelsAtDestination)
+
                     // Set the first matching hotel for this day if available
                     if (hotelsAtDestination.length > 0) {
                         const firstHotel = hotelsAtDestination[0];
@@ -304,7 +303,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                             location: destination,
                             hotelId: firstHotel._id,
                             price: firstHotel.category?.[0]?.season_price?.cp_plan || 0,
-                            availableHotels: hotelsAtDestination // Store all matching hotels
+                            availableHotels: hotelsAtDestination
                         };
                     } else {
                         // If no hotels found, still set the location
@@ -312,12 +311,11 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                             location: destination,
                             hotelId: '',
                             price: 0,
-                            availableHotels: [] // Empty array if no hotels found
+                            availableHotels: []
                         };
                     }
                 }
             });
-            console.log('hotel===>', newHotelSelections)
             setHotelSelections(newHotelSelections);
         }
 
@@ -327,6 +325,8 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             const paxCount = parseInt(tripDetails.pax) || 1;
             setCost(basePrice * paxCount);
         }
+
+        setPackageSuggestions([]);
     };
 
 
@@ -807,9 +807,9 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                         </Grid>
                         <Grid item xs={12} md={6}>
                             <FormControl fullWidth>
-                                <InputLabel>Car Name</InputLabel>
+                                <InputLabel>Car Type</InputLabel>
                                 <Select
-                                    label="Car Name"
+                                    label="Car Type"
                                     name="car_name"
                                     value={tripDetails.car_name}
                                     onChange={handleTripDetailsChange}
@@ -995,7 +995,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                                         p: 2,
                                         border: '1px solid #e0e0e0',
                                         borderRadius: 2,
-                                        backgroundColor: selectedDay === dayIndex ? '#f5f5f5' : 'transparent',
+                                        backgroundColor: 'transparent',
                                     }}
                                 >
                                     {/* Day Label on Left */}
@@ -1111,10 +1111,18 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                                         {hotelSelections[dayIndex]?.hotelId && (
                                             <Box sx={{ mt: 2, p: 1.5, backgroundColor: '#e3f2fd', borderRadius: 1 }}>
                                                 <Typography variant="body2">
-                                                    <strong>Selected:</strong>{' '}
+                                                    <strong>Hotel Name:</strong>{' '}
                                                     {allHotels.find(h => h._id === hotelSelections[dayIndex]?.hotelId)?.hotel_name || 'N/A'}
-                                                    {hotelSelections[dayIndex]?.roomType && ` • Room: ${hotelSelections[dayIndex].roomType}`}
-                                                    {hotelSelections[dayIndex]?.mealPlan && ` • Plan: ${hotelSelections[dayIndex].mealPlan}`}
+                                                    {hotelSelections[dayIndex]?.roomType && (
+                                                        <>
+                                                            {' | '}<strong>Room Type:</strong> {hotelSelections[dayIndex].roomType}
+                                                        </>
+                                                    )}
+                                                    {hotelSelections[dayIndex]?.mealPlan && (
+                                                        <>
+                                                            {' | '}<strong>Meal Plan:</strong> {hotelSelections[dayIndex].mealPlan}
+                                                        </>
+                                                    )}
                                                 </Typography>
                                             </Box>
                                         )}

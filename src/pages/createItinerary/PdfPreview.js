@@ -27,6 +27,16 @@ const PdfPreview = ({ guestInfo, tripDetails, selectedPackage, hotelSelections, 
                 />
             </Box>
 
+            {/* Package Cost */}
+            <Paper elevation={0} sx={{ p: 2, mb: 3, backgroundColor: '#89e3bfff' }}>
+                <Typography variant="h6" fontWeight={700} gutterBottom sx={{ color: '#2d5016' }}>
+                    Package cost:
+                </Typography>
+                <Typography variant="body2">
+                    <strong>Estimated Cost:</strong> ₹{cost.toLocaleString()}/-
+                </Typography>
+            </Paper>
+
             {/* Guest Details */}
             <Paper elevation={0} sx={{ p: 2, mb: 3, backgroundColor: '#f8f9fa' }}>
                 <Typography variant="h6" fontWeight={700} gutterBottom sx={{ color: '#2d5016' }}>
@@ -88,16 +98,6 @@ const PdfPreview = ({ guestInfo, tripDetails, selectedPackage, hotelSelections, 
                 </Paper>
             )}
 
-            {/* Package Cost */}
-            <Paper elevation={0} sx={{ p: 2, mb: 3, backgroundColor: '#f8f9fa' }}>
-                <Typography variant="h6" fontWeight={700} gutterBottom sx={{ color: '#2d5016' }}>
-                    Package cost:
-                </Typography>
-                <Typography variant="body2">
-                    <strong>Estimated Cost:</strong> ₹{cost.toLocaleString()}/-
-                </Typography>
-            </Paper>
-
             {/* Optional Extras */}
             {selectedPackage?.details?.cost?.optionalExtras && (
                 <Paper elevation={0} sx={{ p: 2, mb: 3, backgroundColor: '#f8f9fa' }}>
@@ -113,14 +113,14 @@ const PdfPreview = ({ guestInfo, tripDetails, selectedPackage, hotelSelections, 
             )}
 
             {/* Meal Plan */}
-            <Paper elevation={0} sx={{ p: 2, mb: 3, backgroundColor: '#f8f9fa' }}>
+            {/* <Paper elevation={0} sx={{ p: 2, mb: 3, backgroundColor: '#f8f9fa' }}>
                 <Typography variant="h6" fontWeight={700} gutterBottom sx={{ color: '#2d5016' }}>
                     Meal Plan:
                 </Typography>
                 <Typography variant="body2">
                     {selectedPackage?.details?.mealPlan || 'Breakfast only'}
                 </Typography>
-            </Paper>
+            </Paper> */}
 
             {/* Includes */}
             {selectedPackage?.details?.cost?.inclusions && (
