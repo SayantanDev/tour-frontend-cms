@@ -47,6 +47,7 @@ const TripDetailsCard = ({
             <Grid container spacing={2}>
                 <Grid item xs={12} md={6}>
                     <Autocomplete
+                        size="small"
                         options={uniqueLocations}
                         value={tripDetails.location}
                         onChange={(e, newValue) => {
@@ -62,7 +63,7 @@ const TripDetailsCard = ({
                     />
                 </Grid>
                 <Grid item xs={12} md={6}>
-                    <FormControl fullWidth>
+                    <FormControl fullWidth size="small">
                         <InputLabel>Package</InputLabel>
                         <Select
                             label="Package"
@@ -92,7 +93,7 @@ const TripDetailsCard = ({
                 </Grid>
 
                 <Grid item xs={12} md={6}>
-                    <FormControl fullWidth>
+                    <FormControl fullWidth size="small">
                         <InputLabel>Car Type</InputLabel>
                         <Select
                             label="Car Type"
@@ -111,6 +112,7 @@ const TripDetailsCard = ({
                 <Grid item xs={12} md={6}>
                     <TextField
                         fullWidth
+                        size="small"
                         label="Car Count"
                         name="car_count"
                         type="number"
@@ -122,6 +124,7 @@ const TripDetailsCard = ({
                 <Grid item xs={12} md={6}>
                     <TextField
                         fullWidth
+                        size="small"
                         label="Travel Date"
                         name="travel_date"
                         type="date"
@@ -133,6 +136,7 @@ const TripDetailsCard = ({
                 <Grid item xs={12} md={6}>
                     <TextField
                         fullWidth
+                        size="small"
                         label="Duration (Days)"
                         name="duration"
                         type="number"
@@ -144,6 +148,7 @@ const TripDetailsCard = ({
                 <Grid item xs={12} md={6}>
                     <TextField
                         fullWidth
+                        size="small"
                         label="Number of Rooms"
                         name="rooms"
                         type="number"
@@ -153,7 +158,7 @@ const TripDetailsCard = ({
                     />
                 </Grid>
                 <Grid item xs={12} md={6}>
-                    <FormControl fullWidth>
+                    <FormControl fullWidth size="small">
                         <InputLabel>Hotel Type</InputLabel>
                         <Select
                             name="hotel"
@@ -177,6 +182,7 @@ const TripDetailsCard = ({
                 <Grid item xs={12}>
                     <TextField
                         fullWidth
+                        size="small"
                         label="Keywords"
                         name="keywords"
                         value={tripDetails.keywords}

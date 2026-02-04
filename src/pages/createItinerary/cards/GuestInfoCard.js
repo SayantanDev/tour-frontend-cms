@@ -34,6 +34,7 @@ const GuestInfoCard = ({
                 <Grid item xs={12} md={6}>
                     <TextField
                         fullWidth
+                        size="small"
                         label="Guest Name"
                         name="guest_name"
                         value={guestInfo.guest_name}
@@ -46,6 +47,7 @@ const GuestInfoCard = ({
                 <Grid item xs={12} md={6}>
                     <TextField
                         fullWidth
+                        size="small"
                         label="Guest Email"
                         name="guest_email"
                         type="email"
@@ -67,7 +69,7 @@ const GuestInfoCard = ({
                                 }}
                                 inputStyle={{
                                     width: '100%',
-                                    height: '56px',
+                                    height: '40px',
                                     fontSize: '16px',
                                     paddingLeft: '48px',
                                     borderRadius: '4px',
@@ -89,6 +91,7 @@ const GuestInfoCard = ({
                         <Grid item xs={8}>
                             <TextField
                                 fullWidth
+                                size="small"
                                 label="Phone Number"
                                 name="guest_phone"
                                 value={guestInfo.guest_phone}
@@ -110,6 +113,7 @@ const GuestInfoCard = ({
                         <Grid item xs={6}>
                             <TextField
                                 fullWidth
+                                size="small"
                                 label="Adults"
                                 name="pax"
                                 type="number"
@@ -123,6 +127,7 @@ const GuestInfoCard = ({
                         <Grid item xs={6}>
                             <TextField
                                 fullWidth
+                                size="small"
                                 label="Kid(s) (>5)"
                                 name="kids_above_5"
                                 type="number"

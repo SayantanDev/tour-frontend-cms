@@ -106,7 +106,7 @@ const HotelSelectionCard = ({
                                         onChange={(event, newValue) => {
                                             handleHotelChange(dayIndex, 'hotelId', newValue?._id || '');
                                         }}
-                                        renderInput={(params) => <TextField {...params} label="Select Hotel" />}
+                                        renderInput={(params) => <TextField {...params} label="Select Hotel" size="small" />}
                                         disabled={!season}
                                     />
                                 </Grid>

@@ -814,7 +814,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
                     <Button
                         variant="contained"
-                        size="large"
+                        size="small"
                         startIcon={isEditMode ? <EditIcon /> : <Save />}
                         onClick={() => handleSubmit(false)}
                         disabled={loading}
@@ -824,7 +824,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     </Button>
                     <Button
                         variant="outlined"
-                        size="large"
+                        size="small"
                         startIcon={<Clear />}
                         onClick={onClose || resetForm}
                         disabled={loading}

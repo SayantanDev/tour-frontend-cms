@@ -9,6 +9,7 @@ const CostEstimateCard = ({ cost, handleCostChange }) => {
             </Typography>
             <TextField
                 fullWidth
+                size="small"
                 label="Total Cost"
                 type="number"
                 value={cost}
