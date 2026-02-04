@@ -15,7 +15,7 @@ const HotelSelectionCard = ({
     handleHotelChange
 }) => {
     if (!tripDetails.duration || tripDetails.duration <= 0 || allHotels.length === 0) return null;
-    console.log("====hotelSelections=====>", allHotels);
+
     return (
         <Paper sx={{ p: 3, mb: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>

@@ -14,7 +14,10 @@ const TripDetailsCard = ({
     uniqueLocations,
     snackbar,
     configData,
-    onReset
+    onReset,
+    handleLocationChange,
+    allPackages,
+    onPackageSelect
 }) => {
     return (
         <Paper sx={{ p: 3, mb: 3 }}>
@@ -47,7 +50,11 @@ const TripDetailsCard = ({
                         options={uniqueLocations}
                         value={tripDetails.location}
                         onChange={(e, newValue) => {
-                            setTripDetails({ ...tripDetails, location: newValue || '', duration: 0 });
+                            if (handleLocationChange) {
+                                handleLocationChange(newValue);
+                            } else {
+                                setTripDetails({ ...tripDetails, location: newValue || '', duration: 0 });
+                            }
                         }}
                         renderInput={(params) => (
                             <TextField {...params} label="Location" placeholder="Select location" />
@@ -55,15 +62,35 @@ const TripDetailsCard = ({
                     />
                 </Grid>
                 <Grid item xs={12} md={6}>
-                    <TextField
-                        fullWidth
-                        label="Keywords"
-                        name="keywords"
-                        value={tripDetails.keywords}
-                        onChange={handleTripDetailsChange}
-                        placeholder="e.g., adventure, honeymoon"
-                    />
+                    <FormControl fullWidth>
+                        <InputLabel>Package</InputLabel>
+                        <Select
+                            label="Package"
+                            value={selectedPackage ? selectedPackage._id : 'custom'}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                if (onPackageSelect) {
+                                    if (val === 'custom') {
+                                        onPackageSelect(null);
+                                    } else {
+                                        const pkg = allPackages?.find(p => p._id === val);
+                                        onPackageSelect(pkg);
+                                    }
+                                }
+                            }}
+                        >
+                            <MenuItem value="custom">Custom Package</MenuItem>
+                            {allPackages
+                                ?.filter(p => !tripDetails.location || p.location?.toLowerCase() === tripDetails.location?.toLowerCase())
+                                .map((pkg) => (
+                                    <MenuItem key={pkg._id} value={pkg._id}>
+                                        {pkg.label || pkg.name || 'Unnamed Package'}
+                                    </MenuItem>
+                                ))}
+                        </Select>
+                    </FormControl>
                 </Grid>
+
                 <Grid item xs={12} md={6}>
                     <FormControl fullWidth>
                         <InputLabel>Car Type</InputLabel>
@@ -146,6 +173,16 @@ const TripDetailsCard = ({
                                 ]}
                         </Select>
                     </FormControl>
+                </Grid>
+                <Grid item xs={12}>
+                    <TextField
+                        fullWidth
+                        label="Keywords"
+                        name="keywords"
+                        value={tripDetails.keywords}
+                        onChange={handleTripDetailsChange}
+                        placeholder="e.g., adventure, honeymoon"
+                    />
                 </Grid>
             </Grid>
         </Paper>

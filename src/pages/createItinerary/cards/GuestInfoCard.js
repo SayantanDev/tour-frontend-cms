@@ -39,7 +39,7 @@ const GuestInfoCard = ({
                         value={guestInfo.guest_name}
                         onChange={handleGuestInfoChange}
                         required
-                        error={!guestInfo.guest_name && snackbar.open}
+                        error={!guestInfo.guest_name && snackbar.open && snackbar.severity === 'error'}
                         inputRef={guestNameRef}
                     />
                 </Grid>
@@ -52,7 +52,7 @@ const GuestInfoCard = ({
                         value={guestInfo.guest_email}
                         onChange={handleGuestInfoChange}
                         required
-                        error={!guestInfo.guest_email && snackbar.open}
+                        error={!guestInfo.guest_email && snackbar.open && snackbar.severity === 'error'}
                         helperText="Will be used for sending quotation"
                     />
                 </Grid>
@@ -94,12 +94,12 @@ const GuestInfoCard = ({
                                 value={guestInfo.guest_phone}
                                 onChange={handleGuestInfoChange}
                                 required
-                                error={!guestInfo.guest_phone && snackbar.open}
+                                error={!guestInfo.guest_phone && snackbar.open && snackbar.severity === 'error'}
                                 type="tel"
                             />
                         </Grid>
                     </Grid>
-                    {!guestInfo.guest_phone && snackbar.open && (
+                    {!guestInfo.guest_phone && snackbar.open && snackbar.severity === 'error' && (
                         <Typography variant="caption" color="error" sx={{ ml: 1.5, mt: 0.5 }}>
                             Phone number is required
                         </Typography>
@@ -116,7 +116,7 @@ const GuestInfoCard = ({
                                 value={tripDetails.pax}
                                 onChange={(e) => setTripDetails({ ...tripDetails, pax: e.target.value })}
                                 required
-                                error={!tripDetails.pax && snackbar.open}
+                                error={!tripDetails.pax && snackbar.open && snackbar.severity === 'error'}
                                 inputProps={{ min: 0 }}
                             />
                         </Grid>

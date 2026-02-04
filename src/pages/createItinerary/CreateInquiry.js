@@ -251,6 +251,20 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         }
     }, [tripDetails.duration, tripDetails.location, tripDetails.keywords, allPackages]);
 
+    // Update itinerary based on duration for custom packages
+    useEffect(() => {
+        if (!selectedPackage) {
+            const days = parseInt(tripDetails.duration) || 0;
+            setItinerary(prev => {
+                if (prev.length === days) return prev;
+                if (days > prev.length) {
+                    return [...prev, ...new Array(days - prev.length).fill('')];
+                }
+                return prev.slice(0, days);
+            });
+        }
+    }, [tripDetails.duration, selectedPackage]);
+
     const handleGuestInfoChange = (e) => {
         const { name, value } = e.target;
         setGuestInfo({
@@ -280,6 +294,15 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     const handlePackageSelect = (pkg) => {
         ignoreSuggestionsRef.current = true;
         setShowSuggestions(false);
+
+        if (!pkg || pkg._id === 'custom') {
+            setSelectedPackage(null);
+            setItinerary([]);
+            setHotelSelections({});
+            setCost(0);
+            return;
+        }
+
         setSelectedPackage(pkg);
         if (pkg.location) {
             setTripDetails(prev => ({ ...prev, location: pkg.location }));
@@ -372,6 +395,15 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             duration: ''
         }));
         setStayInfo({ rooms: '', hotel: '' });
+        setSelectedPackage(null);
+        setCost(0);
+        setItinerary([]);
+        setHotelSelections({});
+    };
+
+    const handleLocationChange = (newValue) => {
+        setTripDetails(prev => ({ ...prev, location: newValue || '', duration: 0 }));
+        setHotelSelections({});
     };
 
     const handleHotelReset = () => {
@@ -733,6 +765,9 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     snackbar={snackbar}
                     configData={configData}
                     onReset={handleTripDetailsReset}
+                    handleLocationChange={handleLocationChange}
+                    allPackages={allPackages}
+                    onPackageSelect={handlePackageSelect}
                 />
 
                 {/* Selected Package Info */}
@@ -742,6 +777,16 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 <ItineraryCard
                     itinerary={itinerary}
                     onItineraryChange={handleItineraryChange}
+                    onAddDay={() => {
+                        setItinerary([...itinerary, '']);
+                        setTripDetails(prev => ({ ...prev, duration: (parseInt(prev.duration) || 0) + 1 }));
+                    }}
+                    onRemoveDay={(index) => {
+                        const newItinerary = [...itinerary];
+                        newItinerary.splice(index, 1);
+                        setItinerary(newItinerary);
+                        setTripDetails(prev => ({ ...prev, duration: Math.max(0, (parseInt(prev.duration) || 0) - 1) }));
+                    }}
                 />
 
 
