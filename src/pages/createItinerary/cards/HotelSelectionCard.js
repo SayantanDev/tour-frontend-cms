@@ -140,9 +140,8 @@ const HotelSelectionCard = ({
                                                 handleHotelChange(dayIndex, 'mealPlan', e.target.value);
                                             }}
                                         >
-                                            <MenuItem value="ep_plan">EP (No Meals)</MenuItem>
                                             <MenuItem value="cp_plan">CP (Breakfast)</MenuItem>
-                                            <MenuItem value="hb_plan">HB (Breakfast & Dinner)</MenuItem>
+                                            <MenuItem value="map_plan">MAP (Breakfast + 1 major meal)</MenuItem>
                                             <MenuItem value="ap_plan">AP (All Meals)</MenuItem>
                                         </Select>
                                     </FormControl>
