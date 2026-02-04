@@ -58,7 +58,6 @@ const AllPermissions = () => {
     try {
       const res = await getAllPermission();
       const items = res?.items || [];
-      console.log('permissions', items);
 
       setAllPermissions(items);
       setFilteredPermissions(items);
@@ -246,7 +245,7 @@ const AllPermissions = () => {
       },
     },
     onPaginationChange: (updater) => {
-      const newPagination = typeof updater === "function" 
+      const newPagination = typeof updater === "function"
         ? updater({ pageIndex: page, pageSize: rowsPerPage })
         : updater;
       setPage(newPagination.pageIndex);
@@ -306,7 +305,7 @@ const AllPermissions = () => {
         // borderRadius: 2,
         boxShadow: '0px 2px 6px rgba(0,0,0,0.1)',
       }}>
-        <Table sx={{padding: '6px 12px'}} size='small'>
+        <Table sx={{ padding: '6px 12px' }} size='small'>
           <TableHead>
             {table.getHeaderGroups().map(headerGroup => (
               <TableRow key={headerGroup.id}>
@@ -318,9 +317,9 @@ const AllPermissions = () => {
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                   </TableCell>
                 ))}
               </TableRow>

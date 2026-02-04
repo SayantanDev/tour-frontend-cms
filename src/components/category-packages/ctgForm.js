@@ -155,52 +155,67 @@ const getInitialValues = (data) => {
 };
 
 const package_usage_types_obj = [
-  {label: "None",
+  {
+    label: "None",
     val: "",
   },
-  {label: "Home page attraction",
+  {
+    label: "Home page attraction",
     val: "home-page-attraction",
   },
-  {label: "Attraction",
+  {
+    label: "Attraction",
     val: "attraction",
   },
-  {label: "Tour Category",
+  {
+    label: "Tour Category",
     val: "tour-category",
   },
-  {label: "Home Page Tour Category",
+  {
+    label: "Home Page Tour Category",
     val: "home-page-tour-category",
   },
-  {label: "Trek Category",
+  {
+    label: "Trek Category",
     val: "trek-category",
   },
-  {label: "Home Page Trek Category",
+  {
+    label: "Home Page Trek Category",
     val: "home-page-trek-category",
   },
-  {label: "Places Category",
+  {
+    label: "Places Category",
     val: "places-category",
   },
-  {label: "Home Page Places Category",
+  {
+    label: "Home Page Places Category",
     val: "home-page-places-category",
   },
 ]
 
 const Region_obj = [
-  {label: "None",
+  {
+    label: "None",
     val: "",
   },
-  {label: "Sikkim",
+  {
+    label: "Sikkim",
     val: "sikkim",
   },
-  {label: "Darjeeling",
+  {
+    label: "Darjeeling",
     val: "darjeeling",
   },
-  {label: "North Sikkim",
+  {
+    label: "North Sikkim",
     val: "north-sikkim",
   },
-  {label: "Meghalaya",
+  {
+    label: "Meghalaya",
     val: "meghalaya",
   },
-  {label: "Arunachal Pradesh",
+  {
+    label: "Arunachal Pradesh",
     val: "arunachal-pradesh",
   }
 ]
@@ -308,9 +323,6 @@ const RenderEditableList = ({ name, values, setFieldValue, label }) => {
 const CtgForm = () => {
   const navigate = useNavigate();
   const { fetchSelectedCtgPackage: selectedCatPackage } = useSelector((state) => state.ctgpakage);
-  // console.log("selectedCatPackage : ", selectedCatPackage);
-
-  // const getInitialValues = (selectedCatPackage) => selectedCatPackage || initialValues;
 
   const { showSnackbar, SnackbarComponent } = useSnackbar();
 
@@ -319,7 +331,7 @@ const CtgForm = () => {
       // let res;
       if (selectedCatPackage && selectedCatPackage._id) {
 
-        const res = await  updateCatPackage(selectedCatPackage._id, values); // You'll need to import and define this API
+        const res = await updateCatPackage(selectedCatPackage._id, values); // You'll need to import and define this API
         if (res) {
           showSnackbar('Package updated successfully', 'success');
         }
@@ -327,8 +339,6 @@ const CtgForm = () => {
         await CatPackageCreate(values);
         showSnackbar('You created a new place', 'success');
         navigate(`/category-packages/view`);
-        // console.log("places data : ", values);
-
       }
     } catch (error) {
       console.error('Error submitting form:', error);

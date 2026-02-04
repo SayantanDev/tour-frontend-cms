@@ -69,8 +69,6 @@ const Login = () => {
             }));
             // ✅ Dispatch config string fetch here
             const configRes = await configString();
-            console.log("configRes", configRes.data);
-
             dispatch(setConfigData(configRes.data));
             navigate('/dashboard');
         } catch (err) {

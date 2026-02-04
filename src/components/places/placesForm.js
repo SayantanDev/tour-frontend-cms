@@ -167,8 +167,6 @@ const PlacesForm = () => {
     try {
       // let res;
       if (selectedPlace && selectedPlace._id) {
-        console.log("updatePlace", values);
-
         const res = await updatePlace(values, selectedPlace._id); // You'll need to import and define this API
         if (res) {
           showSnackbar('Package updated successfully', 'success');

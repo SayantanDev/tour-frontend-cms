@@ -51,9 +51,6 @@ const AllUserPermissions = () => {
     try {
       const res = await getAllUserPermission();
       const items = res?.items || [];
-      console.log(items);
-      
-
       setAllUserPermissions(items);
     } catch (error) {
       console.error("Error fetching user permissions:", error);
@@ -81,11 +78,6 @@ const AllUserPermissions = () => {
 
     setSelectedId(id);
     setSelectedRole(role);
-
-    console.log(allUserPermissions);
-
-
-
     const currentUser = allUserPermissions.find((user) => user._id === id);
     const savedPermission = currentUser?.permission || [];
 
@@ -297,9 +289,9 @@ const AllUserPermissions = () => {
                     {header.isPlaceholder
                       ? null
                       : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
                   </TableCell>
                 ))}
               </TableRow>

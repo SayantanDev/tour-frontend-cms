@@ -33,7 +33,7 @@ const PdfPreview = ({ guestInfo, tripDetails, selectedPackage, hotelSelections, 
                     Package cost:
                 </Typography>
                 <Typography variant="body2">
-                    <strong>Estimated Cost:</strong> ₹{cost.toLocaleString()}/-
+                    <strong>Cost:</strong> ₹{cost.toLocaleString()}/-
                 </Typography>
             </Paper>
 

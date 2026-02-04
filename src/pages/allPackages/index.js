@@ -101,7 +101,6 @@ const AllPackages = () => {
 
   const handleOpenConfirm = (section, target) => {
     setOpenConfirm({ isVisible: true, section, target });
-    console.log(section, target);
   }
 
   const handleCloseConfirm = () => setOpenConfirm({ isVisible: false, section: "", target: "" });
@@ -220,8 +219,6 @@ const AllPackages = () => {
     rankingFilter
   ]);
 
-  console.log(filteredPackages);
-
   // actions
   const handleView = React.useCallback((id) => {
     navigate(`/packages/view/${id}`);
@@ -309,9 +306,6 @@ const AllPackages = () => {
 
 
   const handleOpenDialog = React.useCallback((id) => {
-    console.log(id);
-
-    // have to check this portion
     const currentUser = filteredPackages.find((user) => user.id === id);
 
     const costData = {
@@ -338,8 +332,6 @@ const AllPackages = () => {
     }
 
     setCostDialogData(costData);
-    console.log(costData);
-
     setOpenDialog(true);
   }, [filteredPackages]);
 

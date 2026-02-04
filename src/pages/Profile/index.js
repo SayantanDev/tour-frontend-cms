@@ -61,9 +61,6 @@ const Profile = () => {
     try {
       const res = await getAllUserPermission();
       const items = res?.items || [];
-      console.log(items);
-
-
       setAllUserPermissions(items);
     } catch (error) {
       console.error("Error fetching user permissions:", error);
@@ -143,11 +140,11 @@ const Profile = () => {
   });
 
   return (
-    <Box 
+    <Box
       sx={{
         display: "flex",
-        justifyContent:"center",
-        p:2
+        justifyContent: "center",
+        p: 2
       }}>
       <Card sx={{ width: "80%", p: 3, m: 2 }}>
         <CardContent>
@@ -197,7 +194,7 @@ const Profile = () => {
           </Grid>
           {editableUser.role !== "Admin" &&
             <Box mt={4}>
-              <Typography gutterBottom sx={{color: "#555"}} fontWeight={600}>
+              <Typography gutterBottom sx={{ color: "#555" }} fontWeight={600}>
                 Permissions
               </Typography>
               <TableContainer component={Paper}>
@@ -210,9 +207,9 @@ const Profile = () => {
                             {header.isPlaceholder
                               ? null
                               : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext()
-                                )}
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
                           </TableCell>
                         ))}
                       </TableRow>

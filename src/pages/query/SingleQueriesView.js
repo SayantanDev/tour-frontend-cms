@@ -180,14 +180,9 @@ function SingleQueriesView() {
 
     // ⬇️ Set status to "pending" only for this changed row
     updatedRow.status = "Pending";
-    // console.log("updatedRow : ",updatedRow);
-
-    // ⬇️ Replace only the edited row
     newData[editIndex] = updatedRow;
 
     const itnObj = { followup_details: newData };
-    // console.log("itnObj : ",itnObj);
-
     const res = await updateFollowupDetails(fetchSelectedquerie.id, itnObj);
     if (res) {
       // await addChangeRequestForItineray(fetchSelectedquerie.id, { description: changedFields });
@@ -211,8 +206,6 @@ function SingleQueriesView() {
     setRejectedReason('');
     setVerifyPopupOpen(true);
     const originalRow = itineraryData[editIndex];
-    console.log("Verify Itinerary row : ", originalRow);
-
   }
 
   const guestFields = [
@@ -381,9 +374,9 @@ function SingleQueriesView() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </strong>
                   </TableCell>
                 ))}

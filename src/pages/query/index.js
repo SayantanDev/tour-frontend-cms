@@ -180,8 +180,6 @@ const Query = () => {
   const openChangeRequestModal = React.useCallback(async (queryId) => {
     try {
       const res = await getChangeRequest(queryId);
-      console.log("getChangeRequest response : ", res);
-      // const data = await res.json();
       setSelectedChangeRequests(res);
       setCurrentQueryId(queryId);
       setChangeModalOpen(true);
@@ -208,9 +206,6 @@ const Query = () => {
   const openRejectedChangeModal = React.useCallback(async (operationId) => {
     try {
       const res = await getRejectedChanges(operationId);
-      console.log("");
-
-      // const data = await res.json();
       setRejectedChanges(res);
       setRejectedModalOpen(true);
     } catch (err) {
