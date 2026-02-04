@@ -48,6 +48,7 @@ const ItineraryCard = ({ itinerary, onItineraryChange, allPackages, onAddDay, on
                         <Grid item xs={10} md={9}>
                             <Autocomplete
                                 freeSolo
+                                openOnFocus={false}
                                 options={uniqueItineraryOptions}
                                 value={day}
                                 onInputChange={(event, newInputValue) => {
