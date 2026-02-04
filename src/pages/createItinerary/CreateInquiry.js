@@ -777,6 +777,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 <ItineraryCard
                     itinerary={itinerary}
                     onItineraryChange={handleItineraryChange}
+                    allPackages={allPackages}
                     onAddDay={() => {
                         setItinerary([...itinerary, '']);
                         setTripDetails(prev => ({ ...prev, duration: (parseInt(prev.duration) || 0) + 1 }));
@@ -879,6 +880,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                             hotelSelections={hotelSelections}
                             allHotels={allHotels}
                             cost={cost}
+                            itinerary={itinerary}
                         />
 
                         {/* Package Suggestions Overlay */}

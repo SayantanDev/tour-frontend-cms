@@ -16,7 +16,8 @@ function TotalQuiry() {
     const fetchQuery = async () => {
       try {
         const response = await getAllQueries(1, 30);
-        const sortedData = response.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        const data = response?.items || response?.data || []; // Handle potential response structures
+        const sortedData = Array.isArray(data) ? [...data].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) : [];
         setFilteredQuery(sortedData);
       } catch (error) {
         console.error("Error fetching query:", error);

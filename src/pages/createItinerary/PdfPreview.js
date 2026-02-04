@@ -1,11 +1,16 @@
 import React from 'react';
 import { Box, Typography, Divider, Paper } from '@mui/material';
 
-const PdfPreview = ({ guestInfo, tripDetails, selectedPackage, hotelSelections, allHotels, cost }) => {
+const PdfPreview = ({ guestInfo, tripDetails, selectedPackage, hotelSelections, allHotels, cost, itinerary }) => {
     const getHotelName = (hotelId) => {
         const hotel = allHotels.find(h => h._id === hotelId);
         return hotel ? hotel.name : 'Not selected';
     };
+
+    // Use passed itinerary if available, otherwise fallback to package short itinerary
+    const displayItinerary = (itinerary && itinerary.length > 0)
+        ? itinerary
+        : selectedPackage?.details?.shortItinerary;
 
     return (
         <Box
@@ -85,12 +90,12 @@ const PdfPreview = ({ guestInfo, tripDetails, selectedPackage, hotelSelections, 
             </Paper>
 
             {/* Short Itinerary */}
-            {selectedPackage?.details?.shortItinerary && (
+            {displayItinerary && (
                 <Paper elevation={0} sx={{ p: 2, mb: 3, backgroundColor: '#f8f9fa' }}>
                     <Typography variant="h6" fontWeight={700} gutterBottom sx={{ color: '#2d5016' }}>
                         Short Itinerary:
                     </Typography>
-                    {selectedPackage.details.shortItinerary.map((day, index) => (
+                    {displayItinerary.map((day, index) => (
                         <Typography key={index} variant="body2" sx={{ mb: 0.5 }}>
                             <strong>Day {index + 1}:</strong> {typeof day === 'string' ? day : day?.tagValue || day?.tagName || 'N/A'}
                         </Typography>

@@ -1,13 +1,26 @@
-import React from 'react';
-import { Paper, Typography, Box, Grid, TextField, Button } from '@mui/material';
+import React, { useMemo } from 'react';
+import { Paper, Typography, Box, Grid, TextField, Button, Autocomplete } from '@mui/material';
 
-const ItineraryCard = ({ itinerary, onItineraryChange, onAddDay, onRemoveDay }) => {
-    // We render even if empty to show the Add button if needed, but usually it depends on duration.
-    // However, for better UX on Custom Package, we might want to return null if empty AND no add/remove control,
-    // but here we want to support dynamic adding.
-    // If itinerary is explicitly empty (and not just null), we might show nothing or just the add button.
+const ItineraryCard = ({ itinerary, onItineraryChange, allPackages, onAddDay, onRemoveDay }) => {
 
-    // Fallback if null
+    // Extract unique itinerary descriptions for autocomplete
+    const uniqueItineraryOptions = useMemo(() => {
+        const options = new Set();
+        if (allPackages && Array.isArray(allPackages)) {
+            allPackages.forEach(pkg => {
+                if (pkg.details?.shortItinerary && Array.isArray(pkg.details.shortItinerary)) {
+                    pkg.details.shortItinerary.forEach(item => {
+                        const text = typeof item === 'string' ? item : (item.tagValue || item.tagName || '');
+                        if (text && text.trim().length > 0) {
+                            options.add(text.trim());
+                        }
+                    });
+                }
+            });
+        }
+        return Array.from(options);
+    }, [allPackages]);
+
     const safeItinerary = itinerary || [];
 
     if (safeItinerary.length === 0 && !onAddDay) return null;
@@ -33,13 +46,22 @@ const ItineraryCard = ({ itinerary, onItineraryChange, onAddDay, onRemoveDay }) 
                             </Typography>
                         </Grid>
                         <Grid item xs={10} md={9}>
-                            <TextField
-                                fullWidth
-                                multiline
-                                minRows={1}
+                            <Autocomplete
+                                freeSolo
+                                options={uniqueItineraryOptions}
                                 value={day}
-                                onChange={(e) => onItineraryChange(index, e.target.value)}
-                                placeholder={`Enter details for Day ${index + 1}`}
+                                onInputChange={(event, newInputValue) => {
+                                    onItineraryChange(index, newInputValue);
+                                }}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        fullWidth
+                                        multiline
+                                        minRows={1}
+                                        placeholder={`Enter details for Day ${index + 1}`}
+                                    />
+                                )}
                             />
                         </Grid>
                         {onRemoveDay && (
