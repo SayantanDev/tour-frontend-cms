@@ -24,13 +24,13 @@ const PdfPreview = ({ guestInfo, tripDetails, selectedPackage, hotelSelections, 
             }}
         >
             {/* Header */}
-            <Box sx={{ textAlign: 'center', mb: 4 }}>
+            {/* <Box sx={{ textAlign: 'center', mb: 4 }}>
                 <img
                     src="/easo.png"
                     alt="EAS☀TRIP"
                     style={{ maxWidth: '150px', marginBottom: '16px' }}
                 />
-            </Box>
+            </Box> */}
 
             {/* Package Cost */}
             <Paper elevation={0} sx={{ p: 2, mb: 3, backgroundColor: '#89e3bfff' }}>
@@ -206,12 +206,12 @@ const PdfPreview = ({ guestInfo, tripDetails, selectedPackage, hotelSelections, 
             )}
 
             {/* Footer */}
-            <Divider sx={{ my: 3 }} />
+            {/* <Divider sx={{ my: 3 }} />
             <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="body2" color="text.secondary">
                     www.easotrip.com | +91 70017 24300 | easotrip@gmail.com
                 </Typography>
-            </Box>
+            </Box> */}
         </Box>
     );
 };
