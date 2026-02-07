@@ -12,10 +12,15 @@ const PriceBox = ({
   handleChange,
   handleBlur
 }) => {
+  // const fields = [
+  //   "cp_plan", "ep_plan", "ap_plan", "map_plan",
+  //   "extra_mat_cp", "extra_mat_ap", "extra_mat_ep", "extra_mat_map",
+  //   "cnb_cp", "cnb_ap", "cnb_ep", "cnb_map",
+  // ];
   const fields = [
-    "cp_plan", "ep_plan", "ap_plan", "map_plan",
-    "extra_mat_cp", "extra_mat_ap", "extra_mat_ep", "extra_mat_map",
-    "cnb_cp", "cnb_ap", "cnb_ep", "cnb_map",
+    "cp_plan", "ap_plan", "map_plan",
+    "extra_mat_cp", "extra_mat_ap", "extra_mat_map",
+    "cnb_cp", "cnb_ap", "cnb_map",
   ];
 
   return (
