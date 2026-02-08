@@ -206,10 +206,10 @@ const Region_obj = [
     label: "Darjeeling",
     val: "darjeeling",
   },
-  {
-    label: "North Sikkim",
-    val: "north-sikkim",
-  },
+  // {
+  //   label: "North Sikkim",
+  //   val: "north-sikkim",
+  // },
   {
     label: "Meghalaya",
     val: "meghalaya",

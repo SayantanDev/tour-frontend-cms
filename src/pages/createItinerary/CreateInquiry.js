@@ -25,6 +25,21 @@ import SelectedPackageCard from './cards/SelectedPackageCard';
 import ItineraryCard from './cards/ItineraryCard';
 import HotelSelectionCard from './cards/HotelSelectionCard';
 import CostEstimateCard from './cards/CostEstimateCard';
+import {
+    filterPackages,
+    calculatePackageCost,
+    updateItineraryByDuration,
+    prePopulateHotelSelections,
+    calculatePdfDimensions,
+    extractItineraryFromPackage,
+    validateForm as validateFormData,
+    buildPayload as buildPayloadData,
+    generatePdfFilename,
+    validateDraftRequirements,
+    resetHotelSelections,
+    updateItineraryItem,
+    updateHotelSelection,
+} from './createInquiryCalculation';
 
 const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     const dispatch = useDispatch();
@@ -174,7 +189,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         }
     };
 
-
     // Advanced package filtering based on duration, location, and keyword-in-tags match
     useEffect(() => {
         if (!allPackages.length) {
@@ -182,63 +196,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             return;
         }
 
-        // Prepare filters
-        const days = tripDetails.duration ? parseInt(tripDetails.duration) : null;
-        const keywords = tripDetails.keywords;
-        const location = tripDetails.location;
-
-        // Normalize keywords to an array of cleaned lowercase strings
-        const keywordList = Array.isArray(keywords)
-            ? keywords
-            : (typeof keywords === "string" ? keywords.split(",") : []);
-
-        const normalizedKeywords = keywordList
-            .map(k => String(k).trim().toLowerCase())
-            .filter(Boolean);
-
-        // Normalize location
-        const normalizedLocation =
-            typeof location === "string" ? location.trim().toLowerCase() : "";
-
-        // Filter packages
-        const filtered = allPackages.filter(pkg => {
-            if (!pkg || typeof pkg !== "object") return false;
-
-            // --- Duration match ---
-            if (typeof days === "number" && Number.isFinite(days)) {
-                if (Number(pkg.duration) !== days) return false;
-            }
-
-            // --- Location match ---
-            if (normalizedLocation) {
-                const pkgLocation = String(pkg.location || "").trim().toLowerCase();
-                if (pkgLocation !== normalizedLocation) return false;
-            }
-
-            // --- Keyword-in-tags match ---
-            if (normalizedKeywords.length > 0) {
-                const tags = Array.isArray(pkg.tags) ? pkg.tags : [];
-                const normalizedTags = tags
-                    .map(t => {
-                        // Handle both string tags and object tags with tagValue
-                        if (typeof t === 'string') return t.trim().toLowerCase();
-                        if (typeof t === 'object' && t.tagValue) return String(t.tagValue).trim().toLowerCase();
-                        if (typeof t === 'object' && t.tagName) return String(t.tagName).trim().toLowerCase();
-                        return '';
-                    })
-                    .filter(Boolean);
-
-                // Match if any keyword is included in any tag (partial allowed)
-                const hasKeyword = normalizedKeywords.some(kw =>
-                    normalizedTags.some(tag => tag.includes(kw))
-                );
-
-                if (!hasKeyword) return false;
-            }
-
-            return true;
-        });
-
+        const filtered = filterPackages(allPackages, tripDetails);
         setPackageSuggestions(filtered);
 
         if (ignoreSuggestionsRef.current) {
@@ -254,14 +212,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     // Update itinerary based on duration for custom packages
     useEffect(() => {
         if (!selectedPackage) {
-            const days = parseInt(tripDetails.duration) || 0;
-            setItinerary(prev => {
-                if (prev.length === days) return prev;
-                if (days > prev.length) {
-                    return [...prev, ...new Array(days - prev.length).fill('')];
-                }
-                return prev.slice(0, days);
-            });
+            setItinerary(prev => updateItineraryByDuration(prev, tripDetails.duration));
         }
     }, [tripDetails.duration, selectedPackage]);
 
@@ -312,58 +263,19 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         }
 
         // Set editable short itinerary
-        if (pkg.details?.shortItinerary && Array.isArray(pkg.details.shortItinerary)) {
-            setItinerary(pkg.details.shortItinerary.map(day =>
-                typeof day === 'string' ? day : day?.tagValue || day?.tagName || ''
-            ));
-        } else {
-            setItinerary([]);
-        }
+        const extractedItinerary = extractItineraryFromPackage(pkg.details);
+        setItinerary(extractedItinerary);
 
         // Extract locations from shortItinerary and pre-populate hotel selections
         if (pkg.details?.shortItinerary && Array.isArray(pkg.details.shortItinerary)) {
-            const newHotelSelections = {};
-
-            pkg.details.shortItinerary.forEach((item, index) => {
-                if (item.tagValue) {
-                    // Extract destination from tagValue (e.g., "Gorkhey to Srikhola" -> "Srikhola")
-                    const parts = item.tagValue.split(' to ');
-                    const destination = parts.length > 1 ? parts[1].trim() : parts[0].trim();
-
-                    // Find hotels at this destination
-                    const hotelsAtDestination = allHotels.filter(hotel =>
-                        hotel.location?.toLowerCase().includes(destination.toLowerCase()) ||
-                        hotel.sub_destination?.toLowerCase().includes(destination.toLowerCase()) ||
-                        hotel.destination?.toLowerCase().includes(destination.toLowerCase())
-                    );
-
-                    // Set the first matching hotel for this day if available
-                    if (hotelsAtDestination.length > 0) {
-                        newHotelSelections[index] = {
-                            location: destination,
-                            hotelId: '', // Default to none
-                            price: 0,
-                            availableHotels: hotelsAtDestination
-                        };
-                    } else {
-                        // If no hotels found, still set the location
-                        newHotelSelections[index] = {
-                            location: destination,
-                            hotelId: '',
-                            price: 0,
-                            availableHotels: []
-                        };
-                    }
-                }
-            });
+            const newHotelSelections = prePopulateHotelSelections(pkg.details.shortItinerary, allHotels);
             setHotelSelections(newHotelSelections);
         }
 
         // Auto-calculate cost if package has pricing
-        if (pkg.details?.cost?.valueCost?.[0]?.price) {
-            const basePrice = pkg.details.cost.valueCost[0].price;
-            const paxCount = parseInt(tripDetails.pax) || 1;
-            setCost(basePrice * paxCount);
+        const calculatedCost = calculatePackageCost(pkg.details, tripDetails.pax);
+        if (calculatedCost > 0) {
+            setCost(calculatedCost);
         }
 
         setPackageSuggestions([]);
@@ -408,30 +320,11 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
     const handleHotelReset = () => {
         setSeason('');
-        setHotelSelections(prev => {
-            const nextState = {};
-            Object.keys(prev).forEach(key => {
-                if (prev[key]) {
-                    nextState[key] = {
-                        ...prev[key],
-                        hotelId: '',
-                        roomType: '',
-                        mealPlan: ''
-                    };
-                }
-            });
-            return nextState;
-        });
+        setHotelSelections(prev => resetHotelSelections(prev));
     };
 
     const handleHotelChange = (dayIndex, field, value) => {
-        setHotelSelections(prev => ({
-            ...prev,
-            [dayIndex]: {
-                ...prev[dayIndex],
-                [field]: value
-            }
-        }));
+        setHotelSelections(prev => updateHotelSelection(prev, dayIndex, field, value));
     };
 
     const handleCostChange = (e) => {
@@ -441,76 +334,27 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     const handleSeasonChange = (e) => setSeason(e.target.value);
 
     const handleItineraryChange = (index, value) => {
-        const newItinerary = [...itinerary];
-        newItinerary[index] = value;
-        setItinerary(newItinerary);
+        setItinerary(prev => updateItineraryItem(prev, index, value));
     };
 
     const validateForm = () => {
-        if (!guestInfo.guest_name.trim()) {
-            showSnackbar('Please enter guest name', 'error');
+        const validation = validateFormData(guestInfo, tripDetails, selectedPackage);
+        if (!validation.isValid) {
+            showSnackbar(validation.message, validation.severity);
             return false;
         }
-
-        if (!guestInfo.guest_email.trim() || !/\S+@\S+\.\S+/.test(guestInfo.guest_email)) {
-            showSnackbar('Please enter a valid email address', 'error');
-            return false;
-        }
-
-        // Basic validation for phone number length
-        if (!guestInfo.guest_phone.trim() || guestInfo.guest_phone.length < 7) {
-            showSnackbar('Please enter a valid phone number', 'error');
-            return false;
-        }
-
-        if (!tripDetails.pax || parseInt(tripDetails.pax) < 1) {
-            showSnackbar('Please enter valid number of guests', 'error');
-            return false;
-        }
-
-        if (!selectedPackage) {
-            showSnackbar('Please select a package', 'error');
-            return false;
-        }
-
-        if (tripDetails.travel_date) {
-            const travelDate = new Date(tripDetails.travel_date);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            if (travelDate < today) {
-                showSnackbar('Travel date cannot be in the past', 'warning');
-            }
-        }
-
         return true;
     };
 
     const buildPayload = (isDraft = false) => {
-        return {
-            guest_info: {
-                guest_name: guestInfo.guest_name,
-                guest_email: guestInfo.guest_email,
-                guest_phone: `${guestInfo.country_code}${guestInfo.guest_phone}`,
-            },
-            pax: parseInt(tripDetails.pax),
-            kids_above_5: parseInt(tripDetails.kids_above_5) || 0,
-            car_details: {
-                car_name: tripDetails.car_name || '',
-                car_count: parseInt(tripDetails.car_count) || 0,
-            },
-            cost: cost,
-            destination: tripDetails.location || selectedPackage?.location || '',
-            duration: parseInt(tripDetails.duration) || selectedPackage?.duration || 0,
-            package_id: selectedPackage._id,
-            stay_info: {
-                rooms: parseInt(stayInfo.rooms) || 0,
-                hotel: stayInfo.hotel,
-            },
-            travel_date: tripDetails.travel_date || '',
-            lead_source: 'website',
-            lead_stage: isDraft ? 'draft' : 'new',
-            verified: !isDraft,
-        };
+        return buildPayloadData({
+            guestInfo,
+            tripDetails,
+            selectedPackage,
+            cost,
+            stayInfo,
+            isDraft
+        });
     };
 
     const handleSubmit = async (isDraft = false) => {
@@ -565,8 +409,9 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     };
 
     const handleSaveAsDraft = () => {
-        if (!guestInfo.guest_name || !guestInfo.guest_email) {
-            showSnackbar('Please enter at least guest name and email to save draft', 'warning');
+        const validation = validateDraftRequirements(guestInfo);
+        if (!validation.isValid) {
+            showSnackbar(validation.message, validation.severity);
             return;
         }
         handleSubmit(true);
@@ -588,17 +433,11 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
             const imgData = canvas.toDataURL('image/png');
             const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
-            const imgWidth = canvas.width;
-            const imgHeight = canvas.height;
-            const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-            const imgX = (pdfWidth - imgWidth * ratio) / 2;
-            const imgY = 0;
+            const { imgX, imgY, imgWidth, imgHeight } = calculatePdfDimensions(canvas, pdf);
 
-            pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+            pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth, imgHeight);
 
-            const filename = `${guestInfo.guest_name || 'inquiry'}_${tripDetails.location || 'package'}_${Date.now()}.pdf`;
+            const filename = generatePdfFilename(guestInfo.guest_name, tripDetails.location);
             pdf.save(filename);
 
             showSnackbar('PDF exported successfully!', 'success');

@@ -443,7 +443,7 @@ const Query = () => {
           ))}
         </TextField>
         <TextField select label="Location" size="small" value={locationQuery} onChange={(e) => setLocationQuery(e.target.value)} sx={{ minWidth: 180 }}>
-          {["", "Darjeeling", "Sikkim", "North Sikkim", "Sandakphu"].map((loc) => (
+          {["", "Darjeeling", "Sikkim", "Sandakphu"].map((loc) => (
             <MenuItem key={loc} value={loc}>{loc || "All"}</MenuItem>
           ))}
         </TextField>
