@@ -14,8 +14,8 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     env:
-      CI: false
-      REACT_APP_BASE_URL: https://easotrip-ront-cms-c9egaaezccapfraf.canadacentral-01.azurewebsites.net/api/v1
+      CI: false 
+      REACT_APP_BASE_URL: https://easotrip-front-cms-hefvhqa0hxg7g8a7.canadaeast-01.azurewebsites.net/api/v1
     name: Build and Deploy Job
     steps:
       - uses: actions/checkout@v3
