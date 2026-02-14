@@ -5,6 +5,12 @@ import {
   TablePagination, Chip, Switch, CircularProgress, Tooltip, Select, MenuItem,
   Checkbox
 } from '@mui/material';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getPaginationRowModel,
+  flexRender,
+} from "@tanstack/react-table";
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import LocationOffIcon from '@mui/icons-material/LocationOff';
@@ -62,14 +68,14 @@ const AllPackages = () => {
   const location = useLocation();
 
 
-   useEffect(() => {
-      const params = new URLSearchParams(location.search);
-      const zoneFromURL = params.get("zone");
-      
-      setFilterLocation(zoneFromURL ?? null);
-    
-    }, [location.search]);
-  
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const zoneFromURL = params.get("zone");
+
+    setFilterLocation(zoneFromURL ?? null);
+
+  }, [location.search]);
+
   // NEW: filters
   const [filterVerified, setFilterVerified] = useState('All'); // 'All' | 'Verified' | 'Not Verified'
   const [filterDateField, setFilterDateField] = useState('created'); // 'created' | 'updated'
@@ -83,7 +89,6 @@ const AllPackages = () => {
 
   // NEW: track which rows are updating "ranking"
   const [rankingLoading, setRankingLoading] = useState({});
-  const [selectedId, setSelectedId] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const [costDialogdata, setCostDialogData] = useState({
     singleCost: null,
@@ -92,11 +97,10 @@ const AllPackages = () => {
     valueCost: [],
   });
   const [openConfirm, setOpenConfirm] = useState({ isVisible: false, section: "", target: "" });
-  
+
 
   const handleOpenConfirm = (section, target) => {
     setOpenConfirm({ isVisible: true, section, target });
-    console.log(section, target);
   }
 
   const handleCloseConfirm = () => setOpenConfirm({ isVisible: false, section: "", target: "" });
@@ -115,7 +119,7 @@ const AllPackages = () => {
       updated.valueCost = updated.valueCost.filter((d) => d.Type !== target);
     }
     setCostDialogData(updated);
-    handleCloseConfirm();  
+    handleCloseConfirm();
   }
 
   // Hooks
@@ -215,14 +219,12 @@ const AllPackages = () => {
     rankingFilter
   ]);
 
-  console.log(filteredPackages);
-
   // actions
-  const handleView = (id) => {
+  const handleView = React.useCallback((id) => {
     navigate(`/packages/view/${id}`);
-  };
+  }, [navigate]);
 
-  const handleEdit = async (id) => {
+  const handleEdit = React.useCallback(async (id) => {
     try {
       const singleData = await getSinglePackages(id);
       dispatch(setSelectedPackage(singleData.data));
@@ -230,21 +232,14 @@ const AllPackages = () => {
     } catch (error) {
       console.error('Failed to fetch single package', error);
     }
-  };
+  }, [dispatch, navigate]);
 
   const createNewPackage = () => {
     dispatch(removeSelectedPackage());
     navigate(`/packages/createandedit`);
   };
 
-  const handleChangePage = (_, newPage) => setPage(newPage);
-  const handleChangeRowsPerPage = (event) => { setRowsPerPage(+event.target.value); setPage(0); };
-
-  const paginatedRows = filteredPackages.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-  console.log(paginatedRows);
-
-
-  const handleToggleVerified = async (row, nextVal) => {
+  const handleToggleVerified = React.useCallback(async (row, nextVal) => {
     const id = row.id;
     setToggleLoading(prev => ({ ...prev, [id]: true }));
 
@@ -269,10 +264,10 @@ const AllPackages = () => {
     } finally {
       setToggleLoading(prev => ({ ...prev, [id]: false }));
     }
-  };
+  }, []);
 
   // NEW: change ranking
-  const handleChangeRanking = async (row, nextVal) => {
+  const handleChangeRanking = React.useCallback(async (row, nextVal) => {
     const id = row.id;
     const newRanking = Number(nextVal);
 
@@ -298,30 +293,20 @@ const AllPackages = () => {
     } finally {
       setRankingLoading(prev => ({ ...prev, [id]: false }));
     }
-  };
+  }, [allPackages]);
 
 
 
-  const handleImageUpload = (id) => {
+  const handleImageUpload = React.useCallback((id) => {
     navigate(`/upload/package/${id}`);
-  };
+  }, [navigate]);
 
 
   const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
 
-  const handleOpenDialog = (id) => {
-
-    setSelectedId(id);
-    console.log(id);
-
-
-
-
-    // have to check this portion
-    const currentUser = paginatedRows.find((user) => user.id === id);
-
-
+  const handleOpenDialog = React.useCallback((id) => {
+    const currentUser = filteredPackages.find((user) => user.id === id);
 
     const costData = {
       singleCost: currentUser.raw.details.cost.singleCost,
@@ -346,22 +331,212 @@ const AllPackages = () => {
 
     }
 
-
-
-
     setCostDialogData(costData);
-    console.log(costData);
-
     setOpenDialog(true);
+  }, [filteredPackages]);
+
+  const handleCloseDialog = React.useCallback((id) => {
+    setOpenDialog(false);
+  }, []);
+
+  // Column definitions for @tanstack/react-table (must be after all handler functions)
+  const columns = useMemo(() => [
+    {
+      accessorKey: "title",
+      header: "Title",
+    },
+    {
+      accessorKey: "type",
+      header: "Type",
+    },
+    {
+      accessorKey: "duration",
+      header: "Duration",
+    },
+    {
+      accessorKey: "verified",
+      header: "Verified",
+      cell: ({ row }) => {
+        const rowData = row.original;
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {getPermission('packages', 'alter-verify') &&
+              <Switch
+                size="small"
+                checked={rowData.verified}
+                onChange={(e) => handleToggleVerified(rowData, e.target.checked)}
+                disabled={toggleLoading[rowData.id]}
+                inputProps={{ 'aria-label': 'Toggle verified' }}
+              />}
+            {toggleLoading[rowData.id] ? (
+              <CircularProgress size={16} />
+            ) : (
+              <Chip
+                size="small"
+                label={rowData.verified ? "Verified" : "Not Verified"}
+                color={rowData.verified ? "success" : "default"}
+                variant={rowData.verified ? "filled" : "outlined"}
+              />
+            )}
+          </Box>
+        );
+      },
+    },
+    {
+      accessorKey: "ranking",
+      header: "Ranking",
+      cell: ({ row }) => {
+        const rowData = row.original;
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {getPermission('packages', 'alter-ranking') ? (
+              <Select
+                size="small"
+                value={rowData.ranking ?? 0}
+                onChange={(e) => handleChangeRanking(rowData, e.target.value)}
+                disabled={rankingLoading[rowData.id]}
+                sx={{ minWidth: 80 }}
+              >
+                {Array.from({ length: 11 }).map((_, i) => (
+                  <MenuItem key={i} value={i}>
+                    {i}
+                  </MenuItem>
+                ))}
+              </Select>
+            ) : (
+              <Typography>{rowData.ranking ?? 0}</Typography>
+            )}
+            {rankingLoading[rowData.id] && <CircularProgress size={16} />}
+          </Box>
+        );
+      },
+    },
+    {
+      accessorKey: "created_at",
+      header: "Created At",
+      cell: ({ getValue }) => {
+        const value = getValue();
+        return (
+          <Tooltip title={value || ""}>
+            <span>{formatDate(value)}</span>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      accessorKey: "updated_at",
+      header: "Updated At",
+      cell: ({ getValue }) => {
+        const value = getValue();
+        return (
+          <Tooltip title={value || ""}>
+            <span>{formatDate(value)}</span>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      id: "cost",
+      header: "Cost",
+      cell: ({ row }) => {
+        const rowData = row.original;
+        return (
+          <PaymentsIcon
+            color="primary"
+            onClick={() => handleOpenDialog(rowData.id)}
+            sx={{ cursor: 'pointer' }}
+          />
+        );
+      },
+    },
+    {
+      id: "actions",
+      header: "Action",
+      cell: ({ row }) => {
+        const rowData = row.original;
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+            {getPermission('packages', 'alter-image') &&
+              <Tooltip title="Image Upload">
+                <IconButton color="success" onClick={() => handleImageUpload(rowData.id)}>
+                  <DriveFolderUploadIcon />
+                </IconButton>
+              </Tooltip>}
+            {getPermission('packages', 'view') &&
+              <Tooltip title="FullView">
+                <IconButton color="warning" onClick={() => handleView(rowData.id)}>
+                  <VisibilityIcon />
+                </IconButton>
+              </Tooltip>}
+            {getPermission('packages', 'alter') &&
+              <Tooltip title="Edit">
+                <IconButton color="primary" onClick={() => handleEdit(rowData.id)}>
+                  <EditIcon />
+                </IconButton>
+              </Tooltip>}
+            <Tooltip title="Location">
+              <IconButton color="error">
+                <LocationOffIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        );
+      },
+    },
+  ], [getPermission, toggleLoading, rankingLoading, handleToggleVerified, handleChangeRanking, handleImageUpload, handleView, handleEdit, handleOpenDialog]);
+
+  // Table instance
+  const table = useReactTable({
+    data: filteredPackages,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: rowsPerPage,
+        pageIndex: page,
+      },
+    },
+    state: {
+      pagination: {
+        pageIndex: page,
+        pageSize: rowsPerPage,
+      },
+    },
+    onPaginationChange: (updater) => {
+      const newPagination = typeof updater === "function"
+        ? updater({ pageIndex: page, pageSize: rowsPerPage })
+        : updater;
+      setPage(newPagination.pageIndex);
+      setRowsPerPage(newPagination.pageSize);
+    },
+    manualPagination: false,
+  });
+
+  // Sync table pagination with state
+  useEffect(() => {
+    if (table.getState().pagination.pageIndex !== page) {
+      table.setPageIndex(page);
+    }
+    if (table.getState().pagination.pageSize !== rowsPerPage) {
+      table.setPageSize(rowsPerPage);
+    }
+  }, [page, rowsPerPage, table]);
+
+  const handleChangePage = (_, newPage) => {
+    setPage(newPage);
+    table.setPageIndex(newPage);
+  };
+  const handleChangeRowsPerPage = (event) => {
+    const newRowsPerPage = +event.target.value;
+    setRowsPerPage(newRowsPerPage);
+    setPage(0);
+    table.setPageSize(newRowsPerPage);
+    table.setPageIndex(0);
   };
 
-  const handleCloseDialog = (id) => {
-    setOpenDialog(false);
-    setSelectedId(null);
-  }
-
   return (
-    <Container maxWidth="xl" sx={{ py: 2 }}>
+    <Container maxWidth={false} sx={{ py: 2 }}>
       <Typography variant="h6" sx={{ mb: 2 }}>All Packages</Typography>
 
       {/* Filters */}
@@ -465,128 +640,48 @@ const AllPackages = () => {
       </Box>
 
       {/* Table */}
-      <Paper>
+      <Paper sx={{ overflow: "hidden" }}>
         <TableContainer>
           <Table size="small">
             <TableHead>
-              <TableRow>
-                <TableCell>Title</TableCell>
-                <TableCell>Type</TableCell>
-                <TableCell>Duration</TableCell>
-                <TableCell>Verified</TableCell>
-                <TableCell>Ranking</TableCell> {/* NEW */}
-                <TableCell>Created At</TableCell>
-                <TableCell>Updated At</TableCell>
-                <TableCell>Cost</TableCell>
-                <TableCell align="center">Action</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paginatedRows.map((row) => (
-                <TableRow key={row.id} hover>
-                  <TableCell>{row.title}</TableCell>
-                  <TableCell>{row.type}</TableCell>
-                  <TableCell>{row.duration}</TableCell>
-
-                  {/* Verified toggle */}
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {getPermission('packages', 'alter-verify') &&
-                        <Switch
-                          size="small"
-                          checked={row.verified}
-                          onChange={(e) => handleToggleVerified(row, e.target.checked)}
-                          disabled={toggleLoading[row.id]}
-                          inputProps={{ 'aria-label': 'Toggle verified' }}
-                        />}
-                      {toggleLoading[row.id] ? (
-                        <CircularProgress size={16} />
-                      ) : (
-                        <Chip
-                          size="small"
-                          label={row.verified ? "Verified" : "Not Verified"}
-                          color={row.verified ? "success" : "default"}
-                          variant={row.verified ? "filled" : "outlined"}
-                        />
-                      )}
-                    </Box>
-                  </TableCell>
-
-                  {/* NEW: Ranking selector */}
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {getPermission('packages', 'alter-ranking') ? (
-                        // ✅ When permission exists → show editable Select
-                        <Select
-                          size="small"
-                          value={row.ranking ?? 0}
-                          onChange={(e) => handleChangeRanking(row, e.target.value)}
-                          disabled={rankingLoading[row.id]}
-                          sx={{ minWidth: 80 }}
-                        >
-                          {Array.from({ length: 11 }).map((_, i) => (
-                            <MenuItem key={i} value={i}>
-                              {i}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      ) : (
-                        // 🚫 When no permission → show static value in a box
-                        <Typography>{row.ranking ?? 0}</Typography>
-                      )}
-
-                      {rankingLoading[row.id] && <CircularProgress size={16} />}
-                    </Box>
-                  </TableCell>
-
-
-                  {/* Dates */}
-                  <TableCell>
-                    <Tooltip title={row.created_at || ""}>
-                      <span>{formatDate(row.created_at)}</span>
-                    </Tooltip>
-                  </TableCell>
-                  <TableCell>
-                    <Tooltip title={row.updated_at || ""}>
-                      <span>{formatDate(row.updated_at)}</span>
-                    </Tooltip>
-                  </TableCell>
-                  <TableCell><PaymentsIcon color="primary"
-                    onClick={() => handleOpenDialog(row.id)} />
-                  </TableCell>
-
-                  {/* Actions */}
-                  <TableCell align="center" width={"200px"}>
-                    {getPermission('packages', 'alter-image') &&
-                      <Tooltip title="Image Upload">
-                        <IconButton color="success" onClick={() => handleImageUpload(row.id)}>
-                          <DriveFolderUploadIcon /> 
-                        </IconButton>
-                      </Tooltip>}
-                    {getPermission('packages', 'view') &&
-                      <Tooltip title="FullView">
-                        <IconButton color="warning" onClick={() => handleView(row.id)}>
-                          <VisibilityIcon />
-                        </IconButton>
-                      </Tooltip>}
-                    {getPermission('packages', 'alter') &&
-                      <Tooltip title="Edit">
-                        <IconButton color="primary" onClick={() => handleEdit(row.id)}>
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>}
-                    <Tooltip title="Location">
-                      <IconButton color="error">
-                        <LocationOffIcon />
-                      </IconButton>
-                    </Tooltip>
-
-                  </TableCell>
+              {table.getHeaderGroups().map(headerGroup => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map(header => (
+                    <TableCell
+                      key={header.id}
+                      align={header.id === "actions" ? "center" : "left"}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                    </TableCell>
+                  ))}
                 </TableRow>
               ))}
-              {paginatedRows.length === 0 && (
+            </TableHead>
+            <TableBody>
+              {table.getRowModel().rows.map(row => (
+                <TableRow key={row.id} hover>
+                  {row.getVisibleCells().map(cell => (
+                    <TableCell
+                      key={cell.id}
+                      align={cell.column.id === "actions" ? "center" : "left"}
+                      sx={cell.column.id === "actions" ? { width: "200px" } : {}}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+              {table.getRowModel().rows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} align="center">
+                  <TableCell colSpan={columns.length} align="center">
                     No packages found.
                   </TableCell>
                 </TableRow>

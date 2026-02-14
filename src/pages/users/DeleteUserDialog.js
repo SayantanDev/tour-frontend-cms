@@ -3,8 +3,13 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/
 
 const DeleteUserDialog = ({ open, handleDelUserSubmit, handleDelClose }) => {
 
+    const handleDelCloseReason = (event, reason) => {
+        if (reason && reason === "backdropClick") return;
+        handleDelClose();
+    }
+
     return (
-        <Dialog open={open} onClose={handleDelClose} disableBackdropClick>
+        <Dialog open={open} onClose={handleDelCloseReason}>
             <DialogTitle>Delete User</DialogTitle>
             {/* <DialogTitle>{singleRowData.title}</DialogTitle> */}
             <DialogContent>

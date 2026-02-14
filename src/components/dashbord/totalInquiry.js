@@ -7,11 +7,11 @@ import {
   Box,
   Skeleton,
 } from '@mui/material';
-import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 
 const TotalInquiry = () => {
   const [filteredInquiries, setFilteredInquiries] = useState([]);
-  const [loading, setLoading] = useState(true); // ✅ loading state
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchInquiries = async () => {
@@ -24,7 +24,7 @@ const TotalInquiry = () => {
       } catch (error) {
         console.error("Error fetching inquiries:", error);
       } finally {
-        setTimeout(() => setLoading(false), 1000); // ✅ stop loading when done
+        setTimeout(() => setLoading(false), 1000);
       }
     };
     fetchInquiries();
@@ -32,49 +32,71 @@ const TotalInquiry = () => {
 
   return (
     <>
-      <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+      <Typography variant="h5" sx={{ mb: 3, fontWeight: 700, color: 'text.primary' }}>
         Inquiries Summary
       </Typography>
       <Card
+        className="fade-in"
         sx={{
           width: '10vw',
-          minWidth: 140,
-          height: 100,
-          borderRadius: '12px',
-          boxShadow: 3,
-          backgroundColor: '#fff',
+          minWidth: 160,
+          height: 120,
+          borderRadius: 3,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+          background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           p: 2,
+          position: 'relative',
+          overflow: 'hidden',
           transition: 'all 0.3s ease',
           cursor: 'pointer',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)',
+            pointerEvents: 'none',
+          },
           '&:hover': {
-            backgroundColor: '#d9fcef',
-            transform: 'translateY(-4px)',
-            boxShadow: 6,
+            transform: 'translateY(-8px)',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
           },
         }}
       >
-        {loading ? <Skeleton variant='rounded'/> : (
-          <CardContent sx={{ p: 0, width: '100%', height: '100%' }}>
-            <Box sx={{ height: '100%', width: '100%', textAlign: 'center' }}>
-              <Box mb={0.5}>
-                <NotificationsActiveIcon color="primary" />
+        {loading ? (
+          <Skeleton variant='rounded' width="100%" height="100%" />
+        ) : (
+          <CardContent sx={{ p: 0, width: '100%', height: '100%', position: 'relative', zIndex: 1 }}>
+            <Box sx={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <Box
+                sx={{
+                  mb: 1,
+                  p: 1.5,
+                  borderRadius: 2,
+                  background: 'rgba(255,255,255,0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                }}
+              >
+                <AssignmentIcon sx={{ fontSize: 32, color: '#fff' }} />
               </Box>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)', fontWeight: 500, mb: 0.5 }}>
                 Total Inquiries
               </Typography>
-              <Typography variant="h6" fontWeight="bold" color="primary">
+              <Typography variant="h4" sx={{ fontWeight: 700, color: '#fff', textShadow: '0 2px 4px rgba(0,0,0,0.2)' }}>
                 {filteredInquiries.length}
               </Typography>
-
             </Box>
           </CardContent>
         )}
-
       </Card>
-
     </>
   );
 };

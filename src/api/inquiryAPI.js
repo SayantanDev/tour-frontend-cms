@@ -3,9 +3,14 @@ import axios from './interceptor';
 const INQRY_URL = `${process.env.REACT_APP_BASE_URL}/inquiry`;
 // const INQRY_URL = 'https://tour-backend-live.onrender.com/api/v1/inquiry';
 
-export async function getAllInquiries() {
+export async function getAllInquiries(page, size) {
     const ADDUSER_URL = `${INQRY_URL}/get-all-inquiries`;
-    const result = await axios.get(ADDUSER_URL);
+    const result = await axios.get(ADDUSER_URL, {
+        params: {
+            page: page,
+            size: size
+        }
+    });
     return result.data;
 };
 
@@ -16,14 +21,14 @@ export async function deleteInquiry(id) {
     return result.data;
 }
 
-export async function InquiryUserAssign(payload){
+export async function InquiryUserAssign(payload) {
     const ADDUSER_URL = `${INQRY_URL}/user-assign`;
-    const result = await axios.post(ADDUSER_URL,payload);
+    const result = await axios.post(ADDUSER_URL, payload);
     return result.data;
 }
 
-export async function InquiryUserRemove(payload){
+export async function InquiryUserRemove(payload) {
     const ADDUSER_URL = `${INQRY_URL}/user-remove`;
-    const result = await axios.post(ADDUSER_URL,payload);
+    const result = await axios.post(ADDUSER_URL, payload);
     return result.data;
 }

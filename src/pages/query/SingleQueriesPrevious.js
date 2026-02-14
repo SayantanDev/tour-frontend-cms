@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   Divider,
@@ -18,6 +18,7 @@ import {
 // import Grid2 from '@mui/material/Unstable_Grid2';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useSelector } from 'react-redux';
+import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
 
 const itineraryDataInitial = [
   { day: '1', date: '05-Apr-25', hotel: 'demo hotel', payment: 4000, confirmation: 'dome', place: 'Reach Dhotrey' },
@@ -86,6 +87,33 @@ function SingleQueriesView() {
     'vehicle',
     'notes',
   ];
+
+  // Column definitions for @tanstack/react-table
+  const columns = useMemo(() => 
+    fieldKeys.map((field, index) => ({
+      accessorKey: field,
+      header: columnLabels[index],
+      cell: ({ row }) => {
+        const rowData = row.original;
+        const rowIndex = row.index;
+        return (
+          <TextField
+            variant="standard"
+            fullWidth
+            value={rowData[field] || ''}
+            onChange={(e) => handleItineraryChange(rowIndex, field, e.target.value)}
+          />
+        );
+      },
+    }))
+  , [fieldKeys, columnLabels, handleItineraryChange]);
+
+  // Table instance
+  const table = useReactTable({
+    data: itineraryData,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
 
   return (
     <Grid2 container>
@@ -176,36 +204,49 @@ function SingleQueriesView() {
         <TableContainer component={Paper} elevation={3} sx={{ marginTop: '20px' }}>
           <Table>
             <TableHead sx={{ backgroundColor: '#e8f5e9' }}>
-              <TableRow>
-                {columnLabels.map((col) => (
-                  <TableCell
-                    key={col}
-                    sx={col === 'Place' ? { width: '250px' } : { width: 'auto' }}
-                  >
-                    <strong>{col}</strong>
-                  </TableCell>
-                ))}
-              </TableRow>
+              {table.getHeaderGroups().map(headerGroup => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    const fieldKey = header.column.columnDef.accessorKey;
+                    return (
+                      <TableCell
+                        key={header.id}
+                        sx={fieldKey === 'place' ? { width: '250px' } : { width: 'auto' }}
+                      >
+                        <strong>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </strong>
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              ))}
             </TableHead>
             <TableBody>
-              {itineraryData.map((row, index) => (
+              {table.getRowModel().rows.map((row, index) => (
                 <TableRow
-                  key={index}
+                  key={row.id}
                   sx={{ backgroundColor: index % 2 === 0 ? '#f1f8e9' : '#ffffff' }}
                 >
-                  {fieldKeys.map((field) => (
-                    <TableCell
-                      key={field}
-                      sx={field === 'place' ? { width: '250px' } : {}}
-                    >
-                      <TextField
-                        variant="standard"
-                        fullWidth
-                        value={row[field] || ''}
-                        onChange={(e) => handleItineraryChange(index, field, e.target.value)}
-                      />
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    const fieldKey = cell.column.columnDef.accessorKey;
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        sx={fieldKey === 'place' ? { width: '250px' } : {}}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))}
             </TableBody>

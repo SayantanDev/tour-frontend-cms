@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 
 import {
   Box, Button, Divider, Drawer, Grid, IconButton, Paper, Table, TableBody, TableCell, TableContainer,
@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useSelector } from 'react-redux';
+import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
 import { getAllHotels } from '../../api/hotelsAPI';
 import { getAllVehicle } from '../../api/vehicleAPI';
 import { addChangeRequest, addChangeRequestForItineray, getQueriesByoperation, getSingleOperation, updateFollowupDetails } from '../../api/operationAPI';
@@ -22,6 +23,23 @@ const formatDate = (dateString) => {
   const date = new Date(dateString);
   return isNaN(date) ? dateString : date.toLocaleDateString();
 };
+
+const columnsData = [
+  { label: 'Day', field: 'day' },
+  { label: 'Date', field: 'date' },
+  { label: 'Place', field: 'place' },
+  { label: 'Hotel Name', field: 'hotelName' },
+  { label: 'Hotel Amount', field: 'hotelAmount' },
+  { label: 'Hotel Confirmation', field: 'hotelConfirmation' },
+  { label: 'Checkin Date', field: 'checkinDate' },
+  { label: 'Checkout Date', field: 'checkoutDate' },
+  { label: 'Meal Plan', field: 'mealPlan' },
+  { label: 'Vehicle Name', field: 'vehicleName' },
+  { label: 'Vehicle Payment', field: 'vehiclePayment' },
+  { label: 'Vehicle Status', field: 'vehicleStatus' },
+  { label: 'Driver Name', field: 'driverName' },
+  { label: 'CRV', field: 'status' }
+];
 
 function SingleQueriesView() {
   const { fetchSelectedquerie } = useSelector((state) => state.queries);
@@ -162,14 +180,9 @@ function SingleQueriesView() {
 
     // ⬇️ Set status to "pending" only for this changed row
     updatedRow.status = "Pending";
-    // console.log("updatedRow : ",updatedRow);
-
-    // ⬇️ Replace only the edited row
     newData[editIndex] = updatedRow;
 
     const itnObj = { followup_details: newData };
-    // console.log("itnObj : ",itnObj);
-
     const res = await updateFollowupDetails(fetchSelectedquerie.id, itnObj);
     if (res) {
       // await addChangeRequestForItineray(fetchSelectedquerie.id, { description: changedFields });
@@ -193,8 +206,6 @@ function SingleQueriesView() {
     setRejectedReason('');
     setVerifyPopupOpen(true);
     const originalRow = itineraryData[editIndex];
-    console.log("Verify Itinerary row : ", originalRow);
-
   }
 
   const guestFields = [
@@ -218,22 +229,40 @@ function SingleQueriesView() {
     { label: 'Due Payment', field: 'duePayment' },
   ];
 
-  const columns = [
-    { label: 'Day', field: 'day' },
-    { label: 'Date', field: 'date' },
-    { label: 'Place', field: 'place' },
-    { label: 'Hotel Name', field: 'hotelName' },
-    { label: 'Hotel Amount', field: 'hotelAmount' },
-    { label: 'Hotel Confirmation', field: 'hotelConfirmation' },
-    { label: 'Checkin Date', field: 'checkinDate' },
-    { label: 'Checkout Date', field: 'checkoutDate' },
-    { label: 'Meal Plan', field: 'mealPlan' },
-    { label: 'Vehicle Name', field: 'vehicleName' },
-    { label: 'Vehicle Payment', field: 'vehiclePayment' },
-    { label: 'Vehicle Status', field: 'vehicleStatus' },
-    { label: 'Driver Name', field: 'driverName' },
-    { label: 'CRV', field: 'status' }
-  ];
+  // Column definitions for @tanstack/react-table
+  const columns = useMemo(() => [
+    ...columnsData.map((col) => ({
+      accessorKey: col.field,
+      header: col.label,
+      cell: ({ row }) => {
+        const rowData = row.original;
+        const dateFields = ['date', 'checkinDate', 'checkoutDate'];
+        return dateFields.includes(col.field)
+          ? formatDate(rowData[col.field])
+          : rowData[col.field];
+      },
+    })),
+    {
+      id: 'action',
+      header: 'Action',
+      cell: ({ row }) => {
+        const rowData = row.original;
+        const rowIndex = row.index;
+        return (
+          <IconButton onClick={() => openEditDrawer(rowData, rowIndex)}>
+            <EditOutlinedIcon color="primary" />
+          </IconButton>
+        );
+      },
+    },
+  ], [openEditDrawer]);
+
+  // Table instance
+  const table = useReactTable({
+    data: itineraryData,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
   const handleChangeRequest = async () => {
     // Example: You can send this to an API or log it
     if (!description.trim()) {
@@ -337,28 +366,34 @@ function SingleQueriesView() {
       <TableContainer component={Paper}>
         <Table>
           <TableHead sx={{ backgroundColor: '#e8f5e9' }}>
-            <TableRow>
-              {columns.map((col) => (
-                <TableCell key={col.field}><strong>{col.label}</strong></TableCell>
-              ))}
-              <TableCell><strong>Action</strong></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {itineraryData.map((row, index) => (
-              <TableRow key={index}>
-                {columns.map((col) => (
-                  <TableCell key={col.field}>
-                    {['date', 'checkinDate', 'checkoutDate'].includes(col.field)
-                      ? formatDate(row[col.field])
-                      : row[col.field]}
+            {table.getHeaderGroups().map(headerGroup => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableCell key={header.id}>
+                    <strong>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                    </strong>
                   </TableCell>
                 ))}
-                <TableCell>
-                  <IconButton onClick={() => openEditDrawer(row, index)}>
-                    <EditOutlinedIcon color="primary" />
-                  </IconButton>
-                </TableCell>
+              </TableRow>
+            ))}
+          </TableHead>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(
+                      cell.column.columnDef.cell,
+                      cell.getContext()
+                    )}
+                  </TableCell>
+                ))}
               </TableRow>
             ))}
           </TableBody>
@@ -371,7 +406,7 @@ function SingleQueriesView() {
           <Typography variant="h6" fontWeight="bold" gutterBottom>Edit Itinerary</Typography>
           <Divider sx={{ mb: 2 }} />
           <Grid container spacing={2}>
-            {columns.map((col) => {
+            {columnsData.map((col) => {
               if (col.field === 'hotelName') {
                 return (
                   <Grid item xs={12} key={col.field}>

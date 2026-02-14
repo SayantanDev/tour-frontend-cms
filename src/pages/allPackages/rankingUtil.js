@@ -20,9 +20,6 @@ export const handleChangeRanking = async (
 ) => {
   const id = row._id;
   const newRanking = Number(nextVal);
-  //console.log("newRanking : ", newRanking);
-  
-  
   setRankingLoading(prev => ({ ...prev, [id]: true }));
 
   const prevSnapshot = allItems;
@@ -32,7 +29,7 @@ export const handleChangeRanking = async (
 
   try {
     await updatePlaceRanking(id, { ranking: newRanking });
-    
+
     setAllItems(prev =>
       prev.map(item => (item._id === id ? { ...item, updated_at: new Date().toISOString() } : item))
     );

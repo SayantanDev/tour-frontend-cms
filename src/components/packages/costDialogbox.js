@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Box,
   Dialog,
@@ -21,6 +21,11 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+} from "@tanstack/react-table";
 import usePermissions from "../../hooks/UsePermissions";
 
 const CostDialogbox = ({
@@ -182,6 +187,466 @@ const CostDialogbox = ({
 
   const type = openConfirm.section === "multiple" ? "Persons" : openConfirm.section === "days" ? "Days" : "Types";
 
+  // Flatten multiple cost data for table
+  const multipleCostData = useMemo(() => {
+    if (!costDialogdata?.multipleCost?.length) return [];
+    const flattened = [];
+    costDialogdata.multipleCost.forEach((data, index) => {
+      data.Pricing.forEach((priceData, priceIndex) => {
+        flattened.push({
+          id: `${data.Persons}-${priceData.Category}-${priceIndex}`,
+          parentIndex: index,
+          priceIndex,
+          Persons: data.Persons,
+          Category: priceData.Category,
+          Price: priceData.Price,
+          isFirstRow: priceIndex === 0,
+          rowSpan: priceIndex === 0 ? data.Pricing.length + (newRows["multiple"]?.[data.Persons] ? 1 : 0) : 0,
+        });
+      });
+      // Add new row if exists
+      if (newRows["multiple"]?.[data.Persons]) {
+        flattened.push({
+          id: `new-${data.Persons}`,
+          parentIndex: index,
+          priceIndex: -1,
+          Persons: data.Persons,
+          Category: "",
+          Price: "",
+          isNewRow: true,
+          isFirstRow: false,
+          rowSpan: 0,
+        });
+      }
+    });
+    return flattened;
+  }, [costDialogdata?.multipleCost, newRows]);
+
+  // Flatten days cost data for table
+  const daysCostData = useMemo(() => {
+    if (!costDialogdata?.daysCost?.length) return [];
+    const flattened = [];
+    costDialogdata.daysCost.forEach((data, index) => {
+      data.Pricing.forEach((priceData, priceIndex) => {
+        flattened.push({
+          id: `${data.Days}-${priceData.Category}-${priceIndex}`,
+          parentIndex: index,
+          priceIndex,
+          Days: data.Days,
+          Category: priceData.Category,
+          Price: priceData.Price,
+          isFirstRow: priceIndex === 0,
+          rowSpan: priceIndex === 0 ? data.Pricing.length + (newRows["days"]?.[data.Days] ? 1 : 0) : 0,
+        });
+      });
+      // Add new row if exists
+      if (newRows["days"]?.[data.Days]) {
+        flattened.push({
+          id: `new-${data.Days}`,
+          parentIndex: index,
+          priceIndex: -1,
+          Days: data.Days,
+          Category: "",
+          Price: "",
+          isNewRow: true,
+          isFirstRow: false,
+          rowSpan: 0,
+        });
+      }
+    });
+    return flattened;
+  }, [costDialogdata?.daysCost, newRows]);
+
+  // Value cost data (already flat)
+  const valueCostData = useMemo(() => {
+    const data = costDialogdata?.valueCost || [];
+    return data.map((item, index) => ({
+      id: `value-${index}`,
+      index,
+      Type: item.Type,
+      Price: item.Price,
+    }));
+  }, [costDialogdata?.valueCost]);
+
+  // Multiple Cost columns
+  const multipleCostColumns = useMemo(() => {
+    const cols = [
+      {
+        accessorKey: "Persons",
+        header: "Persons",
+        cell: ({ row }) => {
+          const data = row.original;
+          if (data.isNewRow) return null;
+          if (data.isFirstRow && data.rowSpan > 0) {
+            return getPermission('packages', 'alter-cell') ? (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography>{data.Persons}</Typography>
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => handleOpenConfirm("multiple", data.Persons)}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  color="success"
+                  onClick={() => handleAddClick("multiple", data.Persons)}
+                >
+                  <AddIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            ) : data.Persons;
+          }
+          return null;
+        },
+      },
+      {
+        accessorKey: "Category",
+        header: "Category",
+        cell: ({ row }) => {
+          const data = row.original;
+          if (data.isNewRow) {
+            return (
+              <TextField
+                placeholder="Category"
+                value={newRows["multiple"]?.[data.Persons]?.Category || ""}
+                onChange={(e) => handleNewRowChange("multiple", data.Persons, "Category", e.target.value)}
+                size="small"
+              />
+            );
+          }
+          if (getPermission('packages', 'alter-inline')) {
+            return (
+              <Box
+                onDoubleClick={() => setEditCell({ section: "multiple", rowIndex: data.parentIndex, priceIndex: data.priceIndex, field: "Category" })}
+                sx={{ cursor: 'text' }}
+              >
+                {editCell.rowIndex === data.parentIndex && editCell.priceIndex === data.priceIndex && editCell.field === "Category" ? (
+                  <TextField
+                    variant="standard"
+                    value={data.Category}
+                    onChange={(e) => handleEditChange("multiple", data.parentIndex, data.priceIndex, "Category", e.target.value)}
+                    onBlur={() => setEditCell({ section: "", rowIndex: null, priceIndex: null, field: "" })}
+                    onKeyDown={handleEditKeyDown}
+                    autoFocus
+                    size="small"
+                  />
+                ) : data.Category}
+              </Box>
+            );
+          }
+          return data.Category;
+        },
+      },
+      {
+        accessorKey: "Price",
+        header: "Price",
+        cell: ({ row }) => {
+          const data = row.original;
+          if (data.isNewRow) {
+            return (
+              <TextField
+                placeholder="Price"
+                value={newRows["multiple"]?.[data.Persons]?.Price || ""}
+                onChange={(e) => handleNewRowChange("multiple", data.Persons, "Price", e.target.value)}
+                size="small"
+              />
+            );
+          }
+          if (getPermission('packages', 'alter-inline')) {
+            return (
+              <Box
+                onDoubleClick={() => setEditCell({ section: "multiple", rowIndex: data.parentIndex, priceIndex: data.priceIndex, field: "Price" })}
+                sx={{ cursor: 'text' }}
+              >
+                {editCell.rowIndex === data.parentIndex && editCell.priceIndex === data.priceIndex && editCell.field === "Price" ? (
+                  <TextField
+                    variant="standard"
+                    value={data.Price}
+                    onChange={(e) => handleEditChange("multiple", data.parentIndex, data.priceIndex, "Price", e.target.value)}
+                    onBlur={() => setEditCell({ section: "", rowIndex: null, priceIndex: null, field: "" })}
+                    onKeyDown={handleEditKeyDown}
+                    autoFocus
+                    size="small"
+                  />
+                ) : `₹ ${data.Price}`}
+              </Box>
+            );
+          }
+          return `₹ ${data.Price}`;
+        },
+      },
+    ];
+    if (getPermission('packages', 'delete')) {
+      cols.push({
+        id: "action",
+        header: "Action",
+        cell: ({ row }) => {
+          const data = row.original;
+          if (data.isNewRow) {
+            return (
+              <Box>
+                <Button size="small" variant="contained" onClick={() => handleSaveNewRow("multiple", data.Persons)}>Save</Button>
+                <Button size="small" onClick={() => handleCancelNewRow("multiple", data.Persons)}>Cancel</Button>
+              </Box>
+            );
+          }
+          return (
+            <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); handleOpenCatConfirm(data.Category, "multiple", data.priceIndex, data.parentIndex); }}>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          );
+        },
+      });
+    }
+    return cols;
+  }, [getPermission, editCell, newRows, handleEditChange, handleEditKeyDown, handleNewRowChange, handleSaveNewRow, handleCancelNewRow, handleOpenConfirm, handleAddClick, handleOpenCatConfirm]);
+
+  // Multiple Cost table
+  const multipleCostTable = useReactTable({
+    data: multipleCostData,
+    columns: multipleCostColumns,
+    getCoreRowModel: getCoreRowModel(),
+    getRowId: (row) => row.id,
+  });
+
+  // Days Cost columns
+  const daysCostColumns = useMemo(() => {
+    const cols = [
+      {
+        accessorKey: "Days",
+        header: "Days",
+        cell: ({ row }) => {
+          const data = row.original;
+          if (data.isNewRow) return null;
+          if (data.isFirstRow && data.rowSpan > 0) {
+            return getPermission('packages', 'alter-cell') ? (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography>{data.Days}</Typography>
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => handleOpenConfirm("days", data.Days)}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                  size="small"
+                  color="success"
+                  onClick={() => handleAddClick("days", data.Days)}
+                >
+                  <AddIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            ) : data.Days;
+          }
+          return null;
+        },
+      },
+      {
+        accessorKey: "Category",
+        header: "Category",
+        cell: ({ row }) => {
+          const data = row.original;
+          if (data.isNewRow) {
+            return (
+              <TextField
+                placeholder="Category"
+                value={newRows["days"]?.[data.Days]?.Category || ""}
+                onChange={(e) => handleNewRowChange("days", data.Days, "Category", e.target.value)}
+                size="small"
+              />
+            );
+          }
+          if (getPermission('packages', 'alter-inline')) {
+            return (
+              <Box
+                onDoubleClick={() => setEditCell({ section: "days", rowIndex: data.parentIndex, priceIndex: data.priceIndex, field: "Category" })}
+                sx={{ cursor: 'text' }}
+              >
+                {editCell.section === "days" && editCell.rowIndex === data.parentIndex && editCell.priceIndex === data.priceIndex && editCell.field === "Category" ? (
+                  <TextField
+                    variant="standard"
+                    value={data.Category}
+                    onChange={(e) => handleEditChange("days", data.parentIndex, data.priceIndex, "Category", e.target.value)}
+                    onBlur={() => setEditCell({ section: "", rowIndex: null, priceIndex: null, field: "" })}
+                    onKeyDown={handleEditKeyDown}
+                    autoFocus
+                    size="small"
+                  />
+                ) : data.Category}
+              </Box>
+            );
+          }
+          return data.Category;
+        },
+      },
+      {
+        accessorKey: "Price",
+        header: "Price",
+        cell: ({ row }) => {
+          const data = row.original;
+          if (data.isNewRow) {
+            return (
+              <TextField
+                placeholder="Price"
+                value={newRows["days"]?.[data.Days]?.Price || ""}
+                onChange={(e) => handleNewRowChange("days", data.Days, "Price", e.target.value)}
+                size="small"
+              />
+            );
+          }
+          if (getPermission('packages', 'alter-inline')) {
+            return (
+              <Box
+                onDoubleClick={() => setEditCell({ section: "days", rowIndex: data.parentIndex, priceIndex: data.priceIndex, field: "Price" })}
+                sx={{ cursor: 'text' }}
+              >
+                {editCell.rowIndex === data.parentIndex && editCell.priceIndex === data.priceIndex && editCell.field === "Price" ? (
+                  <TextField
+                    variant="standard"
+                    value={data.Price}
+                    onChange={(e) => handleEditChange("days", data.parentIndex, data.priceIndex, "Price", e.target.value)}
+                    onBlur={() => setEditCell({ section: "", rowIndex: null, priceIndex: null, field: "" })}
+                    onKeyDown={handleEditKeyDown}
+                    autoFocus
+                    size="small"
+                  />
+                ) : `₹ ${data.Price}`}
+              </Box>
+            );
+          }
+          return `₹ ${data.Price}`;
+        },
+      },
+    ];
+    if (getPermission('packages', 'delete')) {
+      cols.push({
+        id: "action",
+        header: "Action",
+        cell: ({ row }) => {
+          const data = row.original;
+          if (data.isNewRow) {
+            return (
+              <Box>
+                <Button size="small" variant="contained" onClick={() => handleSaveNewRow("days", data.Days)}>Save</Button>
+                <Button size="small" onClick={() => handleCancelNewRow("days", data.Days)}>Cancel</Button>
+              </Box>
+            );
+          }
+          return (
+            <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); handleOpenCatConfirm(data.Category, "days", data.priceIndex, data.parentIndex); }}>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          );
+        },
+      });
+    }
+    return cols;
+  }, [getPermission, editCell, newRows, handleEditChange, handleEditKeyDown, handleNewRowChange, handleSaveNewRow, handleCancelNewRow, handleOpenConfirm, handleAddClick, handleOpenCatConfirm]);
+
+  // Days Cost table
+  const daysCostTable = useReactTable({
+    data: daysCostData,
+    columns: daysCostColumns,
+    getCoreRowModel: getCoreRowModel(),
+    getRowId: (row) => row.id,
+  });
+
+  // Value Cost columns
+  const valueCostColumns = useMemo(() => {
+    const cols = [
+      {
+        accessorKey: "Type",
+        header: "Category",
+        cell: ({ row }) => {
+          const data = row.original;
+          if (getPermission('packages', 'alter-inline')) {
+            return (
+              <Box
+                onDoubleClick={() => setEditCell({ section: "value", rowIndex: data.index, priceIndex: null, field: "Type" })}
+                sx={{ cursor: 'text' }}
+              >
+                {editCell.section === "value" && editCell.rowIndex === data.index && editCell.field === "Type" ? (
+                  <TextField
+                    variant="standard"
+                    value={data.Type}
+                    onChange={(e) => handleEditChange("value", data.index, null, "Type", e.target.value)}
+                    onBlur={() => setEditCell({ section: "", rowIndex: null, priceIndex: null, field: "" })}
+                    autoFocus
+                    size="small"
+                  />
+                ) : data.Type}
+              </Box>
+            );
+          }
+          return data.Type;
+        },
+      },
+      {
+        accessorKey: "Price",
+        header: "Price",
+        cell: ({ row }) => {
+          const data = row.original;
+          if (getPermission('packages', 'alter-inline')) {
+            return (
+              <Box
+                onDoubleClick={() => setEditCell({ section: "value", rowIndex: data.index, priceIndex: null, field: "Price" })}
+                sx={{ cursor: 'text' }}
+              >
+                {editCell.section === "value" && editCell.rowIndex === data.index && editCell.field === "Price" ? (
+                  <TextField
+                    variant="standard"
+                    value={data.Price}
+                    onChange={(e) => handleEditChange("value", data.index, null, "Price", e.target.value)}
+                    onBlur={() => setEditCell({ section: "", rowIndex: null, priceIndex: null, field: "" })}
+                    autoFocus
+                    size="small"
+                  />
+                ) : `₹ ${data.Price}`}
+              </Box>
+            );
+          }
+          return `₹ ${data.Price}`;
+        },
+      },
+    ];
+    if (getPermission('packages', 'alter-cell')) {
+      cols.push({
+        id: "action",
+        header: "Action",
+        cell: ({ row }) => {
+          const data = row.original;
+          const originalData = costDialogdata?.valueCost?.[data.index];
+          return (
+            <Box>
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => handleOpenConfirm("value", originalData?.Type)}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+              <IconButton size="small" color="success" onClick={() => handleAddClick("value")}>
+                <AddIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          );
+        },
+      });
+    }
+    return cols;
+  }, [getPermission, editCell, costDialogdata, handleEditChange, handleOpenConfirm, handleAddClick]);
+
+  // Value Cost table
+  const valueCostTable = useReactTable({
+    data: valueCostData,
+    columns: valueCostColumns,
+    getCoreRowModel: getCoreRowModel(),
+    getRowId: (row) => row.id,
+  });
+
   return (
     <Dialog fullWidth open={open} onClose={handleClose}>
       <DialogTitle>Cost Details</DialogTitle>
@@ -205,123 +670,67 @@ const CostDialogbox = ({
           <AccordionDetails>
             <Table>
               <TableHead>
-                <TableRow>
-                  <TableCell>Persons</TableCell>
-                  <TableCell>Category</TableCell>
-                  <TableCell>Price</TableCell>
-                  {getPermission('packages', 'delete') && <TableCell>Action</TableCell>}
-
-                </TableRow>
+                {multipleCostTable.getHeaderGroups().map(headerGroup => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map(header => (
+                      <TableCell key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
               </TableHead>
               <TableBody>
-                {costDialogdata?.multipleCost?.length > 0 ? (
-                  costDialogdata.multipleCost.map((data, index) => (
-                    <>
-                      {data.Pricing.map((priceData, priceIndex) => (
-                        <TableRow key={`${data.Persons}-${priceData.Category}-${priceIndex}`}>
-                          {getPermission('packages', 'alter-cell') ? (
-                            priceIndex === 0 && (
-                              <TableCell rowSpan={data.Pricing.length + (newRows[data.Persons] ? 1 : 0)}>
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                  <Typography>{data.Persons}</Typography>
-                                  <IconButton
-                                    size="small"
-                                    color="error"
-                                    onClick={() => handleOpenConfirm("multiple", data.Persons)}
-                                  >
-                                    <DeleteIcon fontSize="small" />
-                                  </IconButton>
-                                  <IconButton
-                                    size="small"
-                                    color="success"
-                                    onClick={() => handleAddClick("multiple", data.Persons)}
-                                  >
-                                    <AddIcon fontSize="small" />
-                                  </IconButton>
-                                </Box>
-                              </TableCell>
-                            )
-                          ) : (
-                            priceIndex === 0 && (
-                              <TableCell rowSpan={data.Pricing.length + (newRows[data.Persons] ? 1 : 0)}>{data.Persons}</TableCell>
-                            ))}
-
-
-                          {/* CATEGORY */}
-                          {getPermission('packages', 'alter-inline') ? 
-                          <TableCell onDoubleClick={() => setEditCell({ section: "multiple", rowIndex: index, priceIndex, field: "Category" })}>
-                            {editCell.rowIndex === index && editCell.priceIndex === priceIndex && editCell.field === "Category" ? (
-                              <TextField
-                                variant="standard"
-                                value={priceData.Category}
-                                onChange={(e) => handleEditChange("multiple", index, priceIndex, "Category", e.target.value)}
-                                onBlur={() => setEditCell({ section: "", rowIndex: null, priceIndex: null, field: "" })}
-                                onKeyDown={handleEditKeyDown}
-                                autoFocus
-                                size="small"
-                              />
-                            ) : priceData.Category}
-                          </TableCell> :
-                          <TableCell>{priceData.Category}</TableCell>}
-
-                          {/* PRICE */}
-                          {getPermission('packages', 'alter-inline') ? 
-                          <TableCell onDoubleClick={() => setEditCell({ section: "multiple", rowIndex: index, priceIndex, field: "Price" })}>
-                            {editCell.rowIndex === index && editCell.priceIndex === priceIndex && editCell.field === "Price" ? (
-                              <TextField
-                                variant="standard"
-                                value={priceData.Price}
-                                onChange={(e) => handleEditChange("multiple", index, priceIndex, "Price", e.target.value)}
-                                onBlur={() => setEditCell({ section: "", rowIndex: null, priceIndex: null, field: "" })}
-                                onKeyDown={handleEditKeyDown}
-                                autoFocus
-                                size="small"
-                              />
-                            ) : `₹ ${priceData.Price}`}
-                            </TableCell> : <TableCell> ₹ {priceData.Price}</TableCell>}
-
-                          {/* DELETE */}
-                          {getPermission('packages', 'delete') &&
-                            <TableCell>
-                              <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); handleOpenCatConfirm(priceData.Category, "multiple", priceIndex, index); }}>
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
-                            </TableCell>
+                {multipleCostData.length > 0 ? (
+                  multipleCostTable.getRowModel().rows.map((row) => {
+                    const data = row.original;
+                    const cells = row.getVisibleCells();
+                    return (
+                      <TableRow key={row.id}>
+                        {cells.map((cell) => {
+                          // Handle rowSpan for Persons column
+                          if (cell.column.id === "Persons") {
+                            if (data.isNewRow) {
+                              return <TableCell key={cell.id} />;
+                            }
+                            if (data.isFirstRow && data.rowSpan > 0) {
+                              return (
+                                <TableCell
+                                  key={cell.id}
+                                  rowSpan={data.rowSpan}
+                                  sx={{ verticalAlign: 'top' }}
+                                >
+                                  {flexRender(
+                                    cell.column.columnDef.cell,
+                                    cell.getContext()
+                                  )}
+                                </TableCell>
+                              );
+                            }
+                            if (!data.isFirstRow) {
+                              return null; // Skip rendering for non-first rows
+                            }
                           }
-                        </TableRow>
-                      ))}
-
-                      {/* INLINE NEW ROW */}
-                      {newRows["multiple"]?.[data.Persons] && (
-                        <TableRow key={`new-${data.Persons}`}>
-                          <TableCell />
-                          <TableCell>
-                            <TextField
-                              placeholder="Category"
-                              value={newRows["multiple"][data.Persons].Category}
-                              onChange={(e) => handleNewRowChange("multiple", data.Persons, "Category", e.target.value)}
-                              size="small"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <TextField
-                              placeholder="Price"
-                              value={newRows["multiple"][data.Persons].Price}
-                              onChange={(e) => handleNewRowChange("multiple", data.Persons, "Price", e.target.value)}
-                              size="small"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Button size="small" variant="contained" onClick={() => handleSaveNewRow("multiple", data.Persons)}>Save</Button>
-                            <Button size="small" onClick={() => handleCancelNewRow("multiple", data.Persons)}>Cancel</Button>
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </>
-                  ))
+                          return (
+                            <TableCell key={cell.id}>
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    );
+                  })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} align="center">No data available</TableCell>
+                    <TableCell colSpan={multipleCostColumns.length} align="center">No data available</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -337,114 +746,67 @@ const CostDialogbox = ({
           <AccordionDetails>
             <Table>
               <TableHead>
-                <TableRow>
-                  <TableCell>Days</TableCell>
-                  <TableCell>Category</TableCell>
-                  <TableCell>Price</TableCell>
-                  {getPermission('packages', 'delete') && <TableCell>Action</TableCell>}
-                </TableRow>
+                {daysCostTable.getHeaderGroups().map(headerGroup => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map(header => (
+                      <TableCell key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
               </TableHead>
               <TableBody>
-                {costDialogdata?.daysCost?.length > 0 ? (
-                  costDialogdata.daysCost.map((data, index) =>
-                    data.Pricing.map((priceData, priceIndex) => (
-                      <>
-                        <TableRow key={`${data.Days}-${priceData.Category}-${priceIndex}`}>
-                          {getPermission('packages', 'alter-cell') ?
-                            (priceIndex === 0 && (
-                              <TableCell rowSpan={data.Pricing.length + (newRows[data.Days] ? 1 : 0)}>
-                                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                  <Typography>{data.Days}</Typography>
-                                  <IconButton size="small" color="error" onClick={() => handleOpenConfirm("days", data.Days)}>
-                                    <DeleteIcon fontSize="small" />
-                                  </IconButton>
-                                  <IconButton size="small" color="success" onClick={() => handleAddClick("days", data.Days)}>
-                                    <AddIcon fontSize="small" />
-                                  </IconButton>
-                                </Box>
-                              </TableCell>
-                            )) : (priceIndex === 0 && (
-                              <TableCell rowSpan={data.Pricing.length + (newRows[data.Days] ? 1 : 0)}>{data.Days}</TableCell>
-                            ))}
-
-                          {/* Category Cell */}
-                          {getPermission('packages', 'alter-inline') ? 
-                          <TableCell onDoubleClick={() => setEditCell({ section: "days", rowIndex: index, priceIndex, field: "Category" })}>
-                            {editCell.section === "days" && editCell.rowIndex === index && editCell.priceIndex === priceIndex && editCell.field === "Category" ? (
-                              <TextField
-                                variant="standard"
-                                value={priceData.Category}
-                                onChange={(e) => handleEditChange("days", index, priceIndex, "Category", e.target.value)}
-                                onBlur={() => setEditCell({ section: "", rowIndex: null, priceIndex: null, field: "" })}
-                                onKeyDown={handleEditKeyDown}
-                                autoFocus
-                                size="small"
-                              />
-                            ) : priceData.Category}
-                          </TableCell> : <TableCell>{priceData.Category}</TableCell>}
-
-                          {/* Price Cell */}
-                          {getPermission('packages', 'alter-inline') ? 
-                          <TableCell onDoubleClick={() => setEditCell({ section: "days", rowIndex: index, priceIndex, field: "Price" })}>
-                            {editCell.rowIndex === index && editCell.priceIndex === priceIndex && editCell.field === "Price" ? (
-                              <TextField
-                                variant="standard"
-                                value={priceData.Price}
-                                onChange={(e) => handleEditChange("days", index, priceIndex, "Price", e.target.value)}
-                                onBlur={() => setEditCell({ section: "", rowIndex: null, priceIndex: null, field: "" })}
-                                onKeyDown={handleEditKeyDown}
-                                autoFocus
-                                size="small"
-                              />
-                            ) : `₹ ${priceData.Price}`}
-                          </TableCell> : <TableCell>₹ {priceData.Price}</TableCell>}
-                          {/* DELETE */}
-                          {getPermission('packages', 'delete') &&
-                            <TableCell>
-                              <IconButton size="small" color="error" onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenCatConfirm(priceData.Category, "days", priceIndex, index);
-                              }}>
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
-                            </TableCell>
+                {daysCostData.length > 0 ? (
+                  daysCostTable.getRowModel().rows.map((row) => {
+                    const data = row.original;
+                    const cells = row.getVisibleCells();
+                    return (
+                      <TableRow key={row.id}>
+                        {cells.map((cell) => {
+                          // Handle rowSpan for Days column
+                          if (cell.column.id === "Days") {
+                            if (data.isNewRow) {
+                              return <TableCell key={cell.id} />;
+                            }
+                            if (data.isFirstRow && data.rowSpan > 0) {
+                              return (
+                                <TableCell
+                                  key={cell.id}
+                                  rowSpan={data.rowSpan}
+                                  sx={{ verticalAlign: 'top' }}
+                                >
+                                  {flexRender(
+                                    cell.column.columnDef.cell,
+                                    cell.getContext()
+                                  )}
+                                </TableCell>
+                              );
+                            }
+                            if (!data.isFirstRow) {
+                              return null; // Skip rendering for non-first rows
+                            }
                           }
-
-
-
-                        </TableRow>
-                        {/* INLINE NEW ROW */}
-                        {priceIndex === data.Pricing.length - 1 && newRows["days"]?.[data.Days] && (
-                          <TableRow key={`new-${data.Days}`}>
-                            <TableCell />
-                            <TableCell>
-                              <TextField
-                                placeholder="Category"
-                                value={newRows["days"][data.Days].Category}
-                                onChange={(e) => handleNewRowChange("days", data.Days, "Category", e.target.value)}
-                                size="small"
-                              />
+                          return (
+                            <TableCell key={cell.id}>
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
                             </TableCell>
-                            <TableCell>
-                              <TextField
-                                placeholder="Price"
-                                value={newRows["days"][data.Days].Price}
-                                onChange={(e) => handleNewRowChange("days", data.Days, "Price", e.target.value)}
-                                size="small"
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <Button size="small" variant="contained" onClick={() => handleSaveNewRow("days", data.Days)}>Save</Button>
-                              <Button size="small" onClick={() => handleCancelNewRow("days", data.Days)}>Cancel</Button>
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </>
-                    ))
-                  )
+                          );
+                        })}
+                      </TableRow>
+                    );
+                  })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={3} align="center">No data available</TableCell>
+                    <TableCell colSpan={daysCostColumns.length} align="center">No data available</TableCell>
                   </TableRow>
                 )}
               </TableBody>
@@ -460,111 +822,74 @@ const CostDialogbox = ({
           <AccordionDetails>
             <Table>
               <TableHead>
-                <TableRow>
-                  <TableCell>Category</TableCell>
-                  <TableCell>Price</TableCell>
-                  {getPermission('packages', 'alter-cell') &&
-                    <TableCell>Action</TableCell>}
-                </TableRow>
-              </TableHead>
-              {/* VALUE COST TABLE */}
-              <TableBody>
-                {costDialogdata.valueCost?.map((item, index) => (
-                  <TableRow key={index}>
-
-                    {/* Type */}
-                    {getPermission('packages', 'alter-inline') ?
-                    <TableCell
-                      onDoubleClick={() =>
-                        setEditCell({ section: "value", rowIndex: index, priceIndex: null, field: "Type" })
-                      }
-                    >
-                      {editCell.section === "value" &&
-                        editCell.rowIndex === index &&
-                        editCell.field === "Type" ? (
-                        <TextField
-                          variant="standard"
-                          value={item.Type}
-                          onChange={(e) => handleEditChange("value", index, null, "Type", e.target.value)}
-                          onBlur={() =>
-                            setEditCell({ section: "", rowIndex: null, priceIndex: null, field: "" })
-                          }
-                          autoFocus
-                          size="small"
-                        />
-                      ) : (
-                        item.Type
-                      )}
-                    </TableCell> : <TableCell>{item.Type}</TableCell>}
-
-                    {/* Price */}
-                    {getPermission('packages', 'alter-inline') ? 
-                    <TableCell
-                      onDoubleClick={() =>
-                        setEditCell({ section: "value", rowIndex: index, priceIndex: null, field: "Price" })
-                      }
-                    >
-                      {editCell.section === "value" &&
-                        editCell.rowIndex === index &&
-                        editCell.field === "Price" ? (
-                        <TextField
-                          variant="standard"
-                          value={item.Price}
-                          onChange={(e) => handleEditChange("value", index, null, "Price", e.target.value)}
-                          onBlur={() =>
-                            setEditCell({ section: "", rowIndex: null, priceIndex: null, field: "" })
-                          }
-                          autoFocus
-                          size="small"
-                        />
-                      ) : `₹ ${item.Price}`}
-                    </TableCell> : <TableCell>₹ {item.Price}</TableCell>}
-
-                    {/* Action */}
-                    {getPermission('packages', 'alter-cell') &&
-                      <TableCell>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => handleOpenConfirm("value", item.Type)}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton size="small" color="success" onClick={() => handleAddClick("value")}>
-                          <AddIcon fontSize="small" />
-                        </IconButton>
+                {valueCostTable.getHeaderGroups().map(headerGroup => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map(header => (
+                      <TableCell key={header.id}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
                       </TableCell>
-                    }
+                    ))}
                   </TableRow>
                 ))}
-
-                {/* INLINE ADD NEW ROW */}
-                {newRows["value"] && (
-                  <TableRow key="new-value">
-                    <TableCell>
-                      <TextField
-                        placeholder="Type"
-                        value={newRows["value"].Type} // or rename to Type if you prefer
-                        onChange={(e) => handleNewRowChange("value", "value", "Category", e.target.value)}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        placeholder="Price"
-                        value={newRows["value"].Price}
-                        onChange={(e) => handleNewRowChange("value", "value", "Price", e.target.value)}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button size="small" variant="contained" onClick={() => handleSaveNewRow("value", "value")}>
-                        Save
-                      </Button>
-                      <Button size="small" onClick={() => handleCancelNewRow("value", "value")}>
-                        Cancel
-                      </Button>
-                    </TableCell>
+              </TableHead>
+              <TableBody>
+                {valueCostData.length > 0 ? (
+                  <>
+                    {valueCostTable.getRowModel().rows.map((row) => {
+                      const data = row.original;
+                      return (
+                        <TableRow key={row.id}>
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell key={cell.id}>
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      );
+                    })}
+                    {/* INLINE ADD NEW ROW */}
+                    {newRows["value"] && (
+                      <TableRow key="new-value">
+                        <TableCell>
+                          <TextField
+                            placeholder="Type"
+                            value={newRows["value"].Type || ""}
+                            onChange={(e) => handleNewRowChange("value", "value", "Type", e.target.value)}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <TextField
+                            placeholder="Price"
+                            value={newRows["value"].Price || ""}
+                            onChange={(e) => handleNewRowChange("value", "value", "Price", e.target.value)}
+                            size="small"
+                          />
+                        </TableCell>
+                        {getPermission('packages', 'alter-cell') && (
+                          <TableCell>
+                            <Button size="small" variant="contained" onClick={() => handleSaveNewRow("value", "value")}>
+                              Save
+                            </Button>
+                            <Button size="small" onClick={() => handleCancelNewRow("value", "value")}>
+                              Cancel
+                            </Button>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    )}
+                  </>
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={valueCostColumns.length} align="center">No data available</TableCell>
                   </TableRow>
                 )}
               </TableBody>

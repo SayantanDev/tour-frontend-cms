@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, MenuItem, Grid, FormHelperText } from '@mui/material';
+import { useSelector } from 'react-redux';
 
 const EditUserDialog = ({ open, userFormData, handleAddUserSubmit, handleChange, handleClose }) => {
-const fetchConfigData = useSelector((state) => state.config.configData);
+    const fetchConfigData = useSelector((state) => state.config.configData);
+    const handleCloseReason = (event, reason) => {
+        if (reason && reason === "backdropClick") return;
+        handleClose();
+    }
     return (
-        <Dialog open={open} onClose={handleClose} disableBackdropClick>
+        <Dialog open={open} onClose={handleCloseReason}>
             <DialogTitle>Update User</DialogTitle>
             {/* <DialogTitle>{singleRowData.title}</DialogTitle> */}
             <DialogContent>
@@ -19,12 +24,12 @@ const fetchConfigData = useSelector((state) => state.config.configData);
                         size="small"
                         margin="normal"
                         required
-                        // error={userFormError.fullName}
-                        // helperText={
-                        //     userFormError.fullName
-                        //     ? 'Enter Full name properly'
-                        //     : ''
-                        // }
+                    // error={userFormError.fullName}
+                    // helperText={
+                    //     userFormError.fullName
+                    //     ? 'Enter Full name properly'
+                    //     : ''
+                    // }
                     />
                     {/* {userFormError.fullName && (
                         <FormHelperText size="small" sx={{ color: 'red', mt: '0' }}>

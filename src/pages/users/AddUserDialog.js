@@ -4,8 +4,12 @@ import { useSelector } from 'react-redux';
 
 const AddUserDialog = ({ open, userFormData, handleAddUserSubmit, handleChange, handleClose }) => {
     const fetchConfigData = useSelector((state) => state.config.configData);
+    const handleCloseReason = (event, reason) => {
+        if (reason && reason === "backdropClick") return;
+        handleClose();
+    }
     return (
-        <Dialog fullWidth open={open} onClose={handleClose} disableBackdropClick>
+        <Dialog fullWidth open={open} onClose={handleCloseReason}>
             <DialogTitle>{userFormData.id ? 'Edit' : 'Add New'} User</DialogTitle>
             {/* <DialogTitle>{singleRowData.title}</DialogTitle> */}
             <DialogContent>
@@ -14,7 +18,7 @@ const AddUserDialog = ({ open, userFormData, handleAddUserSubmit, handleChange, 
                     <TextField
                         label="Full Name"
                         name="fullName"
-                        value={userFormData.fullName}o
+                        value={userFormData.fullName}
                         onChange={handleChange}
                         fullWidth
                         size="small"
@@ -99,7 +103,7 @@ const AddUserDialog = ({ open, userFormData, handleAddUserSubmit, handleChange, 
             </DialogContent>
             <DialogActions>
                 <Button onClick={handleAddUserSubmit} variant="contained" color="success">
-                    {userFormData.id ? 'Update': 'Add'}
+                    {userFormData.id ? 'Update' : 'Add'}
                 </Button>
                 <Button onClick={handleClose} variant="contained" color="error">
                     Close

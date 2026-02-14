@@ -65,7 +65,6 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
       };
 
       const res = await updatePassword(payload);
-      console.log("Password updated successfully", res);
       setConfirmOpen(false);
       setOpenDialog(false);
       showSnackbar(`${res.data.message}`, 'success');
@@ -199,12 +198,12 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
                   helperText={(touched.oldPassword && errors.oldPassword)}
                   InputProps={{
                     endAdornment: (
-                        <Box  
-                          sx={{ cursor: "pointer", display: "flex", alignItems: "center" }}
-                          onClick={() => setShowOldPassword(prev => !prev)}
-                        >
-                          {showOldPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                        </Box>
+                      <Box
+                        sx={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+                        onClick={() => setShowOldPassword(prev => !prev)}
+                      >
+                        {showOldPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </Box>
                     )
                   }}
                 />
@@ -218,12 +217,12 @@ const ProfileDropdown = ({ anchorEl, handleClose }) => {
                   helperText={touched.newPassword && errors.newPassword}
                   InputProps={{
                     endAdornment: (
-                        <Box
-                          sx={{ cursor: "pointer", display: "flex", alignItems: "center" }}
-                          onClick={() => setShowNewPassword(prev => !prev)}
-                        >
-                          {showNewPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                        </Box>
+                      <Box
+                        sx={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+                        onClick={() => setShowNewPassword(prev => !prev)}
+                      >
+                        {showNewPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </Box>
                     )
                   }}
                 />

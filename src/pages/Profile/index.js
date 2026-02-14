@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Card,
@@ -17,6 +17,11 @@ import {
   Snackbar,
   Divider,
 } from "@mui/material";
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+} from "@tanstack/react-table";
 import { useDispatch, useSelector } from "react-redux";
 import { addLoginToken } from "../../reduxcomponents/slices/tokenSlice";
 import { getAllUserPermission } from "../../api/userPermissionAPI";
@@ -56,9 +61,6 @@ const Profile = () => {
     try {
       const res = await getAllUserPermission();
       const items = res?.items || [];
-      console.log(items);
-
-
       setAllUserPermissions(items);
     } catch (error) {
       console.error("Error fetching user permissions:", error);
@@ -107,24 +109,42 @@ const Profile = () => {
     }
   };
 
-  // Map permissions to table rows
-  const permissionRows = editableUser.permission.map((val) => (
-    <TableRow key={val.module}>
-      <TableCell>{val.module}</TableCell>
-      <TableCell>
-        {val.value.map((v) => (
-          <span key={v}>{v} </span>
-        ))}
-      </TableCell>
-    </TableRow>
-  ));
+  // Column definitions for permissions table
+  const permissionColumns = useMemo(() => [
+    {
+      accessorKey: "module",
+      header: "Module",
+    },
+    {
+      accessorKey: "value",
+      header: "Value",
+      cell: ({ getValue }) => {
+        const values = getValue();
+        return (
+          <>
+            {values.map((v) => (
+              <span key={v}>{v} </span>
+            ))}
+          </>
+        );
+      },
+    },
+  ], []);
+
+  // Table instance for permissions
+  const permissionsTable = useReactTable({
+    data: editableUser.permission,
+    columns: permissionColumns,
+    getCoreRowModel: getCoreRowModel(),
+    getRowId: (row) => row.module,
+  });
 
   return (
-    <Box 
+    <Box
       sx={{
         display: "flex",
-        justifyContent:"center",
-        p:2
+        justifyContent: "center",
+        p: 2
       }}>
       <Card sx={{ width: "80%", p: 3, m: 2 }}>
         <CardContent>
@@ -174,18 +194,49 @@ const Profile = () => {
           </Grid>
           {editableUser.role !== "Admin" &&
             <Box mt={4}>
-              <Typography gutterBottom sx={{color: "#555"}} fontWeight={600}>
+              <Typography gutterBottom sx={{ color: "#555" }} fontWeight={600}>
                 Permissions
               </Typography>
               <TableContainer component={Paper}>
                 <Table>
                   <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 600 }}>Module</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Value</TableCell>
-                    </TableRow>
+                    {permissionsTable.getHeaderGroups().map(headerGroup => (
+                      <TableRow key={headerGroup.id}>
+                        {headerGroup.headers.map(header => (
+                          <TableCell key={header.id} sx={{ fontWeight: 600 }}>
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
                   </TableHead>
-                  <TableBody>{permissionRows}</TableBody>
+                  <TableBody>
+                    {permissionsTable.getRowModel().rows.length > 0 ? (
+                      permissionsTable.getRowModel().rows.map(row => (
+                        <TableRow key={row.id}>
+                          {row.getVisibleCells().map(cell => (
+                            <TableCell key={cell.id}>
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={permissionColumns.length} align="center">
+                          No permissions found
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
                 </Table>
               </TableContainer>
             </Box>

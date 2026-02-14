@@ -167,8 +167,6 @@ const PlacesForm = () => {
     try {
       // let res;
       if (selectedPlace && selectedPlace._id) {
-        console.log("updatePlace", values);
-
         const res = await updatePlace(values, selectedPlace._id); // You'll need to import and define this API
         if (res) {
           showSnackbar('Package updated successfully', 'success');
@@ -203,10 +201,10 @@ const PlacesForm = () => {
       label: "Darjeeling",
       val: "darjeeling",
     },
-    {
-      label: "North Sikkim",
-      val: "north-sikkim",
-    },
+    // {
+    //   label: "North Sikkim",
+    //   val: "north-sikkim",
+    // },
     {
       label: "Meghalaya",
       val: "meghalaya",

@@ -1,11 +1,23 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: "Open Sans", sans-serif!important;
+  font-family: "Open Sans", "Roboto", "Helvetica", "Arial", sans-serif !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-size: 16px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8eef3 100%);
+  min-height: 100vh;
 }
 
 code {
-  font-family: "Open Sans", sans-serif!important;
+  font-family: "Open Sans", "Roboto", "Courier New", monospace !important;
+}
+
+#root {
+  min-height: 100vh;
 }

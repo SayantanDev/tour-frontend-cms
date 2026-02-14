@@ -1,13 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
-  Container, Typography, IconButton, Tooltip, Box, Chip, MenuItem,
-  Modal, Paper, TextField, Button, Table, TableBody,
-  TableCell, TableContainer, TableHead, TableRow, TablePagination, Select, Checkbox,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions
+  Container, Typography, IconButton, Tooltip, Box, Chip, MenuItem, Modal, Paper,
+  TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Select, Checkbox, Dialog, DialogTitle, DialogContent, DialogActions
 } from "@mui/material";
+import { useReactTable, getCoreRowModel, getPaginationRowModel, flexRender } from "@tanstack/react-table";
 import { deleteQueries, getAllQueries, updateQueries } from "../../api/queriesAPI";
 import usePermissions from "../../hooks/UsePermissions";
 import { useDispatch } from "react-redux";
@@ -16,7 +13,6 @@ import { useNavigate } from "react-router-dom";
 import useSnackbar from "../../hooks/useSnackbar";
 import { getAllUsers } from "../../api/userAPI";
 import { getChangeRequest, getRejectedChanges, handleChangeRequestApproval } from "../../api/operationAPI";
-import { Delete } from '@mui/icons-material';
 
 const Query = () => {
   const checkPermission = usePermissions();
@@ -27,14 +23,15 @@ const Query = () => {
   const { showSnackbar, SnackbarComponent } = useSnackbar();
 
   // const [query, setQuery] = useState([]);
-  const [filteredQuery, setFilteredQuery] = useState([]);
-  // const [loading, setLoading] = useState(true);
+  const [queries, setQueries] = useState([]);
+  // const [filteredQuery, setFilteredQuery] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [dateQuery, setDateQuery] = useState("");
   const [statusQuery, setStatusQuery] = useState("");
   const [locationQuery, setLocationQuery] = useState("");
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [editingRowId, setEditingRowId] = useState(null);
   const [editedRowData, setEditedRowData] = useState({});
 
@@ -57,23 +54,30 @@ const Query = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [queryToDelete, setQueryToDelete] = useState(null);
 
-  useEffect(() => {
-    fetchUsers();
-    if (canView) fetchQuery();
-  }, [canView]);
-
-  const fetchQuery = async () => {
+  const fetchQuery = React.useCallback(async (pageNum = 1) => {
+    setLoading(true);
     try {
-      const response = await getAllQueries();
-      const sortedData = response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      // setQuery(sortedData);
-      setFilteredQuery(sortedData);
+      const response = await getAllQueries(pageNum, 30);
+      // const sortedData = response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); 
+      // Server should ideally handle sorting with pagination
+      const newData = response.data || [];
+
+      setQueries(prev => {
+        if (pageNum === 1) return newData;
+        // Filter out duplicates if any
+        const existingIds = new Set(prev.map(i => i._id));
+        const uniqueNew = newData.filter(i => !existingIds.has(i._id));
+        return [...prev, ...uniqueNew];
+      });
+
+      setHasMore(response.pagination?.hasNextPage || false);
+      setHasMore(response.pagination?.hasNextPage || false);
     } catch (error) {
       console.error("Error fetching query:", error);
     } finally {
-      // setLoading(false);
+      setLoading(false);
     }
-  };
+  }, []);
 
   const fetchUsers = async () => {
     try {
@@ -85,12 +89,26 @@ const Query = () => {
     }
   };
 
+  useEffect(() => {
+    fetchUsers();
+    if (canView) fetchQuery(1);
+  }, [canView]);
+
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    if (scrollHeight - scrollTop <= clientHeight + 50 && hasMore && !loading) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchQuery(nextPage);
+    }
+  };
+
   const formatDate = (date) => {
     const d = new Date(date);
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
-  const handleSaveEdit = async (id) => {
+  const handleSaveEdit = React.useCallback(async (id) => {
     try {
       const updatedFields = {};
       if (editedRowData.guest_name !== undefined) updatedFields.guest_name = editedRowData.guest_name;
@@ -108,9 +126,9 @@ const Query = () => {
     } catch (error) {
       console.error("Update failed:", error);
     }
-  };
+  }, [editedRowData, fetchQuery, showSnackbar]);
 
-  const getStatusColor = (status) => {
+  const getStatusColor = React.useCallback((status) => {
     switch (status) {
       case "Confirm": return "success";
       case "Cancel": return "default";
@@ -119,39 +137,24 @@ const Query = () => {
       case "Higher Priority": return "error";
       default: return "default";
     }
-  };
+  }, []);
 
-  const handleEditOpen = async (id) => {
-    // const res = await fetchOperationByQueries(id);
+  const handleEditOpen = React.useCallback(async (id) => {
     dispatch(setSelectedquerie({ id }));
     navigate("/query/view");
-  };
-
-  const filteredRows = filteredQuery.filter((item) => {
-    const searchLower = searchQuery.toLowerCase();
-    const name = item.guest_info?.guest_name?.toLowerCase() || "";
-    const phone = item.guest_info?.guest_phone?.toLowerCase() || "";
-    const bookingDate = formatDate(item.created_at);
-    const tourDate = formatDate(item.travel_date);
-    return (
-      (name.includes(searchLower) || phone.includes(searchLower)) &&
-      (!dateQuery || bookingDate === dateQuery || tourDate === dateQuery) &&
-      (!statusQuery || item.lead_stage === statusQuery) &&
-      (!locationQuery || item.destination === locationQuery)
-    );
-  });
-  const handleOpenDeleteDialog = (row) => {
+  }, [dispatch, navigate]);
+  const handleOpenDeleteDialog = React.useCallback((row) => {
     setQueryToDelete(row);
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
 
-  const openUserModal = (row) => {
+  const openUserModal = React.useCallback((row) => {
     setSelectedQueryId(row._id);
     const assigned = row.manage_teams?.map(mt => mt.user_id) || [];
     setAssignedUsers(assigned);
     setUserModalOpen(true);
-  };
+  }, []);
 
   const saveUserAssignments = async () => {
     try {
@@ -174,11 +177,9 @@ const Query = () => {
     }
   };
 
-  const openChangeRequestModal = async (queryId) => {
+  const openChangeRequestModal = React.useCallback(async (queryId) => {
     try {
       const res = await getChangeRequest(queryId);
-      console.log("getChangeRequest response : ", res);
-      // const data = await res.json();
       setSelectedChangeRequests(res);
       setCurrentQueryId(queryId);
       setChangeModalOpen(true);
@@ -186,7 +187,7 @@ const Query = () => {
       console.error("Failed to fetch change requests", err);
       showSnackbar("Failed to load change requests", "error");
     }
-  };
+  }, [showSnackbar]);
   const handleChangeRequestAction = async (changeId, action, reason = "") => {
     try {
       const body = { status: action };
@@ -202,25 +203,22 @@ const Query = () => {
       showSnackbar("Action failed", "error");
     }
   };
-  const openRejectedChangeModal = async (operationId) => {
+  const openRejectedChangeModal = React.useCallback(async (operationId) => {
     try {
       const res = await getRejectedChanges(operationId);
-      console.log("");
-
-      // const data = await res.json();
       setRejectedChanges(res);
       setRejectedModalOpen(true);
     } catch (err) {
       console.error("Failed to load rejected changes", err);
       showSnackbar("Failed to load rejected changes", "error");
     }
-  };
+  }, [showSnackbar]);
   const handleDeleteQuery = async () => {
     try {
       const res = await deleteQueries(queryToDelete._id);
       if (res.success) {
         showSnackbar("Query deleted successfully", "success");
-        fetchQuery();
+        setQueries(prev => prev.filter(q => q._id !== queryToDelete._id));
       } else {
         showSnackbar("Failed to delete query", "error");
       }
@@ -233,8 +231,208 @@ const Query = () => {
     }
   };
 
+  // Column definitions for @tanstack/react-table
+  const columns = useMemo(() => {
+    const cols = [
+      {
+        accessorKey: "guest_info.guest_name",
+        header: "Name",
+        cell: ({ row }) => {
+          const rowData = row.original;
+          if (editingRowId === rowData._id) {
+            return (
+              <TextField
+                size="small"
+                value={editedRowData.guest_name}
+                onChange={(e) => setEditedRowData({ ...editedRowData, guest_name: e.target.value })}
+              />
+            );
+          }
+          return rowData.guest_info?.guest_name || "";
+        },
+      },
+      {
+        accessorKey: "guest_info.guest_phone",
+        header: "Contact",
+        cell: ({ row }) => {
+          const rowData = row.original;
+          if (editingRowId === rowData._id) {
+            return (
+              <TextField
+                size="small"
+                value={editedRowData.guest_phone}
+                onChange={(e) => setEditedRowData({ ...editedRowData, guest_phone: e.target.value })}
+              />
+            );
+          }
+          return rowData.guest_info?.guest_phone || "";
+        },
+      },
+      {
+        accessorKey: "lead_stage",
+        header: "Status",
+        cell: ({ row }) => {
+          const rowData = row.original;
+          if (editingRowId === rowData._id) {
+            return (
+              <Select
+                size="small"
+                value={editedRowData.lead_stage}
+                onChange={(e) => setEditedRowData({ ...editedRowData, lead_stage: e.target.value })}
+              >
+                {["Confirm", "Cancel", "FollowUp", "Postponed", "Higher Priority"].map((status) => (
+                  <MenuItem key={status} value={status}>{status}</MenuItem>
+                ))}
+              </Select>
+            );
+          }
+          return <Chip label={rowData.lead_stage} color={getStatusColor(rowData.lead_stage)} />;
+        },
+      },
+      {
+        accessorKey: "cost",
+        header: "Cost",
+        cell: ({ row }) => {
+          const rowData = row.original;
+          if (editingRowId === rowData._id) {
+            return (
+              <TextField
+                size="small"
+                value={editedRowData.cost}
+                onChange={(e) => setEditedRowData({ ...editedRowData, cost: e.target.value })}
+              />
+            );
+          }
+          return rowData.cost || "N/A";
+        },
+      },
+      {
+        accessorKey: "advance",
+        header: "Advance",
+        cell: ({ row }) => {
+          const rowData = row.original;
+          if (editingRowId === rowData._id) {
+            return (
+              <TextField
+                size="small"
+                value={editedRowData.advance}
+                onChange={(e) => setEditedRowData({ ...editedRowData, advance: e.target.value })}
+              />
+            );
+          }
+          return rowData.advance ? `${rowData.advance}` : "0";
+        },
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const rowData = row.original;
+          if (editingRowId === rowData._id) {
+            return (
+              <>
+                <Button onClick={() => handleSaveEdit(rowData._id)} size="small">Save</Button>
+                <Button onClick={() => { setEditingRowId(null); setEditedRowData({}); }} size="small">Cancel</Button>
+              </>
+            );
+          }
+          return (
+            <>
+              <Tooltip title="Edit">
+                <IconButton onClick={() => {
+                  setEditingRowId(rowData._id);
+                  setEditedRowData({
+                    guest_name: rowData.guest_info?.guest_name || "",
+                    guest_phone: rowData.guest_info?.guest_phone || "",
+                    cost: rowData.cost || "",
+                    advance: rowData.advance || "",
+                    lead_stage: rowData.lead_stage || "",
+                  });
+                }}>
+                  <Typography color="success">Edit</Typography>
+                </IconButton>
+              </Tooltip>
+              {rowData.advance > 0 && (
+                <Tooltip title="Manage Operation">
+                  <IconButton onClick={() => handleEditOpen(rowData.operation_id)}>
+                    <Typography color="primary">Manage</Typography>
+                  </IconButton>
+                </Tooltip>
+              )}
+              {checkPermission("queries", "assuser") && (
+                <Tooltip title="Assign Users">
+                  <IconButton onClick={() => openUserModal(rowData)}>
+                    <Typography color="secondary">Assign Users</Typography>
+                  </IconButton>
+                </Tooltip>
+              )}
+            </>
+          );
+        },
+      },
+    ];
+
+    if (checkPermission("operation", "change-request")) {
+      cols.push({
+        id: "changeRequest",
+        header: "Change Request",
+        cell: ({ row }) => {
+          const rowData = row.original;
+          return (
+            <>
+              <Tooltip title="View Rejected Changes">
+                <IconButton onClick={() => openRejectedChangeModal(rowData.operation_id)}>
+                  <Typography color="error">Rejected</Typography>
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="View Changes Request">
+                <IconButton onClick={() => openChangeRequestModal(rowData.operation_id)}>
+                  <Button size="small">CRV</Button>
+                </IconButton>
+              </Tooltip>
+            </>
+          );
+        },
+      });
+    }
+
+    if (checkPermission("queries", "delete")) {
+      cols.push({
+        id: "delete",
+        header: "Delete",
+        cell: ({ row }) => {
+          const rowData = row.original;
+          return (
+            <Tooltip title="Delete">
+              <IconButton onClick={() => handleOpenDeleteDialog(rowData)}>
+                <Typography color="error">Delete</Typography>
+              </IconButton>
+            </Tooltip>
+          );
+        },
+      });
+    }
+
+    return cols;
+  }, [editingRowId, editedRowData, checkPermission, handleSaveEdit, handleEditOpen, openUserModal, openRejectedChangeModal, openChangeRequestModal, handleOpenDeleteDialog, getStatusColor]);
+
+  // Table instance
+  const table = useReactTable({
+    data: queries,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: queries.length > 0 ? queries.length : 10,
+        pageIndex: 0,
+      },
+    },
+    manualPagination: true,
+  });
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
+    <Container maxWidth={false} sx={{ height: 'calc(100vh - 100px)', display: 'flex', flexDirection: 'column' }}>
       <Typography variant="h4" gutterBottom>Leads</Typography>
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 3 }}>
         <TextField label="Search" size="small" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
@@ -245,202 +443,57 @@ const Query = () => {
           ))}
         </TextField>
         <TextField select label="Location" size="small" value={locationQuery} onChange={(e) => setLocationQuery(e.target.value)} sx={{ minWidth: 180 }}>
-          {["", "Darjeeling", "Sikkim", "North Sikkim", "Sandakphu"].map((loc) => (
+          {["", "Darjeeling", "Sikkim", "Sandakphu"].map((loc) => (
             <MenuItem key={loc} value={loc}>{loc || "All"}</MenuItem>
           ))}
         </TextField>
       </Box>
-      {/* <Container> */}
-      {/* <Stack
-        direction="row"
-        alignItems="center"
-        spacing={2}
-        flexWrap="wrap"
-        sx={{ mb: 3 }}
-      >
-        <Typography variant="h4" color="warning" sx={{ whiteSpace: 'nowrap' }}>
-          Leads
-        </Typography>
-
-        <TextField
-          label="Search"
-          size="small"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-
-        <TextField
-          type="date"
-          label="Date"
-          size="small"
-          value={dateQuery}
-          onChange={(e) => setDateQuery(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-        />
-
-        <TextField
-          select
-          label="Status"
-          size="small"
-          value={statusQuery}
-          onChange={(e) => setStatusQuery(e.target.value)}
-          sx={{ minWidth: 160 }}
-        >
-          {["", "Confirm", "Cancel", "FollowUp", "Postponed", "Higher Priority"].map((status) => (
-            <MenuItem key={status} value={status}>
-              {status || "All"}
-            </MenuItem>
-          ))}
-        </TextField>
-
-        <TextField
-          select
-          label="Location"
-          size="small"
-          value={locationQuery}
-          onChange={(e) => setLocationQuery(e.target.value)}
-          sx={{ minWidth: 160 }}
-        >
-          {["", "Darjeeling", "Sikkim", "North Sikkim", "Sandakphu"].map((loc) => (
-            <MenuItem key={loc} value={loc}>
-              {loc || "All"}
-            </MenuItem>
-          ))}
-        </TextField>
-      </Stack> */}
 
       <TableContainer
         component={Paper}
-        sx={{ borderRadius: 2, boxShadow: 1, overflowX: "auto", mb: 2 }}
+        sx={{ flexGrow: 1, overflowY: "auto", mb: 2 }}
+        onScroll={handleScroll}
       >
-        <Table size="small">
+        <Table size="small" stickyHeader>
           <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Contact</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Cost</TableCell>
-              <TableCell>Advance</TableCell>
-              <TableCell>Actions</TableCell>
-              {checkPermission("operation", "change-request") && (<TableCell>Change Request</TableCell>)}
-              {checkPermission("queries", "delete") && (<TableCell>Delete</TableCell>)}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => (
-              <TableRow key={row._id} hover>
-                <TableCell>
-                  {editingRowId === row._id ? (
-                    <TextField size="small" value={editedRowData.guest_name} onChange={(e) => setEditedRowData({ ...editedRowData, guest_name: e.target.value })} />
-                  ) : row.guest_info?.guest_name}
-                </TableCell>
-                <TableCell>
-                  {editingRowId === row._id ? (
-                    <TextField size="small" value={editedRowData.guest_phone} onChange={(e) => setEditedRowData({ ...editedRowData, guest_phone: e.target.value })} />
-                  ) : row.guest_info?.guest_phone}
-                </TableCell>
-                <TableCell>
-                  {editingRowId === row._id ? (
-                    <Select size="small" value={editedRowData.lead_stage} onChange={(e) => setEditedRowData({ ...editedRowData, lead_stage: e.target.value })}>
-                      {["Confirm", "Cancel", "FollowUp", "Postponed", "Higher Priority"].map((status) => (
-                        <MenuItem key={status} value={status}>{status}</MenuItem>
-                      ))}
-                    </Select>
-                  ) : (
-                    <Chip label={row.lead_stage} color={getStatusColor(row.lead_stage)} />
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editingRowId === row._id ? (
-                    <TextField size="small" value={editedRowData.cost} onChange={(e) => setEditedRowData({ ...editedRowData, cost: e.target.value })} />
-                  ) : row.cost || "N/A"}
-                </TableCell>
-                <TableCell>
-                  {editingRowId === row._id ? (
-                    <TextField size="small" value={editedRowData.advance} onChange={(e) => setEditedRowData({ ...editedRowData, advance: e.target.value })} />
-                  ) : row.advance ? `${row.advance}` : "0"}
-                </TableCell>
-
-                <TableCell>
-                  {editingRowId === row._id ? (
-                    <>
-                      <Button onClick={() => handleSaveEdit(row._id)} size="small">Save</Button>
-                      <Button onClick={() => { setEditingRowId(null); setEditedRowData({}); }} size="small">Cancel</Button>
-                    </>
-                  ) : (
-                    <>
-                      <Tooltip title="Edit">
-                        <IconButton onClick={() => {
-                          setEditingRowId(row._id);
-                          setEditedRowData({
-                            guest_name: row.guest_info?.guest_name || "",
-                            guest_phone: row.guest_info?.guest_phone || "",
-                            cost: row.cost || "",
-                            advance: row.advance || "",
-                            lead_stage: row.lead_stage || "",
-                          });
-                        }}>
-                          <Typography color="success">Edit</Typography>
-                        </IconButton>
-                      </Tooltip>
-                      {row.advance > 0 &&
-                        <Tooltip title="Manage Operation">
-                          <IconButton onClick={() => handleEditOpen(row.operation_id)}>
-                            <Typography color="primary">Manage</Typography>
-                          </IconButton>
-                        </Tooltip>
-                      }
-
-                      {checkPermission("queries", "assuser") && (
-                        <Tooltip title="Assign Users">
-                          <IconButton onClick={() => openUserModal(row)}>
-                            <Typography color="secondary">Assign Users</Typography>
-                          </IconButton>
-                        </Tooltip>
+            {table.getHeaderGroups().map(headerGroup => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map(header => (
+                  <TableCell key={header.id} sx={{ backgroundColor: 'background.paper' }}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
                       )}
-
-                    </>
-                  )}
-                </TableCell>
-                {checkPermission("operation", "change-request") && (
-                  <TableCell>
-                    <Tooltip title="View Rejected Changes">
-                      <IconButton onClick={() => openRejectedChangeModal(row.operation_id)}>
-                        <Typography color="error">Rejected</Typography>
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="View Changes Request">
-                      <IconButton onClick={() => openChangeRequestModal(row.operation_id)}>
-                        <Button size="small">CRV</Button>
-                        {/* <Typography color="error">Rejected</Typography> */}
-                      </IconButton>
-                    </Tooltip>
                   </TableCell>
-                )}
-                {checkPermission("queries", "delete") && (
-                  <TableCell>
-                    <Tooltip title="Delete">
-                      <IconButton onClick={() => handleOpenDeleteDialog(row)}>
-                        <Typography color="error">Delete</Typography>
-                      </IconButton>
-                    </Tooltip>
-                  </TableCell>
-                )}
+                ))}
               </TableRow>
             ))}
+          </TableHead>
+          <TableBody>
+            {table.getRowModel().rows.length > 0 ? (
+              table.getRowModel().rows.map(row => (
+                <TableRow key={row.original._id} hover>
+                  {row.getVisibleCells().map(cell => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} align="center">
+                  No queries found
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
-
-        <TablePagination
-          component="div"
-          count={filteredRows.length}
-          page={page}
-          onPageChange={(e, newPage) => setPage(newPage)}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={(e) => setRowsPerPage(parseInt(e.target.value, 10))}
-          rowsPerPageOptions={[5, 10, 25]}
-          size="small"
-        />
       </TableContainer>
 
 
