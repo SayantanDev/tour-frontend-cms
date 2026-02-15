@@ -1,6 +1,6 @@
 import axios from './interceptor';
 
-export const QRY_URL = `${process.env.REACT_APP_BASE_URL}/user-permission`;
+const QRY_URL = `${process.env.REACT_APP_BASE_URL}/user-permission`;
 
 export async function createUserPermission(payload) {
     const ADDUSER_URL = `${QRY_URL}`;
@@ -20,7 +20,7 @@ export async function getUserPermission(id) {
     return result.data;
 };
 
-export async function updateUserPermission(id,payload) {
+export async function updateUserPermission(id, payload) {
     const ADDUSER_URL = `${QRY_URL}/${id}`;
     const result = await axios.put(ADDUSER_URL, payload);
     return result.data;

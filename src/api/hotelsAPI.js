@@ -1,6 +1,6 @@
 import axios from './interceptor';
 
-export const QRY_URL = `${process.env.REACT_APP_BASE_URL}/hotel`;
+const QRY_URL = `${process.env.REACT_APP_BASE_URL}/hotel`;
 
 
 export async function getAllHotels() {
@@ -15,7 +15,7 @@ export async function insertHotel(payload) {
     return result.data;
 };
 
-export async function updateHotel(id,payload) {
+export async function updateHotel(id, payload) {
     const ADDUSER_URL = `${QRY_URL}/update/${id}`;
     const result = await axios.put(ADDUSER_URL, payload);
     return result.data;

@@ -60,7 +60,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     }, [existingInquiry]);
 
     // UI States
-    const [pdfOpen, setPdfOpen] = useState(true);
     const [loading, setLoading] = useState(false);
     const [dataLoading, setDataLoading] = useState(true);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
@@ -365,20 +364,21 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         setLoading(true);
 
         const payload = buildPayload(isDraft);
+        const QRY_URL = `${process.env.REACT_APP_BASE_URL}/queries`;
 
         try {
             // let response;
             if (isEditMode && existingInquiry?._id) {
                 // Update existing inquiry
                 await axios.put(
-                    `https://tour-backend-live.onrender.com/api/v1/queries/update/${existingInquiry._id}`,
+                    `${QRY_URL}/update/${existingInquiry._id}`,
                     payload
                 );
                 showSnackbar('Inquiry updated successfully!', 'success');
             } else {
                 // Create new inquiry
                 await axios.post(
-                    'https://tour-backend-live.onrender.com/api/v1/queries/create-queries',
+                    `${QRY_URL}/create-queries`,
                     payload
                 );
                 showSnackbar(
@@ -465,7 +465,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             const imgData = canvas.toDataURL('image/png');
 
             // Send email via your backend API
-            await axios.post('https://tour-backend-live.onrender.com/api/v1/email/send-quotation', {
+            await axios.post(`${process.env.REACT_APP_BASE_URL}/email/send-quotation`, {
                 to: emailAddress,
                 guestName: guestInfo.guest_name,
                 pdfData: imgData,
@@ -537,8 +537,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             {/* Left Side - Form */}
             <Box
                 sx={{
-                    flex: pdfOpen ? '0 0 70%' : '1 1 100%',
-                    transition: 'all 0.3s ease',
                     overflow: 'auto',
                     p: 3,
                     backgroundColor: '#f8f9fa',
@@ -609,9 +607,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     onPackageSelect={handlePackageSelect}
                 />
 
-                {/* Selected Package Info */}
-                {/* <SelectedPackageCard selectedPackage={selectedPackage} /> */}
-
                 {/* Short Itinerary */}
                 <ItineraryCard
                     itinerary={itinerary}
@@ -671,133 +666,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                         {onClose ? 'Cancel' : 'Reset'}
                     </Button>
                 </Box>
-            </Box>
-
-            {/* Right Side - PDF Preview */}
-            <Box
-                sx={{
-                    flex: pdfOpen ? '0 0 30%' : '0 0 0',
-                    transition: 'all 0.3s ease',
-                    overflow: 'hidden',
-                    position: 'relative',
-                    borderLeft: pdfOpen ? '1px solid #e0e0e0' : 'none',
-                    pr: 0,
-                    mr: 0,
-                }}
-            >
-                {/* Toggle Button */}
-                <IconButton
-                    onClick={() => setPdfOpen(!pdfOpen)}
-                    sx={{
-                        position: pdfOpen ? 'absolute' : 'fixed',
-                        left: pdfOpen ? -20 : 'auto',
-                        right: pdfOpen ? 'auto' : 0,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        zIndex: 10,
-                        width: 40,
-                        height: 40,
-                        backgroundColor: '#1976d2',
-                        color: '#fff',
-                        boxShadow: 3,
-                        transition: 'background-color 0.2s',
-                        '&:hover': {
-                            backgroundColor: '#1565c0',
-                            transform: 'translateY(-50%)',
-                        },
-                    }}
-                >
-                    {pdfOpen ? <ChevronRight /> : <ChevronLeft />}
-                </IconButton>
-
-                <Collapse in={pdfOpen} orientation="horizontal" sx={{ height: '100%', position: 'relative' }}>
-                    <Box ref={pdfRef} sx={{ height: '100%', overflow: 'auto', position: 'relative' }}>
-                        <PdfPreview
-                            guestInfo={guestInfo}
-                            tripDetails={tripDetails}
-                            selectedPackage={selectedPackage}
-                            hotelSelections={hotelSelections}
-                            allHotels={allHotels}
-                            cost={cost}
-                            itinerary={itinerary}
-                        />
-
-                        {/* Package Suggestions Overlay */}
-                        {showSuggestions && packageSuggestions.length > 0 && (
-                            <Box
-                                sx={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                    bottom: 0,
-                                    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                                    backdropFilter: 'blur(10px)',
-                                    overflowY: 'auto',
-                                    p: 3,
-                                    zIndex: 5,
-                                }}
-                            >
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#1976d2' }}>
-                                        Package Suggestions ({packageSuggestions.length})
-                                    </Typography>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => {
-                                            setTripDetails(prev => ({ ...prev, duration: '', location: '', keywords: '' }));
-                                        }}
-                                        sx={{
-                                            backgroundColor: 'rgba(0,0,0,0.05)',
-                                            '&:hover': { backgroundColor: 'rgba(0,0,0,0.1)' }
-                                        }}
-                                    >
-                                        <Clear fontSize="small" />
-                                    </IconButton>
-                                </Box>
-                                <Grid container spacing={2}>
-                                    {packageSuggestions.map((pkg) => (
-                                        <Grid item xs={12} key={pkg._id}>
-                                            <Card
-                                                sx={{
-                                                    cursor: 'pointer',
-                                                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                                    border: selectedPackage?._id === pkg._id ? '2px solid #1976d2' : '1px solid rgba(0,0,0,0.1)',
-                                                    transition: 'all 0.2s',
-                                                    '&:hover': {
-                                                        backgroundColor: 'rgba(255, 255, 255, 1)',
-                                                        boxShadow: 3,
-                                                        transform: 'translateY(-2px)',
-                                                    },
-                                                }}
-                                                onClick={() => {
-                                                    handlePackageSelect(pkg);
-                                                    // Clear filters to hide overlay after selection
-                                                    setTripDetails(prev => ({ ...prev, keywords: '' }));
-                                                }}
-                                            >
-                                                <CardContent sx={{ p: 2 }}>
-                                                    <Typography variant="subtitle2" fontWeight={600}>
-                                                        {pkg.label}
-                                                    </Typography>
-                                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                                                        {pkg.location} • {pkg.duration} Days
-                                                    </Typography>
-                                                    <Typography variant="body2" sx={{ mt: 1, fontSize: '0.8rem' }} noWrap>
-                                                        {typeof pkg.details?.overview === 'string'
-                                                            ? pkg.details.overview.substring(0, 80) + '...'
-                                                            : 'No description available'
-                                                        }
-                                                    </Typography>
-                                                </CardContent>
-                                            </Card>
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                            </Box>
-                        )}
-                    </Box>
-                </Collapse>
             </Box>
 
             {/* Email Dialog */}

@@ -1,7 +1,6 @@
 import axios from './interceptor';
 
 const INQRY_URL = `${process.env.REACT_APP_BASE_URL}/inquiry`;
-// const INQRY_URL = 'https://tour-backend-live.onrender.com/api/v1/inquiry';
 
 export async function getAllInquiries(page, size) {
     const ADDUSER_URL = `${INQRY_URL}/get-all-inquiries`;

@@ -1,6 +1,6 @@
 import axios from './interceptor';
 
-export const QRY_URL = `${process.env.REACT_APP_BASE_URL}/place`;
+const QRY_URL = `${process.env.REACT_APP_BASE_URL}/place`;
 
 export async function insertPlace(payload) {
     const ADDUSER_URL = `${QRY_URL}/create`;
@@ -8,7 +8,7 @@ export async function insertPlace(payload) {
     return result.data;
 };
 
-export async function updatePlace(payload,id) {
+export async function updatePlace(payload, id) {
     const ADDUSER_URL = `${QRY_URL}/update/${id}`;
     const result = await axios.put(ADDUSER_URL, payload);
     return result.data;
@@ -32,14 +32,14 @@ export async function deletePlace(id) {
     return result.data;
 }
 
-export async function updatePlaceRanking(id,payload) {
+export async function updatePlaceRanking(id, payload) {
     const ADDUSER_URL = `${QRY_URL}/update/ranking/${id}`;
-    const result = await axios.put(ADDUSER_URL,payload);
+    const result = await axios.put(ADDUSER_URL, payload);
     return result.data;
 }
 
-export async function UpdatePlacesPacakges(id,payload) {
+export async function UpdatePlacesPacakges(id, payload) {
     const ADDUSER_URL = `${QRY_URL}/packages/${id}`;
-    const result = await axios.patch(ADDUSER_URL,payload);
+    const result = await axios.patch(ADDUSER_URL, payload);
     return result.data;
 }
