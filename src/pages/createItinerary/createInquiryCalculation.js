@@ -75,15 +75,15 @@ export const calculatePackageCost = (packageDetails, paxCount) => {
 
 export const updateItineraryByDuration = (currentItinerary, duration) => {
     const days = parseInt(duration) || 0;
-    
+
     if (currentItinerary.length === days) {
         return currentItinerary;
     }
-    
+
     if (days > currentItinerary.length) {
         return [...currentItinerary, ...new Array(days - currentItinerary.length).fill('')];
     }
-    
+
     return currentItinerary.slice(0, days);
 };
 
@@ -224,10 +224,7 @@ export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, st
         },
         pax: parseInt(tripDetails.pax),
         kids_above_5: parseInt(tripDetails.kids_above_5) || 0,
-        car_details: {
-            car_name: tripDetails.car_name || '',
-            car_count: parseInt(tripDetails.car_count) || 0,
-        },
+        car_details: tripDetails.car_details?.filter(car => car.car_count > 0) || [],
         cost: cost,
         destination: tripDetails.location || selectedPackage?.location || '',
         duration: parseInt(tripDetails.duration) || selectedPackage?.duration || 0,

@@ -197,6 +197,7 @@ const AllPackages = () => {
       raw: pkg,
       id: pkg._id,
       title: pkg.label || "Untitled",
+      location: pkg.location || "—",
       type: pkg.type || "—",
       verified: Boolean(pkg.verified),
       created_at: pkg.created_at,
@@ -346,6 +347,10 @@ const AllPackages = () => {
       header: "Title",
     },
     {
+      accessorKey: "location",
+      header: "Location",
+    },
+    {
       accessorKey: "type",
       header: "Type",
     },
@@ -411,44 +416,44 @@ const AllPackages = () => {
         );
       },
     },
-    {
-      accessorKey: "created_at",
-      header: "Created At",
-      cell: ({ getValue }) => {
-        const value = getValue();
-        return (
-          <Tooltip title={value || ""}>
-            <span>{formatDate(value)}</span>
-          </Tooltip>
-        );
-      },
-    },
-    {
-      accessorKey: "updated_at",
-      header: "Updated At",
-      cell: ({ getValue }) => {
-        const value = getValue();
-        return (
-          <Tooltip title={value || ""}>
-            <span>{formatDate(value)}</span>
-          </Tooltip>
-        );
-      },
-    },
-    {
-      id: "cost",
-      header: "Cost",
-      cell: ({ row }) => {
-        const rowData = row.original;
-        return (
-          <PaymentsIcon
-            color="primary"
-            onClick={() => handleOpenDialog(rowData.id)}
-            sx={{ cursor: 'pointer' }}
-          />
-        );
-      },
-    },
+    // {
+    //   accessorKey: "created_at",
+    //   header: "Created At",
+    //   cell: ({ getValue }) => {
+    //     const value = getValue();
+    //     return (
+    //       <Tooltip title={value || ""}>
+    //         <span>{formatDate(value)}</span>
+    //       </Tooltip>
+    //     );
+    //   },
+    // },
+    // {
+    //   accessorKey: "updated_at",
+    //   header: "Updated At",
+    //   cell: ({ getValue }) => {
+    //     const value = getValue();
+    //     return (
+    //       <Tooltip title={value || ""}>
+    //         <span>{formatDate(value)}</span>
+    //       </Tooltip>
+    //     );
+    //   },
+    // },
+    // {
+    //   id: "cost",
+    //   header: "Cost",
+    //   cell: ({ row }) => {
+    //     const rowData = row.original;
+    //     return (
+    //       <PaymentsIcon
+    //         color="primary"
+    //         onClick={() => handleOpenDialog(rowData.id)}
+    //         sx={{ cursor: 'pointer' }}
+    //       />
+    //     );
+    //   },
+    // },
     {
       id: "actions",
       header: "Action",
@@ -579,7 +584,7 @@ const AllPackages = () => {
         </TextField>
 
         {/* NEW: Date field selector */}
-        <TextField
+        {/* <TextField
           label="Date Field"
           size="small"
           select
@@ -590,10 +595,10 @@ const AllPackages = () => {
         >
           <option value="created">Created At</option>
           <option value="updated">Updated At</option>
-        </TextField>
+        </TextField> */}
 
         {/* NEW: From / To dates */}
-        <TextField
+        {/* <TextField
           label="From"
           size="small"
           type="date"
@@ -610,7 +615,7 @@ const AllPackages = () => {
           onChange={(e) => setFilterDateTo(e.target.value)}
           sx={{ width: 170 }}
           InputLabelProps={{ shrink: true }}
-        />
+        /> */}
         {getPermission('packages', 'create') &&
           <Button
             variant="contained"

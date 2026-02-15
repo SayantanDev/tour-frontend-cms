@@ -82,8 +82,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     const [tripDetails, setTripDetails] = useState({
         pax: '',
         kids_above_5: 0,
-        car_name: '',
-        car_count: '',
+        car_details: [], // Array of {car_name, car_count}
         location: '',
         keywords: '',
         travel_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
@@ -160,8 +159,8 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         // Load trip details
         setTripDetails({
             pax: inquiry.pax?.toString() || '',
-            car_name: inquiry.car_details?.car_name || '',
-            car_count: inquiry.car_details?.car_count?.toString() || '',
+            kids_above_5: inquiry.kids_above_5 || 0,
+            car_details: inquiry.car_details || [],
             location: inquiry.destination || '',
             keywords: '',
             travel_date: inquiry.travel_date ? new Date(inquiry.travel_date).toISOString().split('T')[0] : '',
@@ -300,8 +299,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             ...prev,
             location: '',
             keywords: '',
-            car_name: '',
-            car_count: '',
+            car_details: [],
             travel_date: '',
             duration: ''
         }));
@@ -310,6 +308,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         setCost(0);
         setItinerary([]);
         setHotelSelections({});
+        setSeason('');
     };
 
     const handleLocationChange = (newValue) => {
@@ -334,6 +333,29 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
     const handleItineraryChange = (index, value) => {
         setItinerary(prev => updateItineraryItem(prev, index, value));
+    };
+
+    const handleCarDetailsChange = (carName, newCount) => {
+        setTripDetails(prev => {
+            const existingCarIndex = prev.car_details.findIndex(car => car.car_name === carName);
+            let newCarDetails = [...prev.car_details];
+
+            if (newCount <= 0) {
+                // Remove car if count is 0 or less
+                if (existingCarIndex !== -1) {
+                    newCarDetails.splice(existingCarIndex, 1);
+                }
+            } else {
+                // Update existing or add new car
+                if (existingCarIndex !== -1) {
+                    newCarDetails[existingCarIndex] = { ...newCarDetails[existingCarIndex], car_count: newCount };
+                } else {
+                    newCarDetails.push({ car_name: carName, car_count: newCount });
+                }
+            }
+
+            return { ...prev, car_details: newCarDetails };
+        });
     };
 
     const validateForm = () => {
@@ -365,47 +387,40 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
         const payload = buildPayload(isDraft);
         const QRY_URL = `${process.env.REACT_APP_BASE_URL}/queries`;
+        console.log('tripDetails===>', tripDetails);
+        console.log('payload===>', payload);
 
-        try {
-            // let response;
-            if (isEditMode && existingInquiry?._id) {
-                // Update existing inquiry
-                await axios.put(
-                    `${QRY_URL}/update/${existingInquiry._id}`,
-                    payload
-                );
-                showSnackbar('Inquiry updated successfully!', 'success');
-            } else {
-                // Create new inquiry
-                await axios.post(
-                    `${QRY_URL}/create-queries`,
-                    payload
-                );
-                showSnackbar(
-                    isDraft ? 'Draft saved successfully!' : 'Inquiry created successfully!',
-                    'success'
-                );
-            }
+        //important code
+        // try {
+        //     if (isEditMode && existingInquiry?._id) {
+        //         await axios.put(`${QRY_URL}/update/${existingInquiry._id}`, payload);
+        //         showSnackbar('Inquiry updated successfully!', 'success');
+        //     } else {
+        //         await axios.post(`${QRY_URL}/create-queries`, payload);
+        //         showSnackbar(
+        //             isDraft ? 'Draft saved successfully!' : 'Inquiry created successfully!',
+        //             'success'
+        //         );
+        //     }
 
-            // Don't reset form if it's a draft save
-            if (!isDraft) {
-                setTimeout(() => {
-                    if (onClose) {
-                        onClose();
-                    } else {
-                        resetForm();
-                    }
-                }, 1500);
-            }
-        } catch (error) {
-            console.error('Error saving inquiry:', error);
-            showSnackbar(
-                error.response?.data?.message || 'Failed to save inquiry',
-                'error'
-            );
-        } finally {
-            setLoading(false);
-        }
+        //     if (!isDraft) {
+        //         setTimeout(() => {
+        //             if (onClose) {
+        //                 onClose();
+        //             } else {
+        //                 resetForm();
+        //             }
+        //         }, 1500);
+        //     }
+        // } catch (error) {
+        //     console.error('Error saving inquiry:', error);
+        //     showSnackbar(
+        //         error.response?.data?.message || 'Failed to save inquiry',
+        //         'error'
+        //     );
+        // } finally {
+        //     setLoading(false);
+        // }
     };
 
     const handleSaveAsDraft = () => {
@@ -491,8 +506,8 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         });
         setTripDetails({
             pax: '',
-            car_name: '',
-            car_count: '',
+            kids_above_5: 0,
+            car_details: [],
             location: '',
             keywords: '',
             travel_date: '',
@@ -506,6 +521,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             hotel: '',
         });
         setEmailAddress('');
+        setSeason('');
     };
 
     const showSnackbar = (message, severity = 'success') => {
@@ -528,7 +544,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     }
 
     return (
-        <Box sx={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+        <Box sx={{ display: 'flex' }}>
             {/* Loading Backdrop */}
             <Backdrop open={loading} sx={{ zIndex: 9999, color: '#fff' }}>
                 <CircularProgress color="inherit" />
@@ -537,9 +553,9 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             {/* Left Side - Form */}
             <Box
                 sx={{
-                    overflow: 'auto',
                     p: 3,
                     backgroundColor: '#f8f9fa',
+                    width: '100%',
                 }}
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -605,6 +621,9 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     handleLocationChange={handleLocationChange}
                     allPackages={allPackages}
                     onPackageSelect={handlePackageSelect}
+                    season={season}
+                    handleSeasonChange={handleSeasonChange}
+                    handleCarDetailsChange={handleCarDetailsChange}
                 />
 
                 {/* Short Itinerary */}
