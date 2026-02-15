@@ -63,15 +63,38 @@ export const filterPackages = (allPackages, tripDetails) => {
     return filtered;
 };
 
-export const calculatePackageCost = (packageDetails, paxCount) => {
+export const calculatePackageCost = (packageDetails, tripDetails) => {
     if (!packageDetails?.cost?.valueCost?.[0]?.price) {
         return 0;
     }
 
     const basePrice = packageDetails.cost.valueCost[0].price;
-    const pax = parseInt(paxCount) || 1;
-    return basePrice * pax;
+    const pax = (parseInt(tripDetails.pax) || 0) + (parseInt(tripDetails.kids_above_5) || 0);
+    return basePrice * (pax || 1);
 };
+
+export const totalCost = (hotelCost, carCost, margin) => {
+    const subtotal = (parseFloat(hotelCost) || 0) + (parseFloat(carCost) || 0);
+    const marginAmount = subtotal * (parseFloat(margin) / 100 || 0);
+    return Math.round(subtotal + marginAmount);
+};
+
+// export const TotalCost = (packageDetails, tripDetails, margin) => {
+//     if (tripDetails?.location === "Sandakphu") {
+//         if (!packageDetails?.cost?.valueCost?.[0]?.price) {
+//             return 0;
+//         }
+
+//         const basePrice = packageDetails.cost.valueCost[0].price;
+//         const pax = parseInt(tripDetails.adults + tripDetails.kids_above_5) || 1;
+//         // const carCost = calculateCarCost(tripDetails.car_details, pax);
+//         return basePrice * pax;
+//     } else {
+//         // const carCost = calculateCarCost(tripDetails.car_details, pax);
+//         // const hotelCost = calculateHotelCost(tripDetails.hotel_details, pax);
+//         return margin;
+//     }
+// };
 
 export const updateItineraryByDuration = (currentItinerary, duration) => {
     const days = (parseInt(duration) || 0) + 1;
@@ -315,4 +338,124 @@ export const updateHotelSelection = (hotelSelections, dayIndex, field, value) =>
             [field]: value
         }
     };
+};
+
+/**
+ * Calculate detailed cost breakdown for a single hotel selection
+ * @param {Object} selection - Single day selection object
+ * @param {Array} allHotels - List of all hotels
+ * @param {string} season - Current season
+ * @param {Object} tripDetails - Trip details (pax, kids)
+ * @param {Object} stayInfo - Stay info (rooms)
+ * @returns {Object} Cost breakdown object
+ */
+export const calculateSingleHotelCostWithBreakdown = (selection, allHotels, season, tripDetails, stayInfo) => {
+    const defaultBreakdown = {
+        baseCost: 0,
+        extraAdultCost: 0,
+        childCost: 0,
+        total: 0,
+        details: {
+            rooms: 0,
+            basePrice: 0,
+            extraAdults: 0,
+            extraPrice: 0,
+            kids: 0,
+            childPrice: 0
+        }
+    };
+
+    if (!selection?.hotelId || !selection?.roomType || !selection?.mealPlan || !allHotels || !season) return defaultBreakdown;
+
+    const rooms = parseInt(stayInfo?.rooms) || 0;
+    const adults = parseInt(tripDetails?.pax) || 0;
+    const kids = parseInt(tripDetails?.kids_above_5) || 0;
+
+    const hotel = allHotels.find(h => h._id === selection.hotelId);
+    if (!hotel) return defaultBreakdown;
+
+    const category = hotel.category?.find(cat => cat.room_cat === selection.roomType);
+    if (!category) return defaultBreakdown;
+
+    const pricing = category[season];
+    if (!pricing) return defaultBreakdown;
+
+    const planType = selection.mealPlan.split('_')[0];
+
+    // 1. Base Room Cost
+    const basePrice = pricing[selection.mealPlan] || 0;
+    const baseCost = basePrice * rooms;
+
+    // 2. Extra Mattress Cost
+    const extraAdults = Math.max(0, adults - (rooms * 2));
+    let extraAdultCost = 0;
+    let extraPrice = 0;
+    if (extraAdults > 0) {
+        const extraMatKey = `extra_mat_${planType}`;
+        extraPrice = pricing[extraMatKey] || 0;
+        extraAdultCost = extraPrice * extraAdults;
+    }
+
+    // 3. Child No Bed (CNB) Cost
+    let childCost = 0;
+    let childPrice = 0;
+    if (kids > 0) {
+        const cnbKey = `cnb_${planType}`;
+        childPrice = pricing[cnbKey] || 0;
+        childCost = childPrice * kids;
+    }
+
+    return {
+        baseCost,
+        extraAdultCost,
+        childCost,
+        total: baseCost + extraAdultCost + childCost,
+        details: {
+            rooms,
+            basePrice,
+            extraAdults,
+            extraPrice,
+            kids,
+            childPrice
+        }
+    };
+};
+
+/**
+ * Calculate cost for a single hotel selection on a specific day
+ * @param {Object} selection - Single day selection object
+ * @param {Array} allHotels - List of all hotels
+ * @param {string} season - Current season
+ * @param {Object} tripDetails - Trip details (pax, kids)
+ * @param {Object} stayInfo - Stay info (rooms)
+ * @returns {number} Cost for this day
+ */
+export const calculateSingleHotelCost = (selection, allHotels, season, tripDetails, stayInfo) => {
+    return calculateSingleHotelCostWithBreakdown(selection, allHotels, season, tripDetails, stayInfo).total;
+};
+
+/**
+ * Calculate total hotel cost based on selections
+ * @param {Object} hotelSelections - Day-wise hotel selections
+ * @param {Array} allHotels - List of all available hotels
+ * @param {string} season - Current season ('season_price' or 'off_season_price')
+ * @param {Object} tripDetails - Trip details (pax, kids)
+ * @param {Object} stayInfo - Stay info (rooms)
+ * @returns {number} Total hotel cost
+ */
+export const hotelCostCalculation = (hotelSelections, allHotels, season, tripDetails, stayInfo) => {
+    if (!hotelSelections) return 0;
+    return Object.values(hotelSelections).reduce((total, selection) => {
+        return total + calculateSingleHotelCost(selection, allHotels, season, tripDetails, stayInfo);
+    }, 0);
+};
+
+export const calculateCarCost = (carDetails, configData, season, duration) => {
+    if (!carDetails || !configData) return 0;
+    const totalDays = (parseInt(duration) || 0) + 1;
+    return carDetails.reduce((acc, carDetail) => {
+        const carConfig = configData?.additionalCosts?.car?.find(c => c.type === carDetail.car_name);
+        const unitPrice = carConfig?.cost?.[season] || 0;
+        return acc + (unitPrice * carDetail.car_count * totalDays);
+    }, 0);
 };

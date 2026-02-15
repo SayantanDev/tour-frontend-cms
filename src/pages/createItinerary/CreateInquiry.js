@@ -39,6 +39,9 @@ import {
     resetHotelSelections,
     updateItineraryItem,
     updateHotelSelection,
+    totalCost,
+    hotelCostCalculation,
+    calculateCarCost,
 } from './createInquiryCalculation';
 
 const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
@@ -46,6 +49,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     const allPackages = useSelector((state) => state.package.allPackages || []);
     const allHotels = useSelector((state) => state.hotels.allHotels || []);
     const configData = useSelector((state) => state.config.configData || {});
+    const [currentMargin, setCurrentMargin] = useState(configData?.additionalCosts?.margin_cost_percent);
     const pdfRef = useRef(null);
     const guestNameRef = useRef(null);
     const ignoreSuggestionsRef = useRef(false);
@@ -214,6 +218,18 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         }
     }, [tripDetails.duration, selectedPackage]);
 
+    // Auto-calculate Total Cost based on Hotel, Car and Margin selections
+    useEffect(() => {
+        if (tripDetails.location && tripDetails.location !== 'Sandakphu') {
+            const hCost = hotelCostCalculation(hotelSelections, allHotels, season, tripDetails, stayInfo);
+            const cCost = calculateCarCost(tripDetails.car_details, configData, season, tripDetails.duration);
+            const tCost = totalCost(hCost, cCost, currentMargin);
+            if (tCost > 0) {
+                setCost(tCost);
+            }
+        }
+    }, [hotelSelections, tripDetails.car_details, tripDetails.duration, season, currentMargin, allHotels, configData, stayInfo, tripDetails.location]);
+
     const handleGuestInfoChange = (e) => {
         const { name, value } = e.target;
         setGuestInfo({
@@ -272,7 +288,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         }
 
         // Auto-calculate cost if package has pricing
-        const calculatedCost = calculatePackageCost(pkg.details, tripDetails.pax);
+        const calculatedCost = (tripDetails.location === 'Sandakphu') && calculatePackageCost(pkg.details, tripDetails);
         if (calculatedCost > 0) {
             setCost(calculatedCost);
         }
@@ -291,7 +307,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             ...prev,
             pax: '',
             kids_above_5: 0,
-            kids_below_5: 0,
         }));
     };
 
@@ -653,6 +668,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     tripDetails={tripDetails}
                     allHotels={allHotels}
                     hotelSelections={hotelSelections}
+                    stayInfo={stayInfo}
                     season={season}
                     handleSeasonChange={handleSeasonChange}
                     handleHotelReset={handleHotelReset}
@@ -664,6 +680,16 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 <CostEstimateCard
                     cost={cost}
                     handleCostChange={handleCostChange}
+                    carDetails={tripDetails.car_details}
+                    hotelSelections={hotelSelections}
+                    allHotels={allHotels}
+                    stayInfo={stayInfo}
+                    tripDetails={tripDetails}
+                    configData={configData}
+                    season={season}
+                    duration={tripDetails.duration}
+                    currentMargin={currentMargin}
+                    setCurrentMargin={setCurrentMargin}
                 />
 
                 {/* Action Buttons */}
