@@ -39,6 +39,9 @@ import {
     resetHotelSelections,
     updateItineraryItem,
     updateHotelSelection,
+    totalCost,
+    hotelCostCalculation,
+    calculateCarCost,
 } from './createInquiryCalculation';
 
 const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
@@ -46,6 +49,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     const allPackages = useSelector((state) => state.package.allPackages || []);
     const allHotels = useSelector((state) => state.hotels.allHotels || []);
     const configData = useSelector((state) => state.config.configData || {});
+    const [currentMargin, setCurrentMargin] = useState(configData?.additionalCosts?.margin_cost_percent);
     const pdfRef = useRef(null);
     const guestNameRef = useRef(null);
     const ignoreSuggestionsRef = useRef(false);
@@ -60,7 +64,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     }, [existingInquiry]);
 
     // UI States
-    const [pdfOpen, setPdfOpen] = useState(true);
     const [loading, setLoading] = useState(false);
     const [dataLoading, setDataLoading] = useState(true);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
@@ -83,8 +86,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     const [tripDetails, setTripDetails] = useState({
         pax: '',
         kids_above_5: 0,
-        car_name: '',
-        car_count: '',
+        car_details: [], // Array of {car_name, car_count}
         location: '',
         keywords: '',
         travel_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
@@ -161,8 +163,8 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         // Load trip details
         setTripDetails({
             pax: inquiry.pax?.toString() || '',
-            car_name: inquiry.car_details?.car_name || '',
-            car_count: inquiry.car_details?.car_count?.toString() || '',
+            kids_above_5: inquiry.kids_above_5 || 0,
+            car_details: inquiry.car_details || [],
             location: inquiry.destination || '',
             keywords: '',
             travel_date: inquiry.travel_date ? new Date(inquiry.travel_date).toISOString().split('T')[0] : '',
@@ -216,6 +218,18 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         }
     }, [tripDetails.duration, selectedPackage]);
 
+    // Auto-calculate Total Cost based on Hotel, Car and Margin selections
+    useEffect(() => {
+        if (tripDetails.location && tripDetails.location !== 'Sandakphu') {
+            const hCost = hotelCostCalculation(hotelSelections, allHotels, season, tripDetails, stayInfo);
+            const cCost = calculateCarCost(tripDetails.car_details, configData, season, tripDetails.duration);
+            const tCost = totalCost(hCost, cCost, currentMargin);
+            if (tCost > 0) {
+                setCost(tCost);
+            }
+        }
+    }, [hotelSelections, tripDetails.car_details, tripDetails.duration, season, currentMargin, allHotels, configData, stayInfo, tripDetails.location]);
+
     const handleGuestInfoChange = (e) => {
         const { name, value } = e.target;
         setGuestInfo({
@@ -251,6 +265,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             setItinerary([]);
             setHotelSelections({});
             setCost(0);
+            setTripDetails(prev => ({ ...prev, duration: '0' }));
             return;
         }
 
@@ -273,7 +288,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         }
 
         // Auto-calculate cost if package has pricing
-        const calculatedCost = calculatePackageCost(pkg.details, tripDetails.pax);
+        const calculatedCost = (tripDetails.location === 'Sandakphu') && calculatePackageCost(pkg.details, tripDetails);
         if (calculatedCost > 0) {
             setCost(calculatedCost);
         }
@@ -292,7 +307,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             ...prev,
             pax: '',
             kids_above_5: 0,
-            kids_below_5: 0,
         }));
     };
 
@@ -301,16 +315,16 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             ...prev,
             location: '',
             keywords: '',
-            car_name: '',
-            car_count: '',
-            travel_date: '',
-            duration: ''
+            car_details: [],
+            travel_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+            duration: '0'
         }));
         setStayInfo({ rooms: '', hotel: '' });
         setSelectedPackage(null);
         setCost(0);
         setItinerary([]);
         setHotelSelections({});
+        setSeason('');
     };
 
     const handleLocationChange = (newValue) => {
@@ -335,6 +349,29 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
     const handleItineraryChange = (index, value) => {
         setItinerary(prev => updateItineraryItem(prev, index, value));
+    };
+
+    const handleCarDetailsChange = (carName, newCount) => {
+        setTripDetails(prev => {
+            const existingCarIndex = prev.car_details.findIndex(car => car.car_name === carName);
+            let newCarDetails = [...prev.car_details];
+
+            if (newCount <= 0) {
+                // Remove car if count is 0 or less
+                if (existingCarIndex !== -1) {
+                    newCarDetails.splice(existingCarIndex, 1);
+                }
+            } else {
+                // Update existing or add new car
+                if (existingCarIndex !== -1) {
+                    newCarDetails[existingCarIndex] = { ...newCarDetails[existingCarIndex], car_count: newCount };
+                } else {
+                    newCarDetails.push({ car_name: carName, car_count: newCount });
+                }
+            }
+
+            return { ...prev, car_details: newCarDetails };
+        });
     };
 
     const validateForm = () => {
@@ -365,47 +402,41 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         setLoading(true);
 
         const payload = buildPayload(isDraft);
+        const QRY_URL = `${process.env.REACT_APP_BASE_URL}/queries`;
+        console.log('tripDetails===>', tripDetails);
+        console.log('payload===>', payload);
 
-        try {
-            // let response;
-            if (isEditMode && existingInquiry?._id) {
-                // Update existing inquiry
-                await axios.put(
-                    `https://tour-backend-live.onrender.com/api/v1/queries/update/${existingInquiry._id}`,
-                    payload
-                );
-                showSnackbar('Inquiry updated successfully!', 'success');
-            } else {
-                // Create new inquiry
-                await axios.post(
-                    'https://tour-backend-live.onrender.com/api/v1/queries/create-queries',
-                    payload
-                );
-                showSnackbar(
-                    isDraft ? 'Draft saved successfully!' : 'Inquiry created successfully!',
-                    'success'
-                );
-            }
+        //important code
+        // try {
+        //     if (isEditMode && existingInquiry?._id) {
+        //         await axios.put(`${QRY_URL}/update/${existingInquiry._id}`, payload);
+        //         showSnackbar('Inquiry updated successfully!', 'success');
+        //     } else {
+        //         await axios.post(`${QRY_URL}/create-queries`, payload);
+        //         showSnackbar(
+        //             isDraft ? 'Draft saved successfully!' : 'Inquiry created successfully!',
+        //             'success'
+        //         );
+        //     }
 
-            // Don't reset form if it's a draft save
-            if (!isDraft) {
-                setTimeout(() => {
-                    if (onClose) {
-                        onClose();
-                    } else {
-                        resetForm();
-                    }
-                }, 1500);
-            }
-        } catch (error) {
-            console.error('Error saving inquiry:', error);
-            showSnackbar(
-                error.response?.data?.message || 'Failed to save inquiry',
-                'error'
-            );
-        } finally {
-            setLoading(false);
-        }
+        //     if (!isDraft) {
+        //         setTimeout(() => {
+        //             if (onClose) {
+        //                 onClose();
+        //             } else {
+        //                 resetForm();
+        //             }
+        //         }, 1500);
+        //     }
+        // } catch (error) {
+        //     console.error('Error saving inquiry:', error);
+        //     showSnackbar(
+        //         error.response?.data?.message || 'Failed to save inquiry',
+        //         'error'
+        //     );
+        // } finally {
+        //     setLoading(false);
+        // }
     };
 
     const handleSaveAsDraft = () => {
@@ -465,7 +496,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             const imgData = canvas.toDataURL('image/png');
 
             // Send email via your backend API
-            await axios.post('https://tour-backend-live.onrender.com/api/v1/email/send-quotation', {
+            await axios.post(`${process.env.REACT_APP_BASE_URL}/email/send-quotation`, {
                 to: emailAddress,
                 guestName: guestInfo.guest_name,
                 pdfData: imgData,
@@ -491,12 +522,12 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         });
         setTripDetails({
             pax: '',
-            car_name: '',
-            car_count: '',
+            kids_above_5: 0,
+            car_details: [],
             location: '',
             keywords: '',
-            travel_date: '',
-            duration: '',
+            travel_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+            duration: '0',
         });
         setSelectedPackage(null);
         setHotelSelections({});
@@ -506,6 +537,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             hotel: '',
         });
         setEmailAddress('');
+        setSeason('');
     };
 
     const showSnackbar = (message, severity = 'success') => {
@@ -528,7 +560,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     }
 
     return (
-        <Box sx={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+        <Box sx={{ display: 'flex' }}>
             {/* Loading Backdrop */}
             <Backdrop open={loading} sx={{ zIndex: 9999, color: '#fff' }}>
                 <CircularProgress color="inherit" />
@@ -537,11 +569,9 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             {/* Left Side - Form */}
             <Box
                 sx={{
-                    flex: pdfOpen ? '0 0 70%' : '1 1 100%',
-                    transition: 'all 0.3s ease',
-                    overflow: 'auto',
                     p: 3,
                     backgroundColor: '#f8f9fa',
+                    width: '100%',
                 }}
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -607,10 +637,10 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     handleLocationChange={handleLocationChange}
                     allPackages={allPackages}
                     onPackageSelect={handlePackageSelect}
+                    season={season}
+                    handleSeasonChange={handleSeasonChange}
+                    handleCarDetailsChange={handleCarDetailsChange}
                 />
-
-                {/* Selected Package Info */}
-                {/* <SelectedPackageCard selectedPackage={selectedPackage} /> */}
 
                 {/* Short Itinerary */}
                 <ItineraryCard
@@ -620,12 +650,14 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     onAddDay={() => {
                         setItinerary([...itinerary, '']);
                         setTripDetails(prev => ({ ...prev, duration: (parseInt(prev.duration) || 0) + 1 }));
+                        setSelectedPackage(null);
                     }}
                     onRemoveDay={(index) => {
                         const newItinerary = [...itinerary];
                         newItinerary.splice(index, 1);
                         setItinerary(newItinerary);
                         setTripDetails(prev => ({ ...prev, duration: Math.max(0, (parseInt(prev.duration) || 0) - 1) }));
+                        setSelectedPackage(null);
                     }}
                 />
 
@@ -636,6 +668,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     tripDetails={tripDetails}
                     allHotels={allHotels}
                     hotelSelections={hotelSelections}
+                    stayInfo={stayInfo}
                     season={season}
                     handleSeasonChange={handleSeasonChange}
                     handleHotelReset={handleHotelReset}
@@ -647,6 +680,16 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 <CostEstimateCard
                     cost={cost}
                     handleCostChange={handleCostChange}
+                    carDetails={tripDetails.car_details}
+                    hotelSelections={hotelSelections}
+                    allHotels={allHotels}
+                    stayInfo={stayInfo}
+                    tripDetails={tripDetails}
+                    configData={configData}
+                    season={season}
+                    duration={tripDetails.duration}
+                    currentMargin={currentMargin}
+                    setCurrentMargin={setCurrentMargin}
                 />
 
                 {/* Action Buttons */}
@@ -671,133 +714,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                         {onClose ? 'Cancel' : 'Reset'}
                     </Button>
                 </Box>
-            </Box>
-
-            {/* Right Side - PDF Preview */}
-            <Box
-                sx={{
-                    flex: pdfOpen ? '0 0 30%' : '0 0 0',
-                    transition: 'all 0.3s ease',
-                    overflow: 'hidden',
-                    position: 'relative',
-                    borderLeft: pdfOpen ? '1px solid #e0e0e0' : 'none',
-                    pr: 0,
-                    mr: 0,
-                }}
-            >
-                {/* Toggle Button */}
-                <IconButton
-                    onClick={() => setPdfOpen(!pdfOpen)}
-                    sx={{
-                        position: pdfOpen ? 'absolute' : 'fixed',
-                        left: pdfOpen ? -20 : 'auto',
-                        right: pdfOpen ? 'auto' : 0,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        zIndex: 10,
-                        width: 40,
-                        height: 40,
-                        backgroundColor: '#1976d2',
-                        color: '#fff',
-                        boxShadow: 3,
-                        transition: 'background-color 0.2s',
-                        '&:hover': {
-                            backgroundColor: '#1565c0',
-                            transform: 'translateY(-50%)',
-                        },
-                    }}
-                >
-                    {pdfOpen ? <ChevronRight /> : <ChevronLeft />}
-                </IconButton>
-
-                <Collapse in={pdfOpen} orientation="horizontal" sx={{ height: '100%', position: 'relative' }}>
-                    <Box ref={pdfRef} sx={{ height: '100%', overflow: 'auto', position: 'relative' }}>
-                        <PdfPreview
-                            guestInfo={guestInfo}
-                            tripDetails={tripDetails}
-                            selectedPackage={selectedPackage}
-                            hotelSelections={hotelSelections}
-                            allHotels={allHotels}
-                            cost={cost}
-                            itinerary={itinerary}
-                        />
-
-                        {/* Package Suggestions Overlay */}
-                        {showSuggestions && packageSuggestions.length > 0 && (
-                            <Box
-                                sx={{
-                                    position: 'absolute',
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                    bottom: 0,
-                                    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                                    backdropFilter: 'blur(10px)',
-                                    overflowY: 'auto',
-                                    p: 3,
-                                    zIndex: 5,
-                                }}
-                            >
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#1976d2' }}>
-                                        Package Suggestions ({packageSuggestions.length})
-                                    </Typography>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => {
-                                            setTripDetails(prev => ({ ...prev, duration: '', location: '', keywords: '' }));
-                                        }}
-                                        sx={{
-                                            backgroundColor: 'rgba(0,0,0,0.05)',
-                                            '&:hover': { backgroundColor: 'rgba(0,0,0,0.1)' }
-                                        }}
-                                    >
-                                        <Clear fontSize="small" />
-                                    </IconButton>
-                                </Box>
-                                <Grid container spacing={2}>
-                                    {packageSuggestions.map((pkg) => (
-                                        <Grid item xs={12} key={pkg._id}>
-                                            <Card
-                                                sx={{
-                                                    cursor: 'pointer',
-                                                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                                    border: selectedPackage?._id === pkg._id ? '2px solid #1976d2' : '1px solid rgba(0,0,0,0.1)',
-                                                    transition: 'all 0.2s',
-                                                    '&:hover': {
-                                                        backgroundColor: 'rgba(255, 255, 255, 1)',
-                                                        boxShadow: 3,
-                                                        transform: 'translateY(-2px)',
-                                                    },
-                                                }}
-                                                onClick={() => {
-                                                    handlePackageSelect(pkg);
-                                                    // Clear filters to hide overlay after selection
-                                                    setTripDetails(prev => ({ ...prev, keywords: '' }));
-                                                }}
-                                            >
-                                                <CardContent sx={{ p: 2 }}>
-                                                    <Typography variant="subtitle2" fontWeight={600}>
-                                                        {pkg.label}
-                                                    </Typography>
-                                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                                                        {pkg.location} • {pkg.duration} Days
-                                                    </Typography>
-                                                    <Typography variant="body2" sx={{ mt: 1, fontSize: '0.8rem' }} noWrap>
-                                                        {typeof pkg.details?.overview === 'string'
-                                                            ? pkg.details.overview.substring(0, 80) + '...'
-                                                            : 'No description available'
-                                                        }
-                                                    </Typography>
-                                                </CardContent>
-                                            </Card>
-                                        </Grid>
-                                    ))}
-                                </Grid>
-                            </Box>
-                        )}
-                    </Box>
-                </Collapse>
             </Box>
 
             {/* Email Dialog */}

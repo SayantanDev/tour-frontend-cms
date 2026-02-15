@@ -1,6 +1,6 @@
 import axios from './interceptor';
 
-export const HOTEL_URL = `${process.env.REACT_APP_BASE_URL}/hotel`;
+const HOTEL_URL = `${process.env.REACT_APP_BASE_URL}/hotel`;
 
 export function getAllHotels() {
     const GET_URL = `${HOTEL_URL}/get-all`;

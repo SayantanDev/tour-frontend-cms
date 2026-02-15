@@ -1,6 +1,6 @@
 import axios from './interceptor';
 
-export const QRY_URL = `${process.env.REACT_APP_BASE_URL}/configString`;
+const QRY_URL = `${process.env.REACT_APP_BASE_URL}/configString`;
 
 
 export async function configString() {

@@ -1,8 +1,6 @@
 import axios from './interceptor';
 
-export const PKG_URL = `${process.env.REACT_APP_BASE_URL}/cat-package`;
-// const PKG_URL = 'https://tour-backend-live.onrender.com/api/v1/packages';
-
+const PKG_URL = `${process.env.REACT_APP_BASE_URL}/cat-package`;
 
 export function getAllcatPackage() {
     const GETPKG_URL = `${PKG_URL}/get-all`;
@@ -21,9 +19,9 @@ export function CatPackageCreate(obj) {
     const ADDPKG_URL = `${PKG_URL}/create`;
     return axios.post(ADDPKG_URL, obj);
 };
-export async function UpdateCatPacakgesbyPkgs(id,payload) {
+export async function UpdateCatPacakgesbyPkgs(id, payload) {
     const ADDUSER_URL = `${PKG_URL}/packages/${id}`;
-    const result = await axios.patch(ADDUSER_URL,payload);
+    const result = await axios.patch(ADDUSER_URL, payload);
     return result.data;
 }
 export async function DeleteCatPackages(id) {
@@ -34,5 +32,5 @@ export async function DeleteCatPackages(id) {
 export function updateCatPackageRanking(id, obj) {
     const UPDATEPKG__URL = `${PKG_URL}/update/ranking/${id}`;
     return axios.put(UPDATEPKG__URL, obj);
-    
+
 }

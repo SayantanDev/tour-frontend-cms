@@ -1,10 +1,7 @@
 import axios from 'axios';
-import axiosServices from './interceptor'; // Import your existing axios instance with interceptors
+import axiosServices from './interceptor';
 
-// External WhatsApp API Configuration
-// Supports: Twilio, WhatsApp Business API, ChatAPI, etc.
 const WHATSAPP_API_CONFIG = {
-    // Provider: 'twilio' | 'whatsapp-business' | 'chatapi' | '360dialog' | 'custom'
     get provider() {
         return localStorage.getItem('whatsapp_provider') || process.env.REACT_APP_WHATSAPP_PROVIDER || 'twilio';
     },

@@ -82,9 +82,9 @@ const PdfPreview = ({ guestInfo, tripDetails, selectedPackage, hotelSelections, 
                 <Typography variant="body2">
                     <strong>Duration:</strong> {tripDetails.duration || selectedPackage?.duration || 'N/A'} Days
                 </Typography>
-                {tripDetails.car_name && (
+                {tripDetails.car_details && tripDetails.car_details.length > 0 && (
                     <Typography variant="body2">
-                        <strong>Car:</strong> {tripDetails.car_name} (x{tripDetails.car_count || 1})
+                        <strong>Vehicles:</strong> {tripDetails.car_details.map(car => `${car.car_name} (x${car.car_count})`).join(', ')}
                     </Typography>
                 )}
             </Paper>

@@ -24,7 +24,7 @@ import CasesOutlinedIcon from '@mui/icons-material/CasesOutlined';
 import AddTaskOutlinedIcon from '@mui/icons-material/AddTaskOutlined';
 import PermIdentityOutlinedIcon from '@mui/icons-material/PermIdentityOutlined';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
-import { AirportShuttleOutlined, CardTravelOutlined, ContactMailOutlined, HotelOutlined } from "@mui/icons-material";
+import { AirportShuttleOutlined, CardTravelOutlined, ContactMailOutlined, HotelOutlined, AdminPanelSettingsOutlined, ManageAccountsOutlined } from "@mui/icons-material";
 
 const Navigation = ({ drawerOpen, setDrawerOpen }) => {
   const checkPermission = usePermissions();
@@ -71,7 +71,9 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
     CasesOutlined: CasesOutlinedIcon,
     AddTaskOutlined: AddTaskOutlinedIcon,
     PermIdentityOutlined: PermIdentityOutlinedIcon,
-    LogoutOutlined: LogoutOutlinedIcon
+    LogoutOutlined: LogoutOutlinedIcon,
+    AdminPanelSettingsOutlined: AdminPanelSettingsOutlined,
+    ManageAccountsOutlined: ManageAccountsOutlined
     // Add more mappings here
   };
 
@@ -125,16 +127,15 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
           width: fetchConfigData.drawerWidth,
           boxSizing: "border-box",
           marginTop: "64px",
-          background: '#e8e1e1',
-          color: '#2c3e50',
-          borderRight: 'none',
+          background: '#dde0ce',
+          borderRight: '1px solid #e3e8ef',
         },
       }}
       variant="persistent"
       anchor="left"
       open={drawerOpen}
     >
-      <List sx={{ p: 0 }}>
+      <List sx={{ p: 2, pt: 3 }}>
         {fetchConfigData.navigationStrings
           .filter((item) => checkPermission(item.module, "view"))
           .map((item) => {
@@ -150,46 +151,66 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
                 item.label === "Leads" ? operationCount : 0;
 
             return (
-              <ListItem disablePadding key={item.link}>
+              <ListItem disablePadding key={item.link} sx={{ mb: 0.5 }}>
                 <ListItemButton
                   onClick={() => navLinkClicked(item.link, item.label)}
                   selected={isActive}
                   sx={{
-                    px: 2,
-                    py: 1.5,
-                    borderRadius: 2,
-                    mx: 1,
-                    my: 0.5,
-                    backgroundColor: isActive ? '#1976d2' : 'transparent',
-                    color: isActive ? '#fff' : '#2c3e50',
+                    px: 2.5,
+                    py: 1.75,
+                    borderRadius: 3,
+                    background: isActive
+                      ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                      : 'transparent',
+                    color: isActive ? '#ffffff' : '#4a5568',
                     position: 'relative',
                     overflow: 'hidden',
-                    transition: 'all 0.3s ease',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    border: isActive ? 'none' : '1px solid transparent',
                     '&::before': isActive ? {
                       content: '""',
                       position: 'absolute',
                       left: 0,
-                      top: 0,
-                      bottom: 0,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      height: '60%',
                       width: '4px',
-                      background: 'linear-gradient(180deg, #42a5f5 0%, #1976d2 100%)',
-                      borderRadius: '0 4px 4px 0',
+                      background: 'rgba(255, 255, 255, 0.5)',
+                      borderRadius: '0 8px 8px 0',
+                    } : {},
+                    '&::after': !isActive ? {
+                      content: '""',
+                      position: 'absolute',
+                      left: 0,
+                      top: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%)',
+                      opacity: 0,
+                      transition: 'opacity 0.3s ease',
+                      borderRadius: 3,
                     } : {},
                     '&:hover': {
-                      backgroundColor: isActive ? '#1565c0' : 'rgba(25, 118, 210, 0.1)',
-                      transform: 'translateX(4px)',
-                      boxShadow: isActive ? '0 4px 12px rgba(25, 118, 210, 0.4)' : 'none',
+                      transform: 'translateX(6px)',
+                      background: isActive
+                        ? 'linear-gradient(135deg, #5568d3 0%, #6b3f91 100%)'
+                        : 'transparent',
+                      border: isActive ? 'none' : '1px solid #e3e8ef',
+                      '&::after': {
+                        opacity: 1,
+                      },
                     },
                   }}
                 >
                   <ListItemIcon
                     sx={{
-                      color: isActive ? '#fff' : '#546e7a',
-                      minWidth: 40,
+                      color: isActive ? '#ffffff' : '#667eea',
+                      minWidth: 42,
                       transition: 'all 0.3s ease',
+                      opacity: isActive ? 1 : 0.85,
                     }}
                   >
-                    {Icon && <Icon fontSize="small" />}
+                    {Icon && <Icon fontSize="medium" />}
                   </ListItemIcon>
 
                   {showBadge ? (
@@ -199,15 +220,27 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
                       sx={{
                         '& .MuiBadge-badge': {
                           right: -12,
-                          top: 10,
-                          fontWeight: 600,
-                          fontSize: '0.65rem',
+                          top: 11,
+                          fontWeight: 700,
+                          fontSize: '0.7rem',
+                          minWidth: 20,
+                          height: 20,
+                          borderRadius: '10px',
+                          background: 'linear-gradient(135deg, #f56565 0%, #c53030 100%)',
                         }
                       }}
                     >
                       <ListItemText
                         primary={
-                          <Typography noWrap variant="body2" fontWeight={isActive ? 600 : 500}>
+                          <Typography
+                            noWrap
+                            variant="body2"
+                            fontWeight={isActive ? 600 : 500}
+                            sx={{
+                              fontSize: '0.925rem',
+                              letterSpacing: '0.01em'
+                            }}
+                          >
                             {item.label}
                           </Typography>
                         }
@@ -216,7 +249,15 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
                   ) : (
                     <ListItemText
                       primary={
-                        <Typography noWrap variant="body2" fontWeight={isActive ? 600 : 500}>
+                        <Typography
+                          noWrap
+                          variant="body2"
+                          fontWeight={isActive ? 600 : 500}
+                          sx={{
+                            fontSize: '0.925rem',
+                            letterSpacing: '0.01em'
+                          }}
+                        >
                           {item.label}
                         </Typography>
                       }
