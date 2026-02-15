@@ -249,6 +249,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             setItinerary([]);
             setHotelSelections({});
             setCost(0);
+            setTripDetails(prev => ({ ...prev, duration: '0' }));
             return;
         }
 
@@ -300,8 +301,8 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             location: '',
             keywords: '',
             car_details: [],
-            travel_date: '',
-            duration: ''
+            travel_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+            duration: '0'
         }));
         setStayInfo({ rooms: '', hotel: '' });
         setSelectedPackage(null);
@@ -510,8 +511,8 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             car_details: [],
             location: '',
             keywords: '',
-            travel_date: '',
-            duration: '',
+            travel_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+            duration: '0',
         });
         setSelectedPackage(null);
         setHotelSelections({});
@@ -634,12 +635,14 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     onAddDay={() => {
                         setItinerary([...itinerary, '']);
                         setTripDetails(prev => ({ ...prev, duration: (parseInt(prev.duration) || 0) + 1 }));
+                        setSelectedPackage(null);
                     }}
                     onRemoveDay={(index) => {
                         const newItinerary = [...itinerary];
                         newItinerary.splice(index, 1);
                         setItinerary(newItinerary);
                         setTripDetails(prev => ({ ...prev, duration: Math.max(0, (parseInt(prev.duration) || 0) - 1) }));
+                        setSelectedPackage(null);
                     }}
                 />
 

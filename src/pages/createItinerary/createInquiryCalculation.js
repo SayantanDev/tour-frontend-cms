@@ -74,7 +74,7 @@ export const calculatePackageCost = (packageDetails, paxCount) => {
 };
 
 export const updateItineraryByDuration = (currentItinerary, duration) => {
-    const days = parseInt(duration) || 0;
+    const days = (parseInt(duration) || 0) + 1;
 
     if (currentItinerary.length === days) {
         return currentItinerary;
