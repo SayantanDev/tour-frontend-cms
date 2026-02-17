@@ -4,6 +4,7 @@ import { Paper, Typography, TextField, Box, Collapse, Grid, Divider } from '@mui
 import { hotelCostCalculation, calculateCarCost, calculateSingleHotelCostWithBreakdown } from '../createInquiryCalculation';
 
 const CostEstimateCard = ({
+    selectedPackage = null,
     cost,
     handleCostChange,
     carDetails = [],
@@ -32,28 +33,47 @@ const CostEstimateCard = ({
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
                     Cost Estimate
                 </Typography>
-                <TextField
-                    size="small"
-                    label="Margin (%)"
-                    type="number"
-                    value={currentMargin}
-                    onChange={(e) => {
-                        const val = e.target.value;
-                        const minMargin = user?.permission === 'Admin' ? 0 : 20;
-                        if (val !== '' && parseFloat(val) < minMargin) {
-                            setCurrentMargin(minMargin);
-                        } else {
-                            setCurrentMargin(val);
-                        }
-                    }}
-                    sx={{ width: 100 }}
-                    InputProps={{
-                        endAdornment: <Typography variant="caption" sx={{ ml: 0.5 }}>%</Typography>,
-                    }}
-                    inputProps={{
-                        min: user?.permission === 'Admin' ? 0 : 20
-                    }}
-                />
+                {tripDetails?.location === "Sandakphu" ? (
+                    <TextField
+                        size="small"
+                        label="Discount (%)"
+                        type="number"
+                        value={currentMargin}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            const minMargin = 0;
+                            if (val !== '' && parseFloat(val) < minMargin) {
+                                setCurrentMargin(minMargin);
+                            } else {
+                                setCurrentMargin(val);
+                            }
+                        }}
+                        sx={{ width: 100 }}
+                    />
+                ) : (
+                    <TextField
+                        size="small"
+                        label="Margin (%)"
+                        type="number"
+                        value={currentMargin}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            const minMargin = user?.permission === 'Admin' ? 0 : 20;
+                            if (val !== '' && parseFloat(val) < minMargin) {
+                                setCurrentMargin(minMargin);
+                            } else {
+                                setCurrentMargin(val);
+                            }
+                        }}
+                        sx={{ width: 100 }}
+                        InputProps={{
+                            endAdornment: <Typography variant="caption" sx={{ ml: 0.5 }}>%</Typography>,
+                        }}
+                        inputProps={{
+                            min: user?.permission === 'Admin' ? 0 : 20
+                        }}
+                    />
+                )}
             </Box>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <TextField
@@ -67,7 +87,74 @@ const CostEstimateCard = ({
                         startAdornment: <Typography sx={{ mr: 1 }}>₹</Typography>,
                     }}
                 />
-                {user?.permission === 'Admin' && carTotal > 0 && (
+                {tripDetails?.location === "Sandakphu" && selectedPackage && (
+                    <Box sx={{ mt: 1, p: 2, borderRadius: 1, border: '1px solid', borderColor: 'secondary.light', bgcolor: 'background.paper' }}>
+                        <Typography variant="subtitle2" fontWeight={600} color="secondary.main" gutterBottom>
+                            Sandakphu Package Calculation
+                        </Typography>
+                        {(() => {
+                            const hasLandRover = selectedPackage?.label?.includes("Land Rover");
+                            const head_count = (parseInt(tripDetails.pax) || 0) + (parseInt(tripDetails.kids_above_5) || 0);
+
+                            let basePrice = 0;
+                            let packageName = "";
+
+                            if (hasLandRover) {
+                                basePrice = selectedPackage?.details?.cost?.multipleCost?.[0]?.Standard || 0;
+                                packageName = "Land Rover Package";
+                            } else {
+                                basePrice = selectedPackage?.details?.cost?.singleCost || 0;
+                                packageName = "Base Package";
+                            }
+
+                            const totalBaseCost = basePrice * head_count;
+                            const discountPercent = parseFloat(currentMargin) || 0;
+                            const discountAmount = totalBaseCost * (discountPercent / 100);
+                            const finalCost = totalBaseCost - discountAmount;
+
+                            return (
+                                <Box>
+                                    <Grid container spacing={1}>
+                                        <Grid item xs={8}>
+                                            <Typography variant="body2">{packageName}</Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                ₹{basePrice.toLocaleString()} × {head_count} Pax
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={4} textAlign="right">
+                                            <Typography variant="body2">₹{totalBaseCost.toLocaleString()}</Typography>
+                                        </Grid>
+                                    </Grid>
+
+                                    {discountAmount > 0 && (
+                                        <>
+                                            <Divider sx={{ my: 1, opacity: 0.5 }} />
+                                            <Grid container spacing={1}>
+                                                <Grid item xs={8}>
+                                                    <Typography variant="body2" color="error.main">Discount ({discountPercent}%)</Typography>
+                                                </Grid>
+                                                <Grid item xs={4} textAlign="right">
+                                                    <Typography variant="body2" color="error.main">- ₹{discountAmount.toLocaleString()}</Typography>
+                                                </Grid>
+                                            </Grid>
+                                        </>
+                                    )}
+
+                                    <Divider sx={{ my: 1 }} />
+                                    <Grid container spacing={1}>
+                                        <Grid item xs={8}>
+                                            <Typography variant="subtitle2" fontWeight={700}>Net Package Cost</Typography>
+                                        </Grid>
+                                        <Grid item xs={4} textAlign="right">
+                                            <Typography variant="subtitle2" fontWeight={700}>₹{finalCost.toLocaleString()}</Typography>
+                                        </Grid>
+                                    </Grid>
+                                </Box>
+                            );
+                        })()}
+                    </Box>
+                )}
+                {tripDetails?.location !== "Sandakphu" && user?.permission === 'Admin' && carTotal > 0 && (
                     <Box sx={{ borderRadius: 1, overflow: 'hidden', border: '1px solid', borderColor: 'primary.light' }}>
                         <Box
                             sx={{
@@ -117,7 +204,7 @@ const CostEstimateCard = ({
                         </Collapse>
                     </Box>
                 )}
-                {user?.permission === 'Admin' && hotelTotal > 0 && (
+                {tripDetails?.location !== "Sandakphu" && user?.permission === 'Admin' && hotelTotal > 0 && (
                     <Box sx={{ mt: 1, borderRadius: 1, overflow: 'hidden', border: '1px solid', borderColor: 'info.light' }}>
                         <Box
                             sx={{

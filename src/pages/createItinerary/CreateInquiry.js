@@ -220,6 +220,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
     // Auto-calculate Total Cost based on Hotel, Car and Margin selections
     useEffect(() => {
+        console.log("selectedPackage====>", selectedPackage);
         const shortItinerary = selectedPackage?.details?.shortItinerary || [];
 
         const hasNorthSikkim = shortItinerary.some(item =>
@@ -229,11 +230,30 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
         const northSikkimMargin = hasNorthSikkim
             ? configData?.additionalCosts?.north_sikkim_extra : 0;
+        let tCost = 0;
 
         if (tripDetails.location && tripDetails.location !== 'Sandakphu') {
             const hCost = hotelCostCalculation(hotelSelections, allHotels, season, tripDetails, stayInfo);
             const cCost = calculateCarCost(tripDetails.car_details, configData, season, tripDetails.duration);
-            const tCost = totalCost(hCost, cCost, currentMargin, northSikkimMargin);
+            tCost = totalCost(hCost, cCost, currentMargin, northSikkimMargin);
+            if (tCost > 0) {
+                setCost(tCost);
+            }
+        } else if (tripDetails.location === 'Sandakphu') {
+            const hasLandRover = selectedPackage?.label?.includes("Land Rover");
+            const head_count = parseInt(tripDetails.pax) + parseInt(tripDetails.kids_above_5) || 0;
+            if (hasLandRover) {
+                const multiple_cost = selectedPackage?.details?.cost?.multipleCost[0].Standard;
+                const totalCost = multiple_cost * head_count;
+                const marginAmount = totalCost * (parseFloat(currentMargin) / 100 || 0);
+                tCost = totalCost - marginAmount;
+
+            } else {
+                const singleCost = selectedPackage?.details?.cost?.singleCost;
+                const totalCost = singleCost * head_count;
+                const marginAmount = totalCost * (parseFloat(currentMargin) / 100 || 0);
+                tCost = totalCost - marginAmount;
+            }
             if (tCost > 0) {
                 setCost(tCost);
             }
@@ -688,6 +708,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 />
 
                 <CostEstimateCard
+                    selectedPackage={selectedPackage}
                     cost={cost}
                     handleCostChange={handleCostChange}
                     carDetails={tripDetails.car_details}
