@@ -220,10 +220,20 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
     // Auto-calculate Total Cost based on Hotel, Car and Margin selections
     useEffect(() => {
+        const shortItinerary = selectedPackage?.details?.shortItinerary || [];
+
+        const hasNorthSikkim = shortItinerary.some(item =>
+            item?.tagValue?.toLowerCase().includes("lachung") ||
+            item?.tagValue?.toLowerCase().includes("lachen")
+        );
+
+        const northSikkimMargin = hasNorthSikkim
+            ? configData?.additionalCosts?.north_sikkim_extra : 0;
+
         if (tripDetails.location && tripDetails.location !== 'Sandakphu') {
             const hCost = hotelCostCalculation(hotelSelections, allHotels, season, tripDetails, stayInfo);
             const cCost = calculateCarCost(tripDetails.car_details, configData, season, tripDetails.duration);
-            const tCost = totalCost(hCost, cCost, currentMargin);
+            const tCost = totalCost(hCost, cCost, currentMargin, northSikkimMargin);
             if (tCost > 0) {
                 setCost(tCost);
             }
@@ -288,10 +298,10 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         }
 
         // Auto-calculate cost if package has pricing
-        const calculatedCost = (tripDetails.location === 'Sandakphu') && calculatePackageCost(pkg.details, tripDetails);
-        if (calculatedCost > 0) {
-            setCost(calculatedCost);
-        }
+        // const calculatedCost = (tripDetails.location === 'Sandakphu') && calculatePackageCost(pkg.details, tripDetails);
+        // if (calculatedCost > 0) {
+        //     setCost(calculatedCost);
+        // }
 
         setPackageSuggestions([]);
     };

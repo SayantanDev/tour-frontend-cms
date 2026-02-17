@@ -37,10 +37,21 @@ const CostEstimateCard = ({
                     label="Margin (%)"
                     type="number"
                     value={currentMargin}
-                    onChange={(e) => setCurrentMargin(e.target.value)}
+                    onChange={(e) => {
+                        const val = e.target.value;
+                        const minMargin = user?.permission === 'Admin' ? 0 : 20;
+                        if (val !== '' && parseFloat(val) < minMargin) {
+                            setCurrentMargin(minMargin);
+                        } else {
+                            setCurrentMargin(val);
+                        }
+                    }}
                     sx={{ width: 100 }}
                     InputProps={{
                         endAdornment: <Typography variant="caption" sx={{ ml: 0.5 }}>%</Typography>,
+                    }}
+                    inputProps={{
+                        min: user?.permission === 'Admin' ? 0 : 20
                     }}
                 />
             </Box>
