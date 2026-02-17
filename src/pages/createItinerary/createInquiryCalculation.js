@@ -73,28 +73,11 @@ export const calculatePackageCost = (packageDetails, tripDetails) => {
     return basePrice * (pax || 1);
 };
 
-export const totalCost = (hotelCost, carCost, margin) => {
-    const subtotal = (parseFloat(hotelCost) || 0) + (parseFloat(carCost) || 0);
+export const totalCost = (hotelCost, carCost, margin, northSikkimMargin) => {
+    const subtotal = (parseFloat(hotelCost) || 0) + (parseFloat(carCost) || 0) + parseFloat(northSikkimMargin);
     const marginAmount = subtotal * (parseFloat(margin) / 100 || 0);
     return Math.round(subtotal + marginAmount);
 };
-
-// export const TotalCost = (packageDetails, tripDetails, margin) => {
-//     if (tripDetails?.location === "Sandakphu") {
-//         if (!packageDetails?.cost?.valueCost?.[0]?.price) {
-//             return 0;
-//         }
-
-//         const basePrice = packageDetails.cost.valueCost[0].price;
-//         const pax = parseInt(tripDetails.adults + tripDetails.kids_above_5) || 1;
-//         // const carCost = calculateCarCost(tripDetails.car_details, pax);
-//         return basePrice * pax;
-//     } else {
-//         // const carCost = calculateCarCost(tripDetails.car_details, pax);
-//         // const hotelCost = calculateHotelCost(tripDetails.hotel_details, pax);
-//         return margin;
-//     }
-// };
 
 export const updateItineraryByDuration = (currentItinerary, duration) => {
     const days = (parseInt(duration) || 0) + 1;
