@@ -40,6 +40,7 @@ import {
     updateItineraryItem,
     updateHotelSelection,
     totalCost,
+    totalCostSandakphu,
     hotelCostCalculation,
     calculateCarCost,
 } from './createInquiryCalculation';
@@ -234,26 +235,17 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
         if (tripDetails.location && tripDetails.location !== 'Sandakphu') {
             const hCost = hotelCostCalculation(hotelSelections, allHotels, season, tripDetails, stayInfo);
-            const cCost = calculateCarCost(tripDetails.car_details, configData, season, tripDetails.duration);
+            const cCost = calculateCarCost(configData, season, tripDetails);
             tCost = totalCost(hCost, cCost, currentMargin, northSikkimMargin);
             if (tCost > 0) {
                 setCost(tCost);
             }
         } else if (tripDetails.location === 'Sandakphu') {
-            const hasLandRover = selectedPackage?.label?.includes("Land Rover");
-            const head_count = parseInt(tripDetails.pax) + parseInt(tripDetails.kids_above_5) || 0;
-            if (hasLandRover) {
-                const multiple_cost = selectedPackage?.details?.cost?.multipleCost[0].Standard;
-                const totalCost = multiple_cost * head_count;
-                const marginAmount = totalCost * (parseFloat(currentMargin) / 100 || 0);
-                tCost = totalCost - marginAmount;
+            console.log("tripDetails=======>", tripDetails);
+            const hCostSandakphu = hotelCostCalculation(hotelSelections, allHotels, season, tripDetails, stayInfo);
+            const cCostSandakphu = calculateCarCost(configData, season, tripDetails);
+            tCost = totalCostSandakphu(hCostSandakphu, cCostSandakphu, currentMargin, tripDetails, selectedPackage);
 
-            } else {
-                const singleCost = selectedPackage?.details?.cost?.singleCost;
-                const totalCost = singleCost * head_count;
-                const marginAmount = totalCost * (parseFloat(currentMargin) / 100 || 0);
-                tCost = totalCost - marginAmount;
-            }
             if (tCost > 0) {
                 setCost(tCost);
             }
@@ -711,14 +703,12 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     selectedPackage={selectedPackage}
                     cost={cost}
                     handleCostChange={handleCostChange}
-                    carDetails={tripDetails.car_details}
                     hotelSelections={hotelSelections}
                     allHotels={allHotels}
                     stayInfo={stayInfo}
                     tripDetails={tripDetails}
                     configData={configData}
                     season={season}
-                    duration={tripDetails.duration}
                     currentMargin={currentMargin}
                     setCurrentMargin={setCurrentMargin}
                 />
