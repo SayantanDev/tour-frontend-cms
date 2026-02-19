@@ -79,6 +79,22 @@ export const totalCost = (hotelCost, carCost, margin, northSikkimMargin) => {
     return Math.round(subtotal + marginAmount);
 };
 
+export const totalCostSandakphu = (hotelCost, carCost, discount, tripDetails, selectedPackage) => {
+
+    const hasLandRover = selectedPackage?.label?.includes("Land Rover");
+    const head_count = parseInt(tripDetails.pax) + parseInt(tripDetails.kids_above_5) || 0;
+    if (hasLandRover) {
+        const totalCost = ((parseFloat(hotelCost) || 0) * head_count) + (parseFloat(carCost) || 0);
+        const marginAmount = totalCost * (parseFloat(discount) / 100 || 0);
+        return (totalCost - marginAmount) * tripDetails.duration;
+    } else {
+        const singleCost = selectedPackage?.details?.cost?.singleCost;
+        const totalCost = singleCost * head_count;
+        const marginAmount = totalCost * (parseFloat(discount) / 100 || 0);
+        return (totalCost - marginAmount) * tripDetails.duration;
+    }
+};
+
 export const updateItineraryByDuration = (currentItinerary, duration) => {
     const days = (parseInt(duration) || 0) + 1;
 
@@ -154,11 +170,6 @@ export const calculatePdfDimensions = (canvas, pdf) => {
     };
 };
 
-/**
- * Extract itinerary array from package details
- * @param {Object} packageDetails - Package details object
- * @returns {Array} Extracted itinerary array
- */
 export const extractItineraryFromPackage = (packageDetails) => {
     if (!packageDetails?.shortItinerary || !Array.isArray(packageDetails.shortItinerary)) {
         return [];
@@ -169,13 +180,6 @@ export const extractItineraryFromPackage = (packageDetails) => {
     );
 };
 
-/**
- * Validate form data and return validation errors
- * @param {Object} guestInfo - Guest information object
- * @param {Object} tripDetails - Trip details object
- * @param {Object} selectedPackage - Selected package object
- * @returns {Object} Validation result with isValid flag and error message
- */
 export const validateForm = (guestInfo, tripDetails, selectedPackage) => {
     if (!guestInfo.guest_name?.trim()) {
         return { isValid: false, message: 'Please enter guest name', severity: 'error' };
@@ -210,17 +214,6 @@ export const validateForm = (guestInfo, tripDetails, selectedPackage) => {
     return { isValid: true };
 };
 
-/**
- * Build payload object for API submission
- * @param {Object} params - Parameters object
- * @param {Object} params.guestInfo - Guest information
- * @param {Object} params.tripDetails - Trip details
- * @param {Object} params.selectedPackage - Selected package
- * @param {number} params.cost - Total cost
- * @param {Object} params.stayInfo - Stay information
- * @param {boolean} params.isDraft - Whether this is a draft
- * @returns {Object} Payload object
- */
 export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, stayInfo, isDraft = false }) => {
     return {
         guest_info: {
@@ -246,21 +239,10 @@ export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, st
     };
 };
 
-/**
- * Generate PDF filename
- * @param {string} guestName - Guest name
- * @param {string} location - Trip location
- * @returns {string} Generated filename
- */
 export const generatePdfFilename = (guestName, location) => {
     return `${guestName || 'inquiry'}_${location || 'package'}_${Date.now()}.pdf`;
 };
 
-/**
- * Validate draft requirements
- * @param {Object} guestInfo - Guest information object
- * @returns {Object} Validation result with isValid flag and error message
- */
 export const validateDraftRequirements = (guestInfo) => {
     if (!guestInfo.guest_name || !guestInfo.guest_email) {
         return {
@@ -272,11 +254,6 @@ export const validateDraftRequirements = (guestInfo) => {
     return { isValid: true };
 };
 
-/**
- * Reset hotel selections by clearing hotel-specific fields
- * @param {Object} hotelSelections - Current hotel selections object
- * @returns {Object} Reset hotel selections object
- */
 export const resetHotelSelections = (hotelSelections) => {
     const nextState = {};
     Object.keys(hotelSelections).forEach(key => {
@@ -292,27 +269,12 @@ export const resetHotelSelections = (hotelSelections) => {
     return nextState;
 };
 
-/**
- * Update itinerary item at specific index
- * @param {Array} currentItinerary - Current itinerary array
- * @param {number} index - Index to update
- * @param {string} value - New value
- * @returns {Array} Updated itinerary array
- */
 export const updateItineraryItem = (currentItinerary, index, value) => {
     const newItinerary = [...currentItinerary];
     newItinerary[index] = value;
     return newItinerary;
 };
 
-/**
- * Update hotel selection for a specific day
- * @param {Object} hotelSelections - Current hotel selections object
- * @param {number} dayIndex - Day index
- * @param {string} field - Field to update
- * @param {*} value - New value
- * @returns {Object} Updated hotel selections object
- */
 export const updateHotelSelection = (hotelSelections, dayIndex, field, value) => {
     return {
         ...hotelSelections,
@@ -323,15 +285,6 @@ export const updateHotelSelection = (hotelSelections, dayIndex, field, value) =>
     };
 };
 
-/**
- * Calculate detailed cost breakdown for a single hotel selection
- * @param {Object} selection - Single day selection object
- * @param {Array} allHotels - List of all hotels
- * @param {string} season - Current season
- * @param {Object} tripDetails - Trip details (pax, kids)
- * @param {Object} stayInfo - Stay info (rooms)
- * @returns {Object} Cost breakdown object
- */
 export const calculateSingleHotelCostWithBreakdown = (selection, allHotels, season, tripDetails, stayInfo) => {
     const defaultBreakdown = {
         baseCost: 0,
@@ -404,28 +357,10 @@ export const calculateSingleHotelCostWithBreakdown = (selection, allHotels, seas
     };
 };
 
-/**
- * Calculate cost for a single hotel selection on a specific day
- * @param {Object} selection - Single day selection object
- * @param {Array} allHotels - List of all hotels
- * @param {string} season - Current season
- * @param {Object} tripDetails - Trip details (pax, kids)
- * @param {Object} stayInfo - Stay info (rooms)
- * @returns {number} Cost for this day
- */
 export const calculateSingleHotelCost = (selection, allHotels, season, tripDetails, stayInfo) => {
     return calculateSingleHotelCostWithBreakdown(selection, allHotels, season, tripDetails, stayInfo).total;
 };
 
-/**
- * Calculate total hotel cost based on selections
- * @param {Object} hotelSelections - Day-wise hotel selections
- * @param {Array} allHotels - List of all available hotels
- * @param {string} season - Current season ('season_price' or 'off_season_price')
- * @param {Object} tripDetails - Trip details (pax, kids)
- * @param {Object} stayInfo - Stay info (rooms)
- * @returns {number} Total hotel cost
- */
 export const hotelCostCalculation = (hotelSelections, allHotels, season, tripDetails, stayInfo) => {
     if (!hotelSelections) return 0;
     return Object.values(hotelSelections).reduce((total, selection) => {
@@ -433,9 +368,16 @@ export const hotelCostCalculation = (hotelSelections, allHotels, season, tripDet
     }, 0);
 };
 
-export const calculateCarCost = (carDetails, configData, season, duration) => {
+export const calculateCarCost = (configData, season, tripDetails) => {
+    const carDetails = tripDetails?.car_details || [];
+    const twoNightPerDayAmount = 8500;
+    const threeNightPerDayAmount = 13500;
     if (!carDetails || !configData) return 0;
-    const totalDays = (parseInt(duration) || 0) + 1;
+    const totalDays = (parseInt(tripDetails.duration) || 0) + 1;
+    if (tripDetails.location === 'Sandakphu') {
+        return totalDays === 3 ? (twoNightPerDayAmount * totalDays) :
+            totalDays === 4 ? (threeNightPerDayAmount * totalDays) : 0;
+    }
     return carDetails.reduce((acc, carDetail) => {
         const carConfig = configData?.additionalCosts?.car?.find(c => c.type === carDetail.car_name);
         const unitPrice = carConfig?.cost?.[season] || 0;

@@ -7,24 +7,22 @@ const CostEstimateCard = ({
     selectedPackage = null,
     cost,
     handleCostChange,
-    carDetails = [],
     hotelSelections = {},
     allHotels = [],
     stayInfo = {},
     tripDetails = {},
     configData = {},
     season = '',
-    duration = 0,
     currentMargin,
     setCurrentMargin
 }) => {
     const [showBreakdown, setShowBreakdown] = useState(false);
     const [showHotelBreakdown, setShowHotelBreakdown] = useState(false);
     const { user } = useSelector(state => state.tokens);
+    const totalDays = (parseInt(tripDetails.duration) || 0) + 1;
+    const carDetails = tripDetails?.car_details || [];
 
-    const totalDays = (parseInt(duration) || 0) + 1;
-
-    const carTotal = calculateCarCost(carDetails, configData, season, duration);
+    const carTotal = calculateCarCost(configData, season, tripDetails);
     const hotelTotal = hotelCostCalculation(hotelSelections, allHotels, season, tripDetails, stayInfo);
 
     return (
@@ -95,58 +93,113 @@ const CostEstimateCard = ({
                         {(() => {
                             const hasLandRover = selectedPackage?.label?.includes("Land Rover");
                             const head_count = (parseInt(tripDetails.pax) || 0) + (parseInt(tripDetails.kids_above_5) || 0);
+                            const duration = parseInt(tripDetails.duration) || 0;
 
-                            let basePrice = 0;
-                            let packageName = "";
+                            let subtotal = 0;
+                            let breakdownItems = [];
 
                             if (hasLandRover) {
-                                basePrice = selectedPackage?.details?.cost?.multipleCost?.[0]?.Standard || 0;
-                                packageName = "Land Rover Package";
+                                const hotelItemTotal = (parseFloat(hotelTotal) || 0) * head_count;
+                                const carItemTotal = (parseFloat(carTotal) || 0);
+                                subtotal = hotelItemTotal + carItemTotal;
+
+                                breakdownItems.push({
+                                    label: "Hotel Cost (Trip Total)",
+                                    detail: `₹${(parseFloat(hotelTotal) || 0).toLocaleString()} × ${head_count} Pax`,
+                                    value: hotelItemTotal
+                                });
+                                breakdownItems.push({
+                                    label: "Car Cost (Trip Total)",
+                                    detail: `Sandakphu Special Service`,
+                                    value: carItemTotal
+                                });
                             } else {
-                                basePrice = selectedPackage?.details?.cost?.singleCost || 0;
-                                packageName = "Base Package";
+                                const singleCost = selectedPackage?.details?.cost?.singleCost || 0;
+                                subtotal = singleCost * head_count;
+
+                                breakdownItems.push({
+                                    label: "Base Package Cost",
+                                    detail: `₹${singleCost.toLocaleString()} × ${head_count} Pax`,
+                                    value: subtotal
+                                });
                             }
 
-                            const totalBaseCost = basePrice * head_count;
                             const discountPercent = parseFloat(currentMargin) || 0;
-                            const discountAmount = totalBaseCost * (discountPercent / 100);
-                            const finalCost = totalBaseCost - discountAmount;
+                            const discountAmount = subtotal * (discountPercent / 100);
+                            const netBeforeMultiplier = subtotal - discountAmount;
+                            const finalCost = netBeforeMultiplier * duration;
 
                             return (
                                 <Box>
+                                    {breakdownItems.map((item, idx) => (
+                                        <Box key={idx} sx={{ mb: idx === breakdownItems.length - 1 ? 0 : 1 }}>
+                                            <Grid container spacing={1}>
+                                                <Grid item xs={8}>
+                                                    <Typography variant="body2">{item.label}</Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {item.detail}
+                                                    </Typography>
+                                                </Grid>
+                                                <Grid item xs={4} textAlign="right">
+                                                    <Typography variant="body2">₹{item.value.toLocaleString()}</Typography>
+                                                </Grid>
+                                            </Grid>
+                                        </Box>
+                                    ))}
+
+                                    <Divider sx={{ my: 1, opacity: 0.5 }} />
+
                                     <Grid container spacing={1}>
                                         <Grid item xs={8}>
-                                            <Typography variant="body2">{packageName}</Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                ₹{basePrice.toLocaleString()} × {head_count} Pax
-                                            </Typography>
+                                            <Typography variant="body2" fontWeight={600}>Total Base</Typography>
                                         </Grid>
                                         <Grid item xs={4} textAlign="right">
-                                            <Typography variant="body2">₹{totalBaseCost.toLocaleString()}</Typography>
+                                            <Typography variant="body2" fontWeight={600}>₹{subtotal.toLocaleString()}</Typography>
                                         </Grid>
                                     </Grid>
 
                                     {discountAmount > 0 && (
-                                        <>
-                                            <Divider sx={{ my: 1, opacity: 0.5 }} />
-                                            <Grid container spacing={1}>
-                                                <Grid item xs={8}>
-                                                    <Typography variant="body2" color="error.main">Discount ({discountPercent}%)</Typography>
-                                                </Grid>
-                                                <Grid item xs={4} textAlign="right">
-                                                    <Typography variant="body2" color="error.main">- ₹{discountAmount.toLocaleString()}</Typography>
-                                                </Grid>
+                                        <Grid container spacing={1} sx={{ mt: 0.5 }}>
+                                            <Grid item xs={8}>
+                                                <Typography variant="body2" color="error.main">Discount ({discountPercent}%)</Typography>
                                             </Grid>
-                                        </>
+                                            <Grid item xs={4} textAlign="right">
+                                                <Typography variant="body2" color="error.main">- ₹{discountAmount.toLocaleString()}</Typography>
+                                            </Grid>
+                                        </Grid>
                                     )}
 
-                                    <Divider sx={{ my: 1 }} />
+                                    <Divider sx={{ my: 1, borderStyle: 'dashed' }} />
+
                                     <Grid container spacing={1}>
                                         <Grid item xs={8}>
-                                            <Typography variant="subtitle2" fontWeight={700}>Net Package Cost</Typography>
+                                            <Typography variant="body2">Rate After Discount</Typography>
                                         </Grid>
                                         <Grid item xs={4} textAlign="right">
-                                            <Typography variant="subtitle2" fontWeight={700}>₹{finalCost.toLocaleString()}</Typography>
+                                            <Typography variant="body2">₹{netBeforeMultiplier.toLocaleString()}</Typography>
+                                        </Grid>
+                                    </Grid>
+
+                                    <Grid container spacing={1} sx={{ mt: 0.5 }}>
+                                        <Grid item xs={8}>
+                                            <Typography variant="body2" color="primary.main">Duration Multiplier</Typography>
+                                            <Typography variant="caption" color="text.secondary">Applied per night factor</Typography>
+                                        </Grid>
+                                        <Grid item xs={4} textAlign="right">
+                                            <Typography variant="body2" color="primary.main">× {duration}</Typography>
+                                        </Grid>
+                                    </Grid>
+
+                                    <Divider sx={{ my: 1.5 }} />
+
+                                    <Grid container spacing={1}>
+                                        <Grid item xs={8}>
+                                            <Typography variant="subtitle2" fontWeight={700}>Grand Total</Typography>
+                                        </Grid>
+                                        <Grid item xs={4} textAlign="right">
+                                            <Typography variant="subtitle2" fontWeight={700} color="primary.dark">
+                                                ₹{finalCost.toLocaleString()}
+                                            </Typography>
                                         </Grid>
                                     </Grid>
                                 </Box>
