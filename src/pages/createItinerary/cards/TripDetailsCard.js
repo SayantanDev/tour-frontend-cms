@@ -24,7 +24,7 @@ const TripDetailsCard = ({
     handleCarDetailsChange
 }) => {
     const [isExpanded, setIsExpanded] = useState(true);
-
+    const user = JSON.parse(localStorage.getItem('user'));
     // Helper function to get car count for a specific car type
     const getCarCount = (carName) => {
         const car = tripDetails.car_details?.find(c => c.car_name === carName);
@@ -168,80 +168,86 @@ const TripDetailsCard = ({
                                     },
                                 }}
                             >
-                                {configData?.additionalCosts?.car?.map((car, index) => {
-                                    const count = getCarCount(car.type);
-                                    const isSelected = count > 0;
-                                    const backgroundColor = isSelected ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)';
+                                {configData?.additionalCosts?.car
+                                    ?.filter(car => {
+                                        const isLandRoverPkg = selectedPackage?.label?.toLowerCase().includes("land rover");
+                                        const isLandRoverCar = car.type?.toLowerCase().includes("land rover");
+                                        return isLandRoverPkg ? isLandRoverCar : !isLandRoverCar;
+                                    })
+                                    ?.map((car, index) => {
+                                        const count = getCarCount(car.type);
+                                        const isSelected = count > 0;
+                                        const backgroundColor = isSelected ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)';
 
-                                    return (
-                                        <MenuItem
-                                            key={index}
-                                            value={car.type}
-                                            sx={{
-                                                backgroundColor,
-                                                border: '1px solid',
-                                                borderColor: isSelected ? 'rgba(0, 200, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)',
-                                                mb: 0.5,
-                                                mx: 1,
-                                                borderRadius: 1,
-                                                transition: 'all 0.3s ease',
-                                                '&:hover': {
-                                                    backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255, 0, 0, 0.2)',
-                                                },
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center'
-                                            }}
-                                            onClick={(e) => e.preventDefault()}
-                                        >
-                                            <Box sx={{ flex: 1 }}>
-                                                <Typography variant="body2" fontWeight={600}>
-                                                    {car.type}
-                                                </Typography>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {season ? `Price: ₹${car.cost?.[season] || 0}` : 'Select season to view price'}
-                                                </Typography>
-                                            </Box>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <IconButton
-                                                    size="small"
-                                                    disabled={!season || count <= 0}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleCarDetailsChange(car.type, count - 1);
-                                                    }}
-                                                    sx={{
-                                                        backgroundColor: '#f44336',
-                                                        color: 'white',
-                                                        '&:hover': { backgroundColor: '#d32f2f' },
-                                                        '&:disabled': { backgroundColor: '#e0e0e0', color: '#9e9e9e' }
-                                                    }}
-                                                >
-                                                    <RemoveIcon fontSize="small" />
-                                                </IconButton>
-                                                <Typography sx={{ minWidth: 30, textAlign: 'center', fontWeight: 600 }}>
-                                                    {count}
-                                                </Typography>
-                                                <IconButton
-                                                    size="small"
-                                                    disabled={!season}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        handleCarDetailsChange(car.type, count + 1);
-                                                    }}
-                                                    sx={{
-                                                        backgroundColor: '#4caf50',
-                                                        color: 'white',
-                                                        '&:hover': { backgroundColor: '#388e3c' },
-                                                        '&:disabled': { backgroundColor: '#e0e0e0', color: '#9e9e9e' }
-                                                    }}
-                                                >
-                                                    <AddIcon fontSize="small" />
-                                                </IconButton>
-                                            </Box>
-                                        </MenuItem>
-                                    );
-                                })}
+                                        return (
+                                            <MenuItem
+                                                key={index}
+                                                value={car.type}
+                                                sx={{
+                                                    backgroundColor,
+                                                    border: '1px solid',
+                                                    borderColor: isSelected ? 'rgba(0, 200, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)',
+                                                    mb: 0.5,
+                                                    mx: 1,
+                                                    borderRadius: 1,
+                                                    transition: 'all 0.3s ease',
+                                                    '&:hover': {
+                                                        backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255, 0, 0, 0.2)',
+                                                    },
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center'
+                                                }}
+                                                onClick={(e) => e.preventDefault()}
+                                            >
+                                                <Box sx={{ flex: 1 }}>
+                                                    <Typography variant="body2" fontWeight={600}>
+                                                        {car.type}
+                                                    </Typography>
+                                                    {(user?.permission === 'Admin') && <Typography variant="caption" color="text.secondary">
+                                                        {season ? `Price: ₹${car.cost?.[season] || 0}` : 'Select season to view price'}
+                                                    </Typography>}
+                                                </Box>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <IconButton
+                                                        size="small"
+                                                        disabled={!season || count <= 0}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleCarDetailsChange(car.type, count - 1);
+                                                        }}
+                                                        sx={{
+                                                            backgroundColor: '#f44336',
+                                                            color: 'white',
+                                                            '&:hover': { backgroundColor: '#d32f2f' },
+                                                            '&:disabled': { backgroundColor: '#e0e0e0', color: '#9e9e9e' }
+                                                        }}
+                                                    >
+                                                        <RemoveIcon fontSize="small" />
+                                                    </IconButton>
+                                                    <Typography sx={{ minWidth: 30, textAlign: 'center', fontWeight: 600 }}>
+                                                        {count}
+                                                    </Typography>
+                                                    <IconButton
+                                                        size="small"
+                                                        disabled={!season}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleCarDetailsChange(car.type, count + 1);
+                                                        }}
+                                                        sx={{
+                                                            backgroundColor: '#4caf50',
+                                                            color: 'white',
+                                                            '&:hover': { backgroundColor: '#388e3c' },
+                                                            '&:disabled': { backgroundColor: '#e0e0e0', color: '#9e9e9e' }
+                                                        }}
+                                                    >
+                                                        <AddIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Box>
+                                            </MenuItem>
+                                        );
+                                    })}
                             </Select>
                         </FormControl>
                     </Grid>

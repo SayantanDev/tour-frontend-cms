@@ -91,7 +91,7 @@ export const totalCostSandakphu = (hotelCost, carCost, discount, tripDetails, se
         const singleCost = selectedPackage?.details?.cost?.singleCost;
         const totalCost = singleCost * head_count;
         const marginAmount = totalCost * (parseFloat(discount) / 100 || 0);
-        return (totalCost - marginAmount) * tripDetails.duration;
+        return (totalCost - marginAmount);
     }
 };
 
@@ -370,13 +370,15 @@ export const hotelCostCalculation = (hotelSelections, allHotels, season, tripDet
 
 export const calculateCarCost = (configData, season, tripDetails) => {
     const carDetails = tripDetails?.car_details || [];
-    const twoNightPerDayAmount = 8500;
-    const threeNightPerDayAmount = 13500;
+    console.log('carDetails=======>', carDetails);
+    const oneNightPerDayCarAmount = 4000;
+    const twoNightPerDayCarAmount = 8500;
+    const threeNightPerDayCarAmount = 13500;
     if (!carDetails || !configData) return 0;
     const totalDays = (parseInt(tripDetails.duration) || 0) + 1;
     if (tripDetails.location === 'Sandakphu') {
-        return totalDays === 3 ? (twoNightPerDayAmount * totalDays) :
-            totalDays === 4 ? (threeNightPerDayAmount * totalDays) : 0;
+        return totalDays === 3 ? (twoNightPerDayCarAmount * carDetails[0].car_count) :
+            totalDays === 4 ? (threeNightPerDayCarAmount * carDetails[0].car_count) : (oneNightPerDayCarAmount * carDetails[0].car_count);
     }
     return carDetails.reduce((acc, carDetail) => {
         const carConfig = configData?.additionalCosts?.car?.find(c => c.type === carDetail.car_name);

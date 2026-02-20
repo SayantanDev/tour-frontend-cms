@@ -221,7 +221,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
     // Auto-calculate Total Cost based on Hotel, Car and Margin selections
     useEffect(() => {
-        console.log("selectedPackage====>", selectedPackage);
         const shortItinerary = selectedPackage?.details?.shortItinerary || [];
 
         const hasNorthSikkim = shortItinerary.some(item =>
@@ -241,7 +240,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 setCost(tCost);
             }
         } else if (tripDetails.location === 'Sandakphu') {
-            console.log("tripDetails=======>", tripDetails);
             const hCostSandakphu = hotelCostCalculation(hotelSelections, allHotels, season, tripDetails, stayInfo);
             const cCostSandakphu = calculateCarCost(configData, season, tripDetails);
             tCost = totalCostSandakphu(hCostSandakphu, cCostSandakphu, currentMargin, tripDetails, selectedPackage);
