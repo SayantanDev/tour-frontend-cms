@@ -234,7 +234,7 @@ export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, st
         },
         travel_date: tripDetails.travel_date || '',
         lead_source: 'website',
-        lead_stage: isDraft ? 'draft' : 'new',
+        lead_stage: isDraft ? 'Draft' : 'New',
         verified: !isDraft,
     };
 };
