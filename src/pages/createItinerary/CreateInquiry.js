@@ -10,6 +10,7 @@ import { getAllPackages } from '../../api/packageAPI';
 import { getAllHotels } from '../../api/hotelAPI';
 import { setAllHotels } from '../../reduxcomponents/slices/hotelsSlice';
 import { setAllPackages } from '../../reduxcomponents/slices/packagesSlice';
+import { setSelectedInquiry } from '../../reduxcomponents/slices/inquirySlice';
 import axios from '../../api/interceptor';
 // import PdfPreview from './PdfPreview';
 import html2canvas from 'html2canvas';
@@ -42,6 +43,7 @@ import {
 
 const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     const dispatch = useDispatch();
+    const reduxSelectedInquiry = useSelector((state) => state.inquiries.fetchSelectedInquiry);
     const allPackages = useSelector((state) => state.package.allPackages || []);
     const allHotels = useSelector((state) => state.hotels.allHotels || []);
     const configData = useSelector((state) => state.config.configData || {});
@@ -57,7 +59,10 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 guestNameRef.current?.focus();
             }, 500);
         }
-    }, [existingInquiry]);
+        return () => {
+            dispatch(setSelectedInquiry({}));
+        };
+    }, [existingInquiry, dispatch]);
 
     // UI States
     const [loading, setLoading] = useState(false);
@@ -114,11 +119,12 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
     // Load existing inquiry data if in edit mode
     useEffect(() => {
-        if (existingInquiry) {
-            loadExistingInquiry(existingInquiry);
+        const inquiryToLoad = existingInquiry || (Object.keys(reduxSelectedInquiry || {}).length > 0 ? reduxSelectedInquiry : null);
+        if (inquiryToLoad) {
+            loadExistingInquiry(inquiryToLoad);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [existingInquiry]);
+    }, [existingInquiry, reduxSelectedInquiry, allPackages.length > 0]);
 
     const fetchData = async () => {
         setDataLoading(true);
@@ -147,23 +153,35 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
     const loadExistingInquiry = (inquiry) => {
         // Load guest info
-        if (inquiry.guest_info) {
-            setGuestInfo({
-                guest_name: inquiry.guest_info.guest_name || '',
-                guest_email: inquiry.guest_info.guest_email || '',
-                guest_phone: inquiry.guest_info.guest_phone || '',
-            });
-            setEmailAddress(inquiry.guest_info.guest_email || '');
+        const gName = inquiry.guest_info?.guest_name || inquiry.guest_name || '';
+        const gEmail = inquiry.guest_info?.guest_email || inquiry.guest_email || '';
+        let gPhone = inquiry.guest_info?.guest_phone || inquiry.guest_phone || '';
+        const gCountryCode = inquiry.guest_info?.guest_country_code || inquiry.guest_country_code || inquiry.country_code || '+91';
+
+        // Separate country code from phone number if it's "punched"
+        if (gPhone.startsWith(gCountryCode)) {
+            gPhone = gPhone.replace(gCountryCode, '').trim();
+        } else if (gPhone.startsWith('+') && !inquiry.guest_info?.guest_country_code && !inquiry.guest_country_code) {
+            // If it starts with + but we didn't have a separate country code, try to guess it or just leave as is if we can't be sure
+            // For now, if we have gCountryCode (default or from data), use it to strip.
         }
+
+        setGuestInfo({
+            guest_name: gName,
+            guest_email: gEmail,
+            guest_phone: gPhone,
+            country_code: gCountryCode,
+        });
+        setEmailAddress(gEmail);
 
         // Load trip details
         setTripDetails({
-            pax: inquiry.pax?.toString() || '',
+            pax: (inquiry.pax || inquiry.guest_count || '')?.toString() || '',
             kids_above_5: inquiry.kids_above_5 || 0,
             car_details: inquiry.car_details || [],
-            location: inquiry.destination || '',
+            location: inquiry.destination || inquiry.location || '',
             keywords: '',
-            travel_date: inquiry.travel_date ? new Date(inquiry.travel_date).toISOString().split('T')[0] : '',
+            travel_date: (inquiry.travel_date || inquiry.arrival_date) ? new Date(inquiry.travel_date || inquiry.arrival_date).toISOString().split('T')[0] : '',
             duration: inquiry.duration?.toString() || '',
         });
 
@@ -182,7 +200,18 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         if (inquiry.package_id && allPackages.length > 0) {
             const pkg = allPackages.find(p => p._id === inquiry.package_id);
             if (pkg) {
+                // Use handlePackageSelect logic to populate itinerary and hotels
                 setSelectedPackage(pkg);
+
+                // Set editable short itinerary
+                const extractedItinerary = extractItineraryFromPackage(pkg.details);
+                setItinerary(extractedItinerary);
+
+                // Extract locations from shortItinerary and pre-populate hotel selections
+                if (pkg.details?.shortItinerary && Array.isArray(pkg.details.shortItinerary)) {
+                    const newHotelSelections = prePopulateHotelSelections(pkg.details.shortItinerary, allHotels);
+                    setHotelSelections(newHotelSelections);
+                }
             }
         }
     };
@@ -532,6 +561,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             guest_name: '',
             guest_email: '',
             guest_phone: '',
+            country_code: '+91'
         });
         setTripDetails({
             pax: '',

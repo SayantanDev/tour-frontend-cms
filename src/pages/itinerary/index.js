@@ -330,7 +330,10 @@ const Inquiry = () => {
                 </Typography>
 
                 <Stack direction="row" spacing={1} flexWrap="wrap">
-                    <Button variant="contained" size="small" onClick={() => navigate("/createItinerary")}>
+                    <Button variant="contained" size="small" onClick={() => {
+                        dispatch(setSelectedInquiry({}));
+                        navigate("/createItinerary");
+                    }}>
                         Create New Inquiry
                     </Button>
                     {hasPermission("inquiry", "alter") && (

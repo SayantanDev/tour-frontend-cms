@@ -113,6 +113,7 @@ const Query = () => {
       const updatedFields = {};
       if (editedRowData.guest_name !== undefined) updatedFields.guest_name = editedRowData.guest_name;
       if (editedRowData.guest_phone !== undefined) updatedFields.guest_phone = editedRowData.guest_phone;
+      if (editedRowData.guest_country_code !== undefined) updatedFields.guest_country_code = editedRowData.guest_country_code;
       if (editedRowData.cost !== undefined) updatedFields.cost = editedRowData.cost;
       if (editedRowData.advance !== undefined) updatedFields.advance = editedRowData.advance;
       if (editedRowData.lead_stage !== undefined) updatedFields.lead_stage = editedRowData.lead_stage;
@@ -139,8 +140,8 @@ const Query = () => {
     }
   }, []);
 
-  const handleEditOpen = useCallback(async (id) => {
-    dispatch(setSelectedquerie({ id }));
+  const handleEditOpen = useCallback((rowData) => {
+    dispatch(setSelectedquerie({ ...rowData, id: rowData.operation_id }));
     navigate("/query/view");
   }, [dispatch, navigate]);
   const handleOpenDeleteDialog = useCallback((row) => {
@@ -258,14 +259,25 @@ const Query = () => {
           const rowData = row.original;
           if (editingRowId === rowData._id) {
             return (
-              <TextField
-                size="small"
-                value={editedRowData.guest_phone}
-                onChange={(e) => setEditedRowData({ ...editedRowData, guest_phone: e.target.value })}
-              />
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <TextField
+                  size="small"
+                  sx={{ width: 70 }}
+                  value={editedRowData.guest_country_code}
+                  onChange={(e) => setEditedRowData({ ...editedRowData, guest_country_code: e.target.value })}
+                  placeholder="+91"
+                />
+                <TextField
+                  size="small"
+                  value={editedRowData.guest_phone}
+                  onChange={(e) => setEditedRowData({ ...editedRowData, guest_phone: e.target.value })}
+                />
+              </Box>
             );
           }
-          return rowData.guest_info?.guest_phone || "";
+          const cCode = rowData.guest_info?.guest_country_code || rowData.guest_country_code || "+91";
+          const phone = rowData.guest_info?.guest_phone || "";
+          return `${cCode} ${phone}`;
         },
       },
       {
@@ -344,6 +356,7 @@ const Query = () => {
                   setEditedRowData({
                     guest_name: rowData.guest_info?.guest_name || "",
                     guest_phone: rowData.guest_info?.guest_phone || "",
+                    guest_country_code: rowData.guest_info?.guest_country_code || rowData.guest_country_code || "+91",
                     cost: rowData.cost || "",
                     advance: rowData.advance || "",
                     lead_stage: rowData.lead_stage || "",
@@ -354,7 +367,7 @@ const Query = () => {
               </Tooltip>
               {rowData.advance > 0 && (
                 <Tooltip title="Manage Operation">
-                  <IconButton onClick={() => handleEditOpen(rowData.operation_id)}>
+                  <IconButton onClick={() => handleEditOpen(rowData)}>
                     <Typography color="primary">Manage</Typography>
                   </IconButton>
                 </Tooltip>
