@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import {
   Container, Typography, Button, IconButton, TextField, Box, Autocomplete,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
@@ -221,11 +221,11 @@ const AllPackages = () => {
   ]);
 
   // actions
-  const handleView = React.useCallback((id) => {
+  const handleView = useCallback((id) => {
     navigate(`/packages/view/${id}`);
   }, [navigate]);
 
-  const handleEdit = React.useCallback(async (id) => {
+  const handleEdit = useCallback(async (id) => {
     try {
       const singleData = await getSinglePackages(id);
       dispatch(setSelectedPackage(singleData.data));
@@ -240,7 +240,7 @@ const AllPackages = () => {
     navigate(`/packages/createandedit`);
   };
 
-  const handleToggleVerified = React.useCallback(async (row, nextVal) => {
+  const handleToggleVerified = useCallback(async (row, nextVal) => {
     const id = row.id;
     setToggleLoading(prev => ({ ...prev, [id]: true }));
 
@@ -268,7 +268,7 @@ const AllPackages = () => {
   }, []);
 
   // NEW: change ranking
-  const handleChangeRanking = React.useCallback(async (row, nextVal) => {
+  const handleChangeRanking = useCallback(async (row, nextVal) => {
     const id = row.id;
     const newRanking = Number(nextVal);
 
@@ -298,7 +298,7 @@ const AllPackages = () => {
 
 
 
-  const handleImageUpload = React.useCallback((id) => {
+  const handleImageUpload = useCallback((id) => {
     navigate(`/upload/package/${id}`);
   }, [navigate]);
 
@@ -306,7 +306,7 @@ const AllPackages = () => {
   const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
 
-  const handleOpenDialog = React.useCallback((id) => {
+  const handleOpenDialog = useCallback((id) => {
     const currentUser = filteredPackages.find((user) => user.id === id);
 
     const costData = {
@@ -336,7 +336,7 @@ const AllPackages = () => {
     setOpenDialog(true);
   }, [filteredPackages]);
 
-  const handleCloseDialog = React.useCallback((id) => {
+  const handleCloseDialog = useCallback((id) => {
     setOpenDialog(false);
   }, []);
 

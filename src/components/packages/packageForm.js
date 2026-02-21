@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState } from 'react';
 import { Formik, FieldArray, Form } from 'formik';
 import * as Yup from 'yup';
 import {
@@ -100,8 +100,8 @@ const RenderStringArray = ({ name, values, handleChange, label }) => (
   </FieldArray>
 );
 const RenderEditableList = ({ name, values, setFieldValue, label }) => {
-  const [inputValue, setInputValue] = React.useState('');
-  const [editIndex, setEditIndex] = React.useState(null);
+  const [inputValue, setInputValue] = useState('');
+  const [editIndex, setEditIndex] = useState(null);
 
   const handleAddOrUpdate = () => {
     const updatedList = [...values];
@@ -188,25 +188,30 @@ const PackageForm = () => {
   };
 
   const Region_obj = [
-  {label: "None",
-    val: "",
-  },
-  {label: "Sikkim",
-    val: "sikkim",
-  },
-  {label: "Darjeeling",
-    val: "darjeeling",
-  },
-  // {label: "North Sikkim",
-  //   val: "north-sikkim",
-  // },
-  {label: "Meghalaya",
-    val: "meghalaya",
-  },
-  {label: "Arunachal Pradesh",
-    val: "arunachal-pradesh",
-  }
-]
+    {
+      label: "None",
+      val: "",
+    },
+    {
+      label: "Sikkim",
+      val: "sikkim",
+    },
+    {
+      label: "Darjeeling",
+      val: "darjeeling",
+    },
+    // {label: "North Sikkim",
+    //   val: "north-sikkim",
+    // },
+    {
+      label: "Meghalaya",
+      val: "meghalaya",
+    },
+    {
+      label: "Arunachal Pradesh",
+      val: "arunachal-pradesh",
+    }
+  ]
 
 
   return (<>
@@ -246,7 +251,7 @@ const PackageForm = () => {
                       <Select
                         labelId="demo-simple-select-label"
                         id="demo-simple-select"
-                        value={values.zone} 
+                        value={values.zone}
                         label="Location"
                         onChange={handleChange}
                         name='location'

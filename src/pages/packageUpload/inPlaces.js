@@ -1,5 +1,5 @@
 import { Box, Button, Card, CardContent, Divider, Grid, InputAdornment, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -38,7 +38,7 @@ const PackageUploadInPlaces = () => {
     fetchData();
   }, [id]);
 
-  const handleAdd = async (packageId) => {
+  const handleAdd = useCallback(async (packageId) => {
     setPackageIds((prev) => [...prev, packageId]);
     const obj = {
       "add": [packageId],
@@ -48,9 +48,9 @@ const PackageUploadInPlaces = () => {
       await UpdatePlacesPacakges(id, obj);
     }
 
-  };
+  }, [id]);
 
-  const handleRemove = async (packageId) => {
+  const handleRemove = useCallback(async (packageId) => {
     setPackageIds((prev) => prev.filter((id) => id !== packageId));
     const obj = {
       "remove": [packageId],
@@ -60,7 +60,7 @@ const PackageUploadInPlaces = () => {
 
       await UpdatePlacesPacakges(id, obj);
     }
-  }
+  }, [id]);
 
   const finalPackages = pkgData.filter((singlePackage) => packageIds.includes(singlePackage._id));
 

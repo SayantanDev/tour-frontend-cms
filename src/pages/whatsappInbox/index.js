@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Box, Grid, Paper, Typography, IconButton, Tooltip, Button } from '@mui/material';
+import { Box, Typography, IconButton, Tooltip } from '@mui/material';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PersonIcon from '@mui/icons-material/Person';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -50,7 +50,6 @@ const WhatsappInbox = () => {
       });
 
       newSocket.on('connect', () => {
-        console.log('Socket connected');
         // Join agent room
         if (currentAgent?.id) {
           newSocket.emit('agent:join', { agentId: currentAgent.id });
@@ -135,10 +134,6 @@ const WhatsappInbox = () => {
         const chats = Array.isArray(chatsRes.data) ? chatsRes.data : (Array.isArray(chatsRes) ? chatsRes : []);
         const agents = Array.isArray(agentsRes.data) ? agentsRes.data : (Array.isArray(agentsRes) ? agentsRes : []);
         const onlineAgents = Array.isArray(onlineRes.data) ? onlineRes.data : (Array.isArray(onlineRes) ? onlineRes : []);
-
-        console.log('Fetched chats:', chats);
-        console.log('Fetched agents:', agents);
-        console.log('Fetched online agents:', onlineAgents);
 
         dispatch(setChats(chats));
         dispatch(setAgents(agents));

@@ -1,27 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 import {
-    Box, Grid, TextField, Button, Typography, IconButton,
-    Collapse, Card, CardContent,
-    Alert, Snackbar, CircularProgress, Backdrop, Dialog, DialogTitle, DialogContent,
+    Box, Grid, TextField, Button, Typography, Alert, Snackbar, CircularProgress, Backdrop, Dialog, DialogTitle, DialogContent,
     DialogActions, Skeleton,
 } from '@mui/material';
-import {
-    ChevronLeft, ChevronRight, Save, Clear, PictureAsPdf,
-    Email, SaveAlt, Edit as EditIcon,
-} from '@mui/icons-material';
+import { Save, Clear, PictureAsPdf, Email, SaveAlt, Edit as EditIcon } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
 import { getAllPackages } from '../../api/packageAPI';
 import { getAllHotels } from '../../api/hotelAPI';
 import { setAllHotels } from '../../reduxcomponents/slices/hotelsSlice';
 import { setAllPackages } from '../../reduxcomponents/slices/packagesSlice';
 import axios from '../../api/interceptor';
-import PdfPreview from './PdfPreview';
+// import PdfPreview from './PdfPreview';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import GuestInfoCard from './cards/GuestInfoCard';
 import TripDetailsCard from './cards/TripDetailsCard';
-import SelectedPackageCard from './cards/SelectedPackageCard';
+// import SelectedPackageCard from './cards/SelectedPackageCard';
 import ItineraryCard from './cards/ItineraryCard';
 import HotelSelectionCard from './cards/HotelSelectionCard';
 import CostEstimateCard from './cards/CostEstimateCard';
@@ -221,7 +216,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
     // Auto-calculate Total Cost based on Hotel, Car and Margin selections
     useEffect(() => {
-        console.log("selectedPackage====>", selectedPackage);
         const shortItinerary = selectedPackage?.details?.shortItinerary || [];
 
         const hasNorthSikkim = shortItinerary.some(item =>
@@ -241,7 +235,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 setCost(tCost);
             }
         } else if (tripDetails.location === 'Sandakphu') {
-            console.log("tripDetails=======>", tripDetails);
             const hCostSandakphu = hotelCostCalculation(hotelSelections, allHotels, season, tripDetails, stayInfo);
             const cCostSandakphu = calculateCarCost(configData, season, tripDetails);
             tCost = totalCostSandakphu(hCostSandakphu, cCostSandakphu, currentMargin, tripDetails, selectedPackage);
@@ -425,40 +418,38 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
         const payload = buildPayload(isDraft);
         const QRY_URL = `${process.env.REACT_APP_BASE_URL}/queries`;
-        console.log('tripDetails===>', tripDetails);
-        console.log('payload===>', payload);
 
         //important code
-        // try {
-        //     if (isEditMode && existingInquiry?._id) {
-        //         await axios.put(`${QRY_URL}/update/${existingInquiry._id}`, payload);
-        //         showSnackbar('Inquiry updated successfully!', 'success');
-        //     } else {
-        //         await axios.post(`${QRY_URL}/create-queries`, payload);
-        //         showSnackbar(
-        //             isDraft ? 'Draft saved successfully!' : 'Inquiry created successfully!',
-        //             'success'
-        //         );
-        //     }
+        try {
+            if (isEditMode && existingInquiry?._id) {
+                await axios.put(`${QRY_URL}/update/${existingInquiry._id}`, payload);
+                showSnackbar('Inquiry updated successfully!', 'success');
+            } else {
+                await axios.post(`${QRY_URL}/create-queries`, payload);
+                showSnackbar(
+                    isDraft ? 'Draft saved successfully!' : 'Inquiry created successfully!',
+                    'success'
+                );
+            }
 
-        //     if (!isDraft) {
-        //         setTimeout(() => {
-        //             if (onClose) {
-        //                 onClose();
-        //             } else {
-        //                 resetForm();
-        //             }
-        //         }, 1500);
-        //     }
-        // } catch (error) {
-        //     console.error('Error saving inquiry:', error);
-        //     showSnackbar(
-        //         error.response?.data?.message || 'Failed to save inquiry',
-        //         'error'
-        //     );
-        // } finally {
-        //     setLoading(false);
-        // }
+            if (!isDraft) {
+                setTimeout(() => {
+                    if (onClose) {
+                        onClose();
+                    } else {
+                        resetForm();
+                    }
+                }, 1500);
+            }
+        } catch (error) {
+            console.error('Error saving inquiry:', error);
+            showSnackbar(
+                error.response?.data?.message || 'Failed to save inquiry',
+                'error'
+            );
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleSaveAsDraft = () => {
@@ -509,31 +500,31 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         }
 
         setEmailSending(true);
-        try {
-            // Generate PDF as base64
-            const canvas = await html2canvas(pdfRef.current, {
-                scale: 2,
-                useCORS: true,
-            });
-            const imgData = canvas.toDataURL('image/png');
+        // try {
+        //     // Generate PDF as base64
+        //     const canvas = await html2canvas(pdfRef.current, {
+        //         scale: 2,
+        //         useCORS: true,
+        //     });
+        //     const imgData = canvas.toDataURL('image/png');
 
-            // Send email via your backend API
-            await axios.post(`${process.env.REACT_APP_BASE_URL}/email/send-quotation`, {
-                to: emailAddress,
-                guestName: guestInfo.guest_name,
-                pdfData: imgData,
-                packageName: selectedPackage?.label || 'Tour Package',
-                destination: tripDetails.location,
-            });
+        //     // Send email via your backend API
+        //     await axios.post(`${process.env.REACT_APP_BASE_URL}/email/send-quotation`, {
+        //         to: emailAddress,
+        //         guestName: guestInfo.guest_name,
+        //         pdfData: imgData,
+        //         packageName: selectedPackage?.label || 'Tour Package',
+        //         destination: tripDetails.location,
+        //     });
 
-            showSnackbar(`Quotation sent successfully to ${emailAddress}!`, 'success');
-            setEmailDialogOpen(false);
-        } catch (error) {
-            console.error('Error sending email:', error);
-            showSnackbar('Failed to send email. Please try again.', 'error');
-        } finally {
-            setEmailSending(false);
-        }
+        //     showSnackbar(`Quotation sent successfully to ${emailAddress}!`, 'success');
+        //     setEmailDialogOpen(false);
+        // } catch (error) {
+        //     console.error('Error sending email:', error);
+        //     showSnackbar('Failed to send email. Please try again.', 'error');
+        // } finally {
+        //     setEmailSending(false);
+        // }
     };
 
     const resetForm = () => {

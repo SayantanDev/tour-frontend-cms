@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import {
   Container, Typography, IconButton, Tooltip, Box, Chip, MenuItem, Modal, Paper,
   TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -54,7 +54,7 @@ const Query = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [queryToDelete, setQueryToDelete] = useState(null);
 
-  const fetchQuery = React.useCallback(async (pageNum = 1) => {
+  const fetchQuery = useCallback(async (pageNum = 1) => {
     setLoading(true);
     try {
       const response = await getAllQueries(pageNum, 30);
@@ -92,7 +92,7 @@ const Query = () => {
   useEffect(() => {
     fetchUsers();
     if (canView) fetchQuery(1);
-  }, [canView]);
+  }, [canView, fetchQuery]);
 
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;
@@ -103,12 +103,12 @@ const Query = () => {
     }
   };
 
-  const formatDate = (date) => {
-    const d = new Date(date);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  };
+  // const formatDate = (date) => {
+  //   const d = new Date(date);
+  //   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  // };
 
-  const handleSaveEdit = React.useCallback(async (id) => {
+  const handleSaveEdit = useCallback(async (id) => {
     try {
       const updatedFields = {};
       if (editedRowData.guest_name !== undefined) updatedFields.guest_name = editedRowData.guest_name;
@@ -128,7 +128,7 @@ const Query = () => {
     }
   }, [editedRowData, fetchQuery, showSnackbar]);
 
-  const getStatusColor = React.useCallback((status) => {
+  const getStatusColor = useCallback((status) => {
     switch (status) {
       case "Confirm": return "success";
       case "Cancel": return "default";
@@ -139,17 +139,17 @@ const Query = () => {
     }
   }, []);
 
-  const handleEditOpen = React.useCallback(async (id) => {
+  const handleEditOpen = useCallback(async (id) => {
     dispatch(setSelectedquerie({ id }));
     navigate("/query/view");
   }, [dispatch, navigate]);
-  const handleOpenDeleteDialog = React.useCallback((row) => {
+  const handleOpenDeleteDialog = useCallback((row) => {
     setQueryToDelete(row);
     setDeleteDialogOpen(true);
   }, []);
 
 
-  const openUserModal = React.useCallback((row) => {
+  const openUserModal = useCallback((row) => {
     setSelectedQueryId(row._id);
     const assigned = row.manage_teams?.map(mt => mt.user_id) || [];
     setAssignedUsers(assigned);
@@ -177,7 +177,7 @@ const Query = () => {
     }
   };
 
-  const openChangeRequestModal = React.useCallback(async (queryId) => {
+  const openChangeRequestModal = useCallback(async (queryId) => {
     try {
       const res = await getChangeRequest(queryId);
       setSelectedChangeRequests(res);
@@ -203,7 +203,7 @@ const Query = () => {
       showSnackbar("Action failed", "error");
     }
   };
-  const openRejectedChangeModal = React.useCallback(async (operationId) => {
+  const openRejectedChangeModal = useCallback(async (operationId) => {
     try {
       const res = await getRejectedChanges(operationId);
       setRejectedChanges(res);

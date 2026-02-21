@@ -1,12 +1,9 @@
-import React from 'react';
+import { useState, Fragment } from 'react';
 import { Formik, FieldArray, Form } from 'formik';
 import * as Yup from 'yup';
 import {
-  Box, Button, Grid, TextField, Typography, Switch, FormControlLabel, Paper, Divider, Chip, Stack,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem
+  Box, Button, Grid, TextField, Typography, Switch, FormControlLabel,
+  Paper, Divider, Chip, Stack, FormControl, InputLabel, Select, MenuItem
 } from '@mui/material';
 import { Delete } from '@mui/icons-material';
 import useSnackbar from '../../hooks/useSnackbar';
@@ -259,8 +256,8 @@ const RenderStringArray = ({ name, values, handleChange, label }) => (
   </FieldArray>
 );
 const RenderEditableList = ({ name, values, setFieldValue, label }) => {
-  const [inputValue, setInputValue] = React.useState('');
-  const [editIndex, setEditIndex] = React.useState(null);
+  const [inputValue, setInputValue] = useState('');
+  const [editIndex, setEditIndex] = useState(null);
 
   const handleAddOrUpdate = () => {
     const updatedList = [...values];
@@ -2956,7 +2953,7 @@ const CtgForm = () => {
                   {({ push, remove }) => (
                     <Grid container spacing={2}>
                       {values.details.faqs?.map((faq, index) => (
-                        <React.Fragment key={index}>
+                        <Fragment key={index}>
                           <Grid item xs={12} sm={5}>
                             <TextField
                               name={`details.faqs[${index}].question`}
@@ -2981,7 +2978,7 @@ const CtgForm = () => {
                           <Grid item xs={12} sm={1} display="flex" alignItems="center">
                             <Button onClick={() => remove(index)} color="error">Remove</Button>
                           </Grid>
-                        </React.Fragment>
+                        </Fragment>
                       ))}
                       <Grid item xs={12}>
                         <Button
