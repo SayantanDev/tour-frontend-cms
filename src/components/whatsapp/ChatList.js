@@ -81,13 +81,13 @@ const ChatList = ({ socket }) => {
   }, [chats, searchQuery, filters]);
 
   // Debug: Log chats when they change (moved after filteredChats definition)
-  React.useEffect(() => {
-    console.log('ChatList - Current chats in Redux:', chats);
-    console.log('ChatList - Number of chats:', chats.length);
-    console.log('ChatList - Current filters:', filters);
-    console.log('ChatList - Filtered chats count:', filteredChats.length);
-    console.log('ChatList - Filtered chats:', filteredChats);
-  }, [chats, filters, filteredChats]);
+  // React.useEffect(() => {
+  //   console.log('ChatList - Current chats in Redux:', chats);
+  //   console.log('ChatList - Number of chats:', chats.length);
+  //   console.log('ChatList - Current filters:', filters);
+  //   console.log('ChatList - Filtered chats count:', filteredChats.length);
+  //   console.log('ChatList - Filtered chats:', filteredChats);
+  // }, [chats, filters, filteredChats]);
 
   const handleChatSelect = (chat) => {
     dispatch(setSelectedChat(chat));
@@ -163,9 +163,6 @@ const ChatList = ({ socket }) => {
   };
 
   const handleNewChatCreated = async (newChat) => {
-    console.log('=== NEW CHAT CREATED ===');
-    console.log('Raw newChat:', newChat);
-
     // Ensure newChat has all required fields with proper structure
     const chatToAdd = {
       id: newChat.id || newChat.phoneNumber?.replace(/[^\d]/g, '') || `chat_${Date.now()}`,
@@ -178,10 +175,6 @@ const ChatList = ({ socket }) => {
       unreadCount: newChat.unreadCount || 0,
       ...newChat, // Spread to include any additional fields from API
     };
-
-    console.log('Chat to add (formatted):', chatToAdd);
-    console.log('Current chats before add:', chats.length);
-
     // Add chat to Redux state immediately
     dispatch(addChat(chatToAdd));
 
@@ -192,8 +185,6 @@ const ChatList = ({ socket }) => {
     try {
       const res = await getAllChats(filters);
       const fetchedChats = Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []);
-
-      console.log('Fetched chats from backend:', fetchedChats.length, fetchedChats);
 
       // Create identifiers for matching
       const chatIdToMatch = chatToAdd.id;
@@ -240,11 +231,7 @@ const ChatList = ({ socket }) => {
       }
     } catch (error) {
       console.error('Failed to refresh chats:', error);
-      // The chat is already in Redux via addChat, so it will remain
-      console.log('Error occurred, but chat was already added to Redux via addChat');
     }
-
-    console.log('=== END NEW CHAT CREATED ===');
   };
 
   return (

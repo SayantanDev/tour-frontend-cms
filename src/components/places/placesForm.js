@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, Fragment } from 'react';
 import { Formik, FieldArray, Form } from 'formik';
 import * as Yup from 'yup';
 import {
@@ -94,8 +94,8 @@ const SectionWrapper = ({ title, children }) => (
 );
 
 const RenderEditableList = ({ name, values, setFieldValue, label }) => {
-  const [inputValue, setInputValue] = React.useState('');
-  const [editIndex, setEditIndex] = React.useState(null);
+  const [inputValue, setInputValue] = useState('');
+  const [editIndex, setEditIndex] = useState(null);
 
   const handleAddOrUpdate = () => {
     const updatedList = [...values];
@@ -462,7 +462,7 @@ const PlacesForm = () => {
                   {({ push, remove }) => (
                     <Grid container spacing={2}>
                       {values.details.best_time_to_visit.details?.map((item, index) => (
-                        <React.Fragment key={index}>
+                        <Fragment key={index}>
                           <Grid item xs={12} sm={3}>
                             <TextField
                               name={`details.best_time_to_visit.details[${index}].months`}
@@ -513,7 +513,7 @@ const PlacesForm = () => {
                               Remove
                             </Button>
                           </Grid>
-                        </React.Fragment>
+                        </Fragment>
                       ))}
                       <Grid item xs={12}>
                         <Button
@@ -567,7 +567,7 @@ const PlacesForm = () => {
                   {({ push, remove }) => (
                     <Grid container spacing={2}>
                       {values.details.how_to_reach.details?.map((item, index) => (
-                        <React.Fragment key={index}>
+                        <Fragment key={index}>
                           <Grid item xs={12} sm={5}>
                             <TextField
                               name={`details.how_to_reach.details[${index}].name`}
@@ -593,7 +593,7 @@ const PlacesForm = () => {
                               Remove
                             </Button>
                           </Grid>
-                        </React.Fragment>
+                        </Fragment>
                       ))}
                       <Grid item xs={12}>
                         <Button
@@ -645,7 +645,7 @@ const PlacesForm = () => {
                   {({ push, remove }) => (
                     <Grid container spacing={2}>
                       {values.details.weather?.details?.map((entry, index) => (
-                        <React.Fragment key={index}>
+                        <Fragment key={index}>
                           <Grid item xs={12} sm={3}>
                             <TextField
                               name={`details.weather.details[${index}].season`}
@@ -687,7 +687,7 @@ const PlacesForm = () => {
                               Remove
                             </Button>
                           </Grid>
-                        </React.Fragment>
+                        </Fragment>
                       ))}
                       <Grid item xs={12}>
                         <Button
@@ -771,7 +771,7 @@ const PlacesForm = () => {
                   {({ push, remove }) => (
                     <Grid container spacing={2}>
                       {values.details.attraction_and_activites?.attraction?.map((item, index) => (
-                        <React.Fragment key={index}>
+                        <Fragment key={index}>
                           <Grid item xs={12} sm={5}>
                             <TextField
                               name={`details.attraction_and_activites.attraction[${index}].name`}
@@ -795,7 +795,7 @@ const PlacesForm = () => {
                           <Grid item xs={12} sm={1} display="flex" alignItems="center">
                             <Button onClick={() => remove(index)} color="error">Remove</Button>
                           </Grid>
-                        </React.Fragment>
+                        </Fragment>
                       ))}
                       <Grid item xs={12}>
                         <Button variant="outlined" onClick={() => push({ name: "", description: "" })}>
@@ -812,7 +812,7 @@ const PlacesForm = () => {
                   {({ push, remove }) => (
                     <Grid container spacing={2}>
                       {values.details.attraction_and_activites?.activity?.map((item, index) => (
-                        <React.Fragment key={index}>
+                        <Fragment key={index}>
                           <Grid item xs={12} sm={5}>
                             <TextField
                               name={`details.attraction_and_activites.activity[${index}].name`}
@@ -836,7 +836,7 @@ const PlacesForm = () => {
                           <Grid item xs={12} sm={1} display="flex" alignItems="center">
                             <Button onClick={() => remove(index)} color="error">Remove</Button>
                           </Grid>
-                        </React.Fragment>
+                        </Fragment>
                       ))}
                       <Grid item xs={12}>
                         <Button variant="outlined" onClick={() => push({ name: "", description: "" })}>
@@ -868,7 +868,7 @@ const PlacesForm = () => {
                   {({ push, remove }) => (
                     <Grid container spacing={2}>
                       {values.details.experiences?.details?.map((item, index) => (
-                        <React.Fragment key={index}>
+                        <Fragment key={index}>
                           <Grid item xs={12} sm={4}>
                             <TextField
                               name={`details.experiences.details[${index}].name`}
@@ -928,7 +928,7 @@ const PlacesForm = () => {
                               )}
                             </FieldArray>
                           </Grid>
-                        </React.Fragment>
+                        </Fragment>
                       ))}
                       <Grid item xs={12}>
                         <Button variant="outlined" onClick={() => push({ name: "", description: "", images: [""] })}>
@@ -980,7 +980,7 @@ const PlacesForm = () => {
                   {({ push, remove }) => (
                     <Grid container spacing={2}>
                       {values.details.accommdations.details?.map((item, index) => (
-                        <React.Fragment key={index}>
+                        <Fragment key={index}>
                           <Grid item xs={12} sm={2}>
                             <TextField
                               name={`details.accommdations.details[${index}].category`}
@@ -1031,7 +1031,7 @@ const PlacesForm = () => {
                               Remove
                             </Button>
                           </Grid>
-                        </React.Fragment>
+                        </Fragment>
                       ))}
                       <Grid item xs={12}>
                         <Button
@@ -1302,7 +1302,7 @@ const PlacesForm = () => {
                   {({ push, remove }) => (
                     <Grid container spacing={2}>
                       {values.details.faqs?.map((faq, index) => (
-                        <React.Fragment key={index}>
+                        <Fragment key={index}>
                           <Grid item xs={12} sm={5}>
                             <TextField
                               name={`details.faqs[${index}].question`}
@@ -1326,7 +1326,7 @@ const PlacesForm = () => {
                           <Grid item xs={12} sm={1} display="flex" alignItems="center">
                             <Button onClick={() => remove(index)} color="error">Remove</Button>
                           </Grid>
-                        </React.Fragment>
+                        </Fragment>
                       ))}
                       <Grid item xs={12}>
                         <Button

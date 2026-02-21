@@ -370,7 +370,6 @@ export const hotelCostCalculation = (hotelSelections, allHotels, season, tripDet
 
 export const calculateCarCost = (configData, season, tripDetails) => {
     const carDetails = tripDetails?.car_details || [];
-    console.log('carDetails=======>', carDetails);
     const oneNightPerDayCarAmount = 4000;
     const twoNightPerDayCarAmount = 8500;
     const threeNightPerDayCarAmount = 13500;

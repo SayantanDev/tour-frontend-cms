@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { TextField, Button, Typography, Paper, Box, InputAdornment, IconButton, Checkbox, FormControlLabel } from '@mui/material';
@@ -19,7 +19,7 @@ const Login = () => {
     const [rememberMe, setRememberMe] = useState(true);
 
     // Initialize from local storage if remember me was previously checked
-    React.useEffect(() => {
+    useEffect(() => {
         const rememberedEmail = localStorage.getItem("rememberedEmail");
         const rememberedPassword = localStorage.getItem("rememberedPassword");
         if (rememberedEmail && rememberedPassword) {

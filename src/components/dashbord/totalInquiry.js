@@ -1,12 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getAllInquiries } from '../../api/inquiryAPI';
-import {
-  Card,
-  CardContent,
-  Typography,
-  Box,
-  Skeleton,
-} from '@mui/material';
+import { Card, CardContent, Typography, Box, Skeleton } from '@mui/material';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 
 const TotalInquiry = () => {

@@ -4,8 +4,10 @@ import {
     Toolbar,
     Typography,
     IconButton,
-    Box
+    Box,
+    Button
 } from '@mui/material';
+import { useNavigate, useLocation } from "react-router-dom";
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import Notification from "./notification";
@@ -13,6 +15,8 @@ import ProfileDropdown from "./ProfileDropDown";
 
 const Top = ({ toggleDrawer }) => {
 
+    const navigate = useNavigate();
+    const location = useLocation();
     const [anchorEl, setAnchorEl] = useState(null);
 
     const handleProfileClick = (event) => {
@@ -65,6 +69,29 @@ const Top = ({ toggleDrawer }) => {
                     >
                         Tour Operation CMS
                     </Typography>
+
+                    {location.pathname !== "/createItinerary" && (
+                        <Button
+                            variant="contained"
+                            size="small"
+                            onClick={() => navigate("/createItinerary")}
+                            sx={{
+                                mr: 2,
+                                background: 'linear-gradient(135deg, #e9e067ff 0%, #059669 100%)', // Premium Emerald
+                                fontWeight: 'bold',
+                                whiteSpace: 'nowrap',
+                                boxShadow: '0px 4px 12px rgba(16, 185, 129, 0.35)',
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: '0px 6px 20px rgba(16, 185, 129, 0.45)',
+                                }
+                            }}
+                        >
+                            Create New Inquiry
+                        </Button>
+                    )}
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <Notification />

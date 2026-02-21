@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Dialog,
@@ -160,7 +160,7 @@ const MessageTemplateDialog = ({ open, onClose, onSelect }) => {
                 </Typography>
               ) : (
                 templates.map((template) => (
-                  <React.Fragment key={template.id}>
+                  <Fragment key={template.id}>
                     <ListItem
                       secondaryAction={
                         <Box>
@@ -182,7 +182,7 @@ const MessageTemplateDialog = ({ open, onClose, onSelect }) => {
                       </ListItemButton>
                     </ListItem>
                     <Divider />
-                  </React.Fragment>
+                  </Fragment>
                 ))
               )}
             </List>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     Container, Typography, Button, IconButton, Collapse, Box, Card, CardContent, Tooltip, CircularProgress, Checkbox,
@@ -88,7 +88,7 @@ const Inquiry = () => {
         }
     };
 
-    const getAssignedUserNames = React.useCallback((inquiry) => {
+    const getAssignedUserNames = useCallback((inquiry) => {
         if (!inquiry.manage_teams || inquiry.manage_teams.length === 0) return "-";
         return inquiry.manage_teams
             .map(team => {
@@ -100,12 +100,12 @@ const Inquiry = () => {
 
 
 
-    const handleInquiryClick = React.useCallback((inquiry) => {
+    const handleInquiryClick = useCallback((inquiry) => {
         dispatch(setSelectedInquiry(inquiry));
         navigate(`/createItinerary`);
     }, [dispatch, navigate]);
 
-    const handleOpenDeleteDialog = React.useCallback((inquiryId) => {
+    const handleOpenDeleteDialog = useCallback((inquiryId) => {
         setSelectedInquiryId(inquiryId);
         setDeleteDialogOpen(true);
     }, []);
@@ -397,7 +397,7 @@ const Inquiry = () => {
                                     const inquiry = row.original;
                                     const isExpanded = row.getIsExpanded();
                                     return (
-                                        <React.Fragment key={row.id}>
+                                        <Fragment key={row.id}>
                                             <TableRow>
                                                 {row.getVisibleCells().map(cell => (
                                                     <TableCell
@@ -435,7 +435,7 @@ const Inquiry = () => {
                                                     </TableCell>
                                                 </TableRow>
                                             )}
-                                        </React.Fragment>
+                                        </Fragment>
                                     );
                                 })}
                                 {loading && (
