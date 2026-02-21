@@ -93,6 +93,7 @@ function SingleQueriesView() {
     const queriesData = await getQueriesByoperation(operationData._id);
     const guestAndStayData = {
       name: operationData?.guest_info?.name || '',
+      country_code: operationData?.guest_info?.country_code || '+91',
       contact: operationData?.guest_info?.phone || '',
       email: operationData?.guest_info?.email || '',
       pax: operationData?.trip_details?.number_of_adults || '',
@@ -210,6 +211,7 @@ function SingleQueriesView() {
 
   const guestFields = [
     { label: 'Name', field: 'name' },
+    { label: 'Country Code', field: 'country_code' },
     { label: 'Contact', field: 'contact' },
     { label: 'Email', field: 'email' },
     { label: 'Pax', field: 'pax' },
@@ -303,7 +305,11 @@ function SingleQueriesView() {
                     {guestFields.map((item) => (
                       <TableRow key={item.field}>
                         <TableCell sx={{ fontWeight: 'bold' }}>{item.label}</TableCell>
-                        <TableCell>{guestInfo[item.field] || 'N/A'}</TableCell>
+                        <TableCell>
+                          {item.field === 'contact'
+                            ? `${guestInfo.country_code || ''} ${guestInfo.contact || ''}`
+                            : guestInfo[item.field] || 'N/A'}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

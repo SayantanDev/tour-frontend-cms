@@ -152,6 +152,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 guest_name: inquiry.guest_info.guest_name || '',
                 guest_email: inquiry.guest_info.guest_email || '',
                 guest_phone: inquiry.guest_info.guest_phone || '',
+                country_code: inquiry.guest_info.guest_country_code || inquiry.guest_country_code || '+91',
             });
             setEmailAddress(inquiry.guest_info.guest_email || '');
         }

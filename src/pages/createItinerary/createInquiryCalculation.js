@@ -219,7 +219,8 @@ export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, st
         guest_info: {
             guest_name: guestInfo.guest_name,
             guest_email: guestInfo.guest_email,
-            guest_phone: `${guestInfo.country_code}${guestInfo.guest_phone}`,
+            guest_phone: guestInfo.guest_phone,
+            guest_country_code: guestInfo.country_code || '+91',
         },
         pax: parseInt(tripDetails.pax),
         kids_above_5: parseInt(tripDetails.kids_above_5) || 0,
