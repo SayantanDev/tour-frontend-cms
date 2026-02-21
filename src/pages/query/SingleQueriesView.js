@@ -41,7 +41,7 @@ const columnsData = [
   { label: 'CRV', field: 'status' }
 ];
 
-function SingleQueriesView() {
+const SingleQueriesView = () => {
   const { fetchSelectedquerie } = useSelector((state) => state.queries);
   const hasPermission = usePermissions();
   const { showSnackbar, SnackbarComponent } = useSnackbar();
@@ -67,60 +67,69 @@ function SingleQueriesView() {
   const [verifyIndex, setVerifyIndex] = useState(null); // index of the itinerary row
   const [rejectedViewOpen, setRejectedViewOpen] = useState(false);
 
-  const detchOperationData = async () => {
-    const operationData = await getSingleOperation(fetchSelectedquerie.id);
-    // setOperation(operationData);
-
-    const followUpData = operationData?.followup_details?.map((item, index) => ({
-      id: item._id,
-      day: (index + 1).toString(),
-      date: item.journey_date || '',
-      place: item.destination || '',
-      hotelName: item.hotel_name || '',
-      hotelAmount: item.hotel_amount || '',
-      hotelConfirmation: item.hotel_confirmation || '',
-      checkinDate: item.checkin_date || '',
-      checkoutDate: item.checkout_date || '',
-      mealPlan: item.meal_plan || '',
-      vehicleName: item.vehicle_name || '',
-      vehiclePayment: item.vehicle_payment || '',
-      vehicleStatus: item.vehicle_status || '',
-      driverName: item.driver || '',
-      status: item.approved_status || '',
-    })) || []
-
-    setItineraryData(followUpData);
-    const queriesData = await getQueriesByoperation(operationData._id);
-    const guestAndStayData = {
-      name: operationData?.guest_info?.name || '',
-      country_code: operationData?.guest_info?.country_code || '+91',
-      contact: operationData?.guest_info?.phone || '',
-      email: operationData?.guest_info?.email || '',
-      pax: operationData?.trip_details?.number_of_adults || '',
-      hotel: queriesData?.stay_info?.hotel || '',
-      rooms: queriesData?.stay_info?.rooms || '',
-      carname: queriesData?.car_details?.car_name || '',
-      carcount: queriesData?.car_details?.car_count || '',
-      source: queriesData?.lead_source || '',
-      bookingDate: operationData?.createdAt?.slice(0, 10) || '',
-      tourDate: queriesData?.travel_date?.slice(0, 10) || '',
-      bookingStatus: queriesData?.lead_stage || '',
-      cost: queriesData?.cost || '',
-      advancePayment: queriesData?.advance || '',
-      duePayment:
-        typeof queriesData?.cost === 'number' &&
-          typeof queriesData?.advance === 'number'
-          ? queriesData.cost - operationData.guest_details?.advance
-          : '',
+  const fetchOperationData = async () => {
+    if (!fetchSelectedquerie?._id) {
+      console.error("No selected query ID found");
+      return;
     }
-    setGuestInfo(guestAndStayData);
+
+    try {
+      const operationData = await getSingleOperation(fetchSelectedquerie?._id);
+      if (!operationData) return;
+
+      const followUpData = operationData?.followup_details?.map((item, index) => ({
+        id: item._id,
+        day: (index + 1).toString(),
+        date: item.journey_date || '',
+        place: item.destination || '',
+        hotelName: item.hotel_name || '',
+        hotelAmount: item.hotel_amount || '',
+        hotelConfirmation: item.hotel_confirmation || '',
+        checkinDate: item.checkin_date || '',
+        checkoutDate: item.checkout_date || '',
+        mealPlan: item.meal_plan || '',
+        vehicleName: item.vehicle_name || '',
+        vehiclePayment: item.vehicle_payment || '',
+        vehicleStatus: item.vehicle_status || '',
+        driverName: item.driver || '',
+        status: item.approved_status || '',
+      })) || []
+
+      setItineraryData(followUpData);
+      const queriesData = await getQueriesByoperation(operationData._id);
+      const guestAndStayData = {
+        name: operationData?.guest_info?.name || '',
+        country_code: operationData?.guest_info?.country_code || '+91',
+        contact: operationData?.guest_info?.phone || '',
+        email: operationData?.guest_info?.email || '',
+        pax: operationData?.trip_details?.number_of_adults || '',
+        hotel: queriesData?.stay_info?.hotel || '',
+        rooms: queriesData?.stay_info?.rooms || '',
+        carname: queriesData?.car_details?.car_name || '',
+        carcount: queriesData?.car_details?.car_count || '',
+        source: queriesData?.lead_source || '',
+        bookingDate: operationData?.createdAt?.slice(0, 10) || '',
+        tourDate: queriesData?.travel_date?.slice(0, 10) || '',
+        bookingStatus: queriesData?.lead_stage || '',
+        cost: queriesData?.cost || '',
+        advancePayment: queriesData?.advance || '',
+        duePayment:
+          !isNaN(parseFloat(queriesData?.cost)) && !isNaN(parseFloat(queriesData?.advance))
+            ? parseFloat(queriesData.cost) - parseFloat(queriesData.advance)
+            : '',
+      }
+      setGuestInfo(guestAndStayData);
+    } catch (error) {
+      console.error("Error fetching operation data:", error);
+      showSnackbar("Failed to fetch operation data", "error");
+    }
   }
 
   useEffect(() => {
-    detchOperationData();
+    fetchOperationData();
     getAllHotels().then(setHotels);
     getAllVehicle().then(setVehicles);
-  }, []);
+  }, [fetchSelectedquerie?._id]);
 
   const handleGuestChange = (e) => {
     setGuestInfo({ ...guestInfo, [e.target.name]: e.target.value });
@@ -147,7 +156,7 @@ function SingleQueriesView() {
   //   newData[editIndex] = editRow;
   //   const itnObj = { followup_details: newData }
   //   setItineraryData(newData);
-  //   const res = await updateFollowupDetails(fetchSelectedquerie.id, itnObj);
+  //   const res = await updateFollowupDetails(fetchSelectedquerie?._id, itnObj);
   //   if (res) {
   //     showSnackbar(res.message, "success");
   //   }
@@ -184,9 +193,9 @@ function SingleQueriesView() {
     newData[editIndex] = updatedRow;
 
     const itnObj = { followup_details: newData };
-    const res = await updateFollowupDetails(fetchSelectedquerie.id, itnObj);
+    const res = await updateFollowupDetails(fetchSelectedquerie?._id, itnObj);
     if (res) {
-      // await addChangeRequestForItineray(fetchSelectedquerie.id, { description: changedFields });
+      // await addChangeRequestForItineray(fetchSelectedquerie?._id, { description: changedFields });
       showSnackbar(res.message, "success");
     }
 
@@ -198,7 +207,7 @@ function SingleQueriesView() {
   };
 
   const handleVerifyItineray = async () => {
-    // const res = await verifyItinerary(fetchSelectedquerie.id);
+    // const res = await verifyItinerary(fetchSelectedquerie?._id);
     // if (res) {
     //   showSnackbar(res.message, "success");
     // }
@@ -276,7 +285,7 @@ function SingleQueriesView() {
     setDescription('');
     setChangeRequestOpen(false);
 
-    await addChangeRequest(fetchSelectedquerie.id, { description });
+    await addChangeRequest(fetchSelectedquerie?._id, { description });
     showSnackbar("Change Request Submitted Successfully", "success");
   };
 
@@ -630,7 +639,7 @@ function SingleQueriesView() {
                 item.rejected_reason.push({ description: rejectedReason });
               }
 
-              const res = await updateFollowupDetails(fetchSelectedquerie.id, {
+              const res = await updateFollowupDetails(fetchSelectedquerie?._id, {
                 followup_details: updatedItinerary
               });
 

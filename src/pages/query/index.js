@@ -140,8 +140,8 @@ const Query = () => {
     }
   }, []);
 
-  const handleEditOpen = useCallback(async (id) => {
-    dispatch(setSelectedquerie({ id }));
+  const handleEditOpen = useCallback((rowData) => {
+    dispatch(setSelectedquerie({ ...rowData, id: rowData.operation_id }));
     navigate("/query/view");
   }, [dispatch, navigate]);
   const handleOpenDeleteDialog = useCallback((row) => {
@@ -367,7 +367,7 @@ const Query = () => {
               </Tooltip>
               {rowData.advance > 0 && (
                 <Tooltip title="Manage Operation">
-                  <IconButton onClick={() => handleEditOpen(rowData.operation_id)}>
+                  <IconButton onClick={() => handleEditOpen(rowData)}>
                     <Typography color="primary">Manage</Typography>
                   </IconButton>
                 </Tooltip>

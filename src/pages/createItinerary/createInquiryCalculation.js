@@ -215,12 +215,18 @@ export const validateForm = (guestInfo, tripDetails, selectedPackage) => {
 };
 
 export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, stayInfo, isDraft = false }) => {
+    const gPhone = guestInfo.guest_phone || '';
+    const gCountryCode = guestInfo.country_code || '+91';
+    const cleanedPhone = gPhone.startsWith(gCountryCode)
+        ? gPhone.replace(gCountryCode, '').trim()
+        : gPhone;
+
     return {
         guest_info: {
             guest_name: guestInfo.guest_name,
             guest_email: guestInfo.guest_email,
-            guest_phone: guestInfo.guest_phone,
-            guest_country_code: guestInfo.country_code || '+91',
+            guest_phone: cleanedPhone,
+            guest_country_code: gCountryCode,
         },
         pax: parseInt(tripDetails.pax),
         kids_above_5: parseInt(tripDetails.kids_above_5) || 0,
