@@ -244,12 +244,14 @@ const Query = () => {
             return (
               <TextField
                 size="small"
+                autoFocus
                 value={editedRowData.guest_name}
                 onChange={(e) => setEditedRowData({ ...editedRowData, guest_name: e.target.value })}
+                sx={{ '& .MuiInputBase-input': { py: '3px', fontSize: '0.75rem' } }}
               />
             );
           }
-          return rowData.guest_info?.guest_name || "";
+          return <Typography variant="caption">{rowData.guest_info?.guest_name || ""}</Typography>;
         },
       },
       {
@@ -259,16 +261,18 @@ const Query = () => {
           const rowData = row.original;
           if (editingRowId === rowData._id) {
             return (
-              <Box sx={{ display: 'flex', gap: 1 }}>
+              <Box sx={{ display: 'flex', gap: 0.5 }}>
                 <TextField
                   size="small"
-                  sx={{ width: 70 }}
+                  sx={{ width: 55, '& .MuiInputBase-input': { py: '3px', fontSize: '0.75rem' } }}
                   value={editedRowData.guest_country_code}
                   onChange={(e) => setEditedRowData({ ...editedRowData, guest_country_code: e.target.value })}
                   placeholder="+91"
                 />
                 <TextField
                   size="small"
+                  autoFocus
+                  sx={{ '& .MuiInputBase-input': { py: '3px', fontSize: '0.75rem' } }}
                   value={editedRowData.guest_phone}
                   onChange={(e) => setEditedRowData({ ...editedRowData, guest_phone: e.target.value })}
                 />
@@ -277,7 +281,7 @@ const Query = () => {
           }
           const cCode = rowData.guest_info?.guest_country_code || rowData.guest_country_code || "+91";
           const phone = rowData.guest_info?.guest_phone || "";
-          return `${cCode} ${phone}`;
+          return <Typography variant="caption">{`${cCode} ${phone}`}</Typography>;
         },
       },
       {
@@ -291,14 +295,15 @@ const Query = () => {
                 size="small"
                 value={editedRowData.lead_stage}
                 onChange={(e) => setEditedRowData({ ...editedRowData, lead_stage: e.target.value })}
+                sx={{ fontSize: '0.75rem', '& .MuiSelect-select': { py: '3px' } }}
               >
                 {["Confirm", "Cancel", "FollowUp", "Postponed", "Higher Priority"].map((status) => (
-                  <MenuItem key={status} value={status}>{status}</MenuItem>
+                  <MenuItem key={status} value={status} sx={{ fontSize: '0.75rem', py: 0.5 }}>{status}</MenuItem>
                 ))}
               </Select>
             );
           }
-          return <Chip label={rowData.lead_stage} color={getStatusColor(rowData.lead_stage)} />;
+          return <Chip label={rowData.lead_stage} size="small" color={getStatusColor(rowData.lead_stage)} sx={{ height: 18, fontSize: '0.65rem' }} />;
         },
       },
       {
@@ -314,10 +319,11 @@ const Query = () => {
                 autoFocus
                 value={editedRowData.cost}
                 onChange={(e) => setEditedRowData({ ...editedRowData, cost: e.target.value })}
+                sx={{ width: 90, '& .MuiInputBase-input': { py: '3px', fontSize: '0.75rem' } }}
               />
             );
           }
-          return rowData.cost || "N/A";
+          return <Typography variant="caption">{rowData.cost || "N/A"}</Typography>;
         },
       },
       {
@@ -333,10 +339,11 @@ const Query = () => {
                 autoFocus
                 value={editedRowData.advance}
                 onChange={(e) => setEditedRowData({ ...editedRowData, advance: e.target.value })}
+                sx={{ width: 90, '& .MuiInputBase-input': { py: '3px', fontSize: '0.75rem' } }}
               />
             );
           }
-          return rowData.advance ? `${rowData.advance}` : "0";
+          return <Typography variant="caption">{rowData.advance ? `${rowData.advance}` : "0"}</Typography>;
         },
       },
       {
@@ -347,15 +354,15 @@ const Query = () => {
           if (editingRowId === rowData._id) {
             return (
               <>
-                <Button onClick={() => handleSaveEdit(rowData._id)} size="small">Save</Button>
-                <Button onClick={() => { setEditingRowId(null); setEditedRowData({}); }} size="small">Cancel</Button>
+                <Button onClick={() => handleSaveEdit(rowData._id)} size="small" variant="contained" sx={{ py: '1px', px: 1, fontSize: '0.7rem', minWidth: 0, mr: 0.5 }}>Save</Button>
+                <Button onClick={() => { setEditingRowId(null); setEditedRowData({}); }} size="small" sx={{ py: '1px', px: 1, fontSize: '0.7rem', minWidth: 0 }}>Cancel</Button>
               </>
             );
           }
           return (
             <>
               <Tooltip title="Edit">
-                <IconButton onClick={() => {
+                <IconButton size="small" sx={{ p: '2px' }} onClick={() => {
                   setEditingRowId(rowData._id);
                   setEditedRowData({
                     guest_name: rowData.guest_info?.guest_name || "",
@@ -366,20 +373,20 @@ const Query = () => {
                     lead_stage: rowData.lead_stage || "",
                   });
                 }}>
-                  <Typography color="success">Edit</Typography>
+                  <Typography variant="caption" color="success.main" fontWeight={600}>Edit</Typography>
                 </IconButton>
               </Tooltip>
               {rowData.advance > 0 && (
                 <Tooltip title="Manage Operation">
-                  <IconButton onClick={() => handleEditOpen(rowData)}>
-                    <Typography color="primary">Manage</Typography>
+                  <IconButton size="small" sx={{ p: '2px' }} onClick={() => handleEditOpen(rowData)}>
+                    <Typography variant="caption" color="primary.main" fontWeight={600}>Manage</Typography>
                   </IconButton>
                 </Tooltip>
               )}
               {checkPermission("queries", "assuser") && (
                 <Tooltip title="Assign Users">
-                  <IconButton onClick={() => openUserModal(rowData)}>
-                    <Typography color="secondary">Assign Users</Typography>
+                  <IconButton size="small" sx={{ p: '2px' }} onClick={() => openUserModal(rowData)}>
+                    <Typography variant="caption" color="secondary.main" fontWeight={600}>Assign</Typography>
                   </IconButton>
                 </Tooltip>
               )}
@@ -398,13 +405,13 @@ const Query = () => {
           return (
             <>
               <Tooltip title="View Rejected Changes">
-                <IconButton onClick={() => openRejectedChangeModal(rowData.operation_id)}>
-                  <Typography color="error">Rejected</Typography>
+                <IconButton size="small" sx={{ p: '2px' }} onClick={() => openRejectedChangeModal(rowData.operation_id)}>
+                  <Typography variant="caption" color="error.main" fontWeight={600}>Rejected</Typography>
                 </IconButton>
               </Tooltip>
               <Tooltip title="View Changes Request">
-                <IconButton onClick={() => openChangeRequestModal(rowData.operation_id)}>
-                  <Button size="small">CRV</Button>
+                <IconButton size="small" sx={{ p: '2px' }} onClick={() => openChangeRequestModal(rowData.operation_id)}>
+                  <Button size="small" sx={{ py: '1px', px: 1, fontSize: '0.7rem', minWidth: 0 }}>CRV</Button>
                 </IconButton>
               </Tooltip>
             </>
@@ -421,8 +428,8 @@ const Query = () => {
           const rowData = row.original;
           return (
             <Tooltip title="Delete">
-              <IconButton onClick={() => handleOpenDeleteDialog(rowData)}>
-                <Typography color="error">Delete</Typography>
+              <IconButton size="small" sx={{ p: '2px' }} onClick={() => handleOpenDeleteDialog(rowData)}>
+                <Typography variant="caption" color="error.main" fontWeight={600}>Delete</Typography>
               </IconButton>
             </Tooltip>
           );
@@ -449,29 +456,29 @@ const Query = () => {
   });
 
   return (
-    <Container maxWidth={false} sx={{ height: 'calc(100vh - 100px)', display: 'flex', flexDirection: 'column' }}>
-      <Typography variant="h4" gutterBottom>Leads</Typography>
-      <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 3 }}>
-        <TextField label="Search" size="small" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-        <TextField type="date" label="Date" size="small" value={dateQuery} onChange={(e) => setDateQuery(e.target.value)} InputLabelProps={{ shrink: true }} />
-        <TextField select label="Status" size="small" value={statusQuery} onChange={(e) => setStatusQuery(e.target.value)} sx={{ minWidth: 180 }}>
+    <Container maxWidth={false} sx={{ height: 'calc(100vh - 100px)', display: 'flex', flexDirection: 'column', px: 1, py: 1 }}>
+      <Typography variant="h6" gutterBottom sx={{ mb: 0.5 }}>Leads</Typography>
+      <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 1 }}>
+        <TextField label="Search" size="small" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} sx={{ '& .MuiInputBase-input': { py: '4px', fontSize: '0.75rem' }, '& .MuiInputLabel-root': { fontSize: '0.75rem' } }} />
+        <TextField type="date" label="Date" size="small" value={dateQuery} onChange={(e) => setDateQuery(e.target.value)} InputLabelProps={{ shrink: true }} sx={{ '& .MuiInputBase-input': { py: '4px', fontSize: '0.75rem' }, '& .MuiInputLabel-root': { fontSize: '0.75rem' } }} />
+        <TextField select label="Status" size="small" value={statusQuery} onChange={(e) => setStatusQuery(e.target.value)} sx={{ minWidth: 140, '& .MuiInputBase-input': { py: '4px', fontSize: '0.75rem' }, '& .MuiInputLabel-root': { fontSize: '0.75rem' } }}>
           {["", "Confirm", "Cancel", "FollowUp", "Postponed", "Higher Priority"].map((status) => (
-            <MenuItem key={status} value={status}>{status || "All"}</MenuItem>
+            <MenuItem key={status} value={status} sx={{ fontSize: '0.75rem', py: 0.5 }}>{status || "All"}</MenuItem>
           ))}
         </TextField>
-        <TextField select label="Location" size="small" value={locationQuery} onChange={(e) => setLocationQuery(e.target.value)} sx={{ minWidth: 180 }}>
+        <TextField select label="Location" size="small" value={locationQuery} onChange={(e) => setLocationQuery(e.target.value)} sx={{ minWidth: 140, '& .MuiInputBase-input': { py: '4px', fontSize: '0.75rem' }, '& .MuiInputLabel-root': { fontSize: '0.75rem' } }}>
           {["", "Darjeeling", "Sikkim", "Sandakphu"].map((loc) => (
-            <MenuItem key={loc} value={loc}>{loc || "All"}</MenuItem>
+            <MenuItem key={loc} value={loc} sx={{ fontSize: '0.75rem', py: 0.5 }}>{loc || "All"}</MenuItem>
           ))}
         </TextField>
       </Box>
 
       <TableContainer
         component={Paper}
-        sx={{ flexGrow: 1, overflowY: "auto", mb: 2 }}
+        sx={{ flexGrow: 1, overflowY: "auto", mb: 1 }}
         onScroll={handleScroll}
       >
-        <Table size="small" stickyHeader>
+        <Table size="small" stickyHeader sx={{ '& .MuiTableCell-root': { py: '2px', px: '6px', fontSize: '0.72rem' }, '& .MuiTableCell-head': { py: '4px', px: '6px', fontSize: '0.72rem', fontWeight: 700 } }}>
           <TableHead>
             {table.getHeaderGroups().map(headerGroup => (
               <TableRow key={headerGroup.id}>
@@ -491,7 +498,7 @@ const Query = () => {
           <TableBody>
             {table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map(row => (
-                <TableRow key={row.original._id} hover>
+                <TableRow key={row.original._id} hover sx={{ '&:hover': { backgroundColor: 'action.hover' } }}>
                   {row.getVisibleCells().map(cell => (
                     <TableCell key={cell.id}>
                       {flexRender(
@@ -504,7 +511,7 @@ const Query = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} align="center">
+                <TableCell colSpan={columns.length} align="center" sx={{ py: 2 }}>
                   No queries found
                 </TableCell>
               </TableRow>
@@ -520,9 +527,9 @@ const Query = () => {
           position: 'absolute', top: '50%', left: '50%',
           transform: 'translate(-50%, -50%)',
           bgcolor: 'background.paper', boxShadow: 24,
-          p: 4, width: 400, borderRadius: 2
+          p: 2, width: 360, borderRadius: 2
         }}>
-          <Typography variant="h6" mb={2}>Assign Users</Typography>
+          <Typography variant="subtitle1" fontWeight={600} mb={1}>Assign Users</Typography>
 
           <Select
             multiple
@@ -560,10 +567,10 @@ const Query = () => {
         <Box sx={{
           position: 'absolute', top: '50%', left: '50%',
           transform: 'translate(-50%, -50%)',
-          bgcolor: '#f5f5f5', boxShadow: 24, p: 4,
-          width: 600, maxHeight: "90vh", overflowY: "auto", borderRadius: 2
+          bgcolor: '#f5f5f5', boxShadow: 24, p: 2,
+          width: 560, maxHeight: "90vh", overflowY: "auto", borderRadius: 2
         }}>
-          <Typography variant="h6" gutterBottom>Change Requests</Typography>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>Change Requests</Typography>
           {selectedChangeRequests.map(change => (
             <Paper key={change._id} sx={{ p: 2, mb: 2 }}>
               <Typography><b>Description:</b> {change.description}</Typography>
@@ -619,10 +626,10 @@ const Query = () => {
         <Box sx={{
           position: 'absolute', top: '50%', left: '50%',
           transform: 'translate(-50%, -50%)',
-          bgcolor: '#fff3f3', p: 4, width: 600,
+          bgcolor: '#fff3f3', p: 2, width: 560,
           borderRadius: 2, boxShadow: 24, maxHeight: '80vh', overflowY: 'auto'
         }}>
-          <Typography variant="h6" gutterBottom>Rejected Change Requests</Typography>
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>Rejected Change Requests</Typography>
           {rejectedChanges.length === 0 ? (
             <Typography>No rejected requests found.</Typography>
           ) : (
