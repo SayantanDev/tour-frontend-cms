@@ -392,3 +392,342 @@ export const calculateCarCost = (configData, season, tripDetails) => {
         return acc + (unitPrice * carDetail.car_count * totalDays);
     }, 0);
 };
+
+/**
+ * Generates and downloads a professional A4 PDF quotation.
+**/
+export const exportQuotationPDF = async (
+    {
+        guestInfo,
+        tripDetails,
+        stayInfo,
+        itinerary,
+        hotelSelections,
+        allHotels,
+        selectedPackage,
+        carSeason,
+        hotelSeason,
+        cost,
+        configData,
+        currentMargin,
+    },
+    setLoading,
+    showSnackbar
+) => {
+    // jsPDF is a default export — import dynamically to keep this file framework-free
+    const { default: jsPDF } = await import('jspdf');
+
+    // ── Pre-load logo ────────────────────────────────────────
+    let logoDataUrl = null;
+    try {
+        const resp = await fetch('/easo.png');
+        const blob = await resp.blob();
+        logoDataUrl = await new Promise((res) => {
+            const reader = new FileReader();
+            reader.onload = () => res(reader.result);
+            reader.readAsDataURL(blob);
+        });
+    } catch (_) {
+        // logo not critical — continue without it
+    }
+
+    setLoading(true);
+    try {
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const W = pdf.internal.pageSize.getWidth();
+        const H = pdf.internal.pageSize.getHeight();
+        const marginL = 14;
+        const marginR = W - 14;
+        const contentW = marginR - marginL;
+        let y = 0;
+
+        // ── Colour palette ──────────────────────────────────────
+        const PRIMARY = [122, 124, 209];
+        const DARK = [31, 41, 55];
+        const MID = [107, 114, 128];
+        const LIGHT_BG = [245, 247, 250];
+        const WHITE = [255, 255, 255];
+        const ACCENT = [34, 197, 94];
+        const DARK_GREEN = [27, 94, 32];   // footer / accent
+
+        // ── Helpers ─────────────────────────────────────────────
+        const setC = (c) => pdf.setTextColor(...c);
+        const fillC = (c) => pdf.setFillColor(...c);
+        const drawC = (c) => pdf.setDrawColor(...c);
+
+        const addFooter = () => {
+            const pg = pdf.internal.getNumberOfPages();
+            pdf.setPage(pg);
+
+            // Dark-green footer bar
+            fillC(DARK_GREEN);
+            pdf.rect(0, H - 18, W, 18, 'F');
+
+            // Three contact columns — white text
+            setC(WHITE); pdf.setFontSize(8); pdf.setFont(undefined, 'normal');
+            pdf.text('\u{1F310} www.easotrip.com', marginL + 10, H - 8);
+            pdf.text('\u{1F4DE} +91 70017 24300', W / 2, H - 8, { align: 'center' });
+            pdf.text('\u2709  easogroup@gmail.com', marginR - 10, H - 8, { align: 'right' });
+
+            // Thin white separator line above footer
+            drawC(WHITE); pdf.setLineWidth(0.3);
+            pdf.line(0, H - 18, W, H - 18);
+        };
+
+        const checkPage = (needed = 8) => {
+            if (y + needed > H - 22) {
+                addFooter();
+                pdf.addPage();
+                y = 14;
+            }
+        };
+
+        const sectionTitle = (title) => {
+            checkPage(14);
+            fillC(DARK_GREEN);
+            pdf.rect(marginL, y, contentW, 7, 'F');
+            setC(WHITE); pdf.setFontSize(9); pdf.setFont(undefined, 'bold');
+            pdf.text(title.toUpperCase(), marginL + 3, y + 5);
+            y += 10;
+            pdf.setFont(undefined, 'normal');
+        };
+
+        const row = (label, value, indent = 0) => {
+            checkPage(7);
+            setC(MID); pdf.setFontSize(8);
+            pdf.text(label, marginL + indent, y);
+            setC(DARK); pdf.setFontSize(8.5); pdf.setFont(undefined, 'bold');
+            pdf.text(String(value || '—'), marginL + indent + 52, y);
+            pdf.setFont(undefined, 'normal');
+            y += 5.5;
+        };
+
+        const hRule = (color = [229, 231, 235]) => {
+            drawC(color); pdf.setLineWidth(0.3);
+            pdf.line(marginL, y, marginR, y);
+            y += 3;
+        };
+
+        // ── HEADER ──────────────────────────────────────────────
+        // White page background (jsPDF default is white, but be explicit)
+        fillC(WHITE);
+        pdf.rect(0, 0, W, 40, 'F');
+
+        // Green decorative large circle — top-left, mostly off-page
+        fillC(DARK_GREEN);
+        pdf.circle(-18, -10, 38, 'F');
+
+        // Thin separator line under header area
+        drawC([220, 220, 220]); pdf.setLineWidth(0.4);
+        pdf.line(0, 40, W, 40);
+
+        // Logo — top right
+        if (logoDataUrl) {
+            // Render at ~40 mm wide, proportional height (~16 mm for typical logo)
+            pdf.addImage(logoDataUrl, 'PNG', W - 54, 3, 44, 18);
+        } else {
+            // Fallback text if logo fails
+            setC(DARK_GREEN); pdf.setFontSize(16); pdf.setFont(undefined, 'bold');
+            pdf.text('EASOTRIP', W - 14, 16, { align: 'right' });
+            pdf.setFont(undefined, 'normal');
+        }
+
+        y = 46;
+
+        // ── GUEST INFO ──────────────────────────────────────────
+        sectionTitle('Guest Information');
+        row('Name', guestInfo.guest_name);
+        row('Phone', `${guestInfo.country_code || '+91'} ${guestInfo.guest_phone}`);
+        row('Email', guestInfo.guest_email);
+        y += 2;
+
+        // ── TRIP DETAILS ────────────────────────────────────────
+        sectionTitle('Trip Details');
+        y += 1;
+
+        // Two-column helpers
+        const colL = marginL;          // left label x
+        const colLV = marginL + 42;    // left value x
+        const colR = marginL + (contentW / 2) + 4;   // right label x
+        const colRV = colR + 38;       // right value x
+
+        const twoCol = (lblL, valL, lblR, valR) => {
+            checkPage(7);
+            // Left label
+            setC(MID); pdf.setFontSize(8); pdf.setFont(undefined, 'normal');
+            pdf.text(lblL, colL, y);
+            // Left value
+            setC(DARK); pdf.setFont(undefined, 'bold'); pdf.setFontSize(8.5);
+            pdf.text(String(valL || '—'), colLV, y);
+            // Right label (only if provided)
+            if (lblR) {
+                setC(MID); pdf.setFontSize(8); pdf.setFont(undefined, 'normal');
+                pdf.text(lblR, colR, y);
+                setC(DARK); pdf.setFont(undefined, 'bold'); pdf.setFontSize(8.5);
+                pdf.text(String(valR || '—'), colRV, y);
+            }
+            pdf.setFont(undefined, 'normal');
+            y += 5.5;
+        };
+
+        const activeCars = (tripDetails.car_details || []).filter(c => c.car_count > 0);
+        const vehicleStr = activeCars.length
+            ? activeCars.map(c => `${c.car_name} ×${c.car_count}`).join(', ')
+            : '—';
+
+        twoCol(
+            'Travel Date',
+            tripDetails.travel_date
+                ? new Date(tripDetails.travel_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                : '—',
+            'Rooms',
+            stayInfo.rooms || '—'
+        );
+        twoCol(
+            'Duration',
+            tripDetails.duration
+                ? `${tripDetails.duration} Nights / ${Number(tripDetails.duration) + 1} Days`
+                : '—',
+            'Vehicles',
+            vehicleStr
+        );
+        twoCol(
+            'Adults (Pax)',
+            tripDetails.pax || '—',
+            'Package',
+            selectedPackage?.label || '—'
+        );
+        twoCol(
+            'Kids (5+)',
+            tripDetails.kids_above_5 || 0,
+            null, null   // no right column for last row
+        );
+        y += 2;
+
+
+        // ── ITINERARY ───────────────────────────────────────────
+        if (itinerary && itinerary.length > 0) {
+            sectionTitle('Day-by-Day Itinerary');
+            itinerary.forEach((item, idx) => {
+                const itemText = typeof item === 'string' ? item : (item?.tagValue || item?.tagName || '');
+                const label = `Day ${idx + 1}:  `;
+                const labelWidth = pdf.getStringUnitWidth(label) * 8.5 / pdf.internal.scaleFactor;
+
+                // Word-wrap the content to fit after the label on first line
+                const firstLineW = contentW - 6 - labelWidth;
+                const bodyLines = itemText
+                    ? pdf.splitTextToSize(itemText, firstLineW > 40 ? firstLineW : contentW - 6)
+                    : [];
+
+                const rowH = Math.max(7, 5 * (bodyLines.length || 1) + 2);
+                checkPage(rowH + 2);
+
+                // Alternating light bg
+                if (idx % 2 === 0) {
+                    fillC(LIGHT_BG);
+                    pdf.rect(marginL, y - 1, contentW, rowH, 'F');
+                }
+
+                // "Day N:" bold dark-green label
+                setC(DARK_GREEN); pdf.setFontSize(8.5); pdf.setFont(undefined, 'bold');
+                pdf.text(label, marginL + 2, y + 4);
+
+                // Content text — starts right after the label on the same line
+                if (bodyLines.length > 0) {
+                    setC(DARK); pdf.setFontSize(8); pdf.setFont(undefined, 'normal');
+                    pdf.text(bodyLines[0], marginL + 2 + labelWidth, y + 4);
+                    // Subsequent wrapped lines (if any) indented to match content start
+                    bodyLines.slice(1).forEach((line, li) => {
+                        pdf.text(line, marginL + 2 + labelWidth, y + 4 + (li + 1) * 5);
+                    });
+                }
+                pdf.setFont(undefined, 'normal');
+                y += rowH + 1;
+            });
+            y += 2;
+        }
+
+        // ── HOTEL SELECTIONS ────────────────────────────────────
+        const hotelDays = Object.keys(hotelSelections).filter(d => hotelSelections[d]?.hotelId);
+        if (hotelDays.length > 0) {
+            sectionTitle('Hotel Selections');
+            checkPage(8);
+            fillC(DARK_GREEN); pdf.rect(marginL, y - 1, contentW, 6, 'F');
+            setC(WHITE); pdf.setFontSize(7.5); pdf.setFont(undefined, 'bold');
+            pdf.text('Night', marginL + 2, y + 3.5);
+            pdf.text('Hotel', marginL + 20, y + 3.5);
+            pdf.text('Room Type', marginL + 100, y + 3.5);
+            pdf.text('Meal Plan', marginL + 140, y + 3.5);
+            y += 7; pdf.setFont(undefined, 'normal');
+
+            hotelDays.forEach((dayIdx, i) => {
+                checkPage(8);
+                const sel = hotelSelections[dayIdx];
+                const hotel = allHotels.find(h => h._id === sel.hotelId);
+                if (i % 2 === 0) { fillC(LIGHT_BG); pdf.rect(marginL, y - 1, contentW, 6.5, 'F'); }
+                setC(DARK); pdf.setFontSize(8);
+                pdf.text(`Night ${Number(dayIdx) + 1}`, marginL + 2, y + 3.5);
+                pdf.text(pdf.splitTextToSize(hotel?.hotel_name || '—', 75)[0], marginL + 20, y + 3.5);
+                pdf.text(sel.roomType || '—', marginL + 100, y + 3.5);
+                const mealPlanLabel = {
+                    cp_plan: 'Breakfast',
+                    map_plan: 'Breakfast + 1 major meal',
+                    ap_plan: 'All meals',
+                }[sel.mealPlan] || sel.mealPlan || '—';
+                pdf.text(mealPlanLabel, marginL + 140, y + 3.5);
+                y += 7;
+            });
+            y += 2;
+        }
+
+        checkPage(14);
+        fillC(DARK_GREEN);
+        pdf.rect(marginL, y, contentW, 11, 'F');
+        setC(WHITE); pdf.setFontSize(11); pdf.setFont(undefined, 'bold');
+        pdf.text('TOTAL QUOTED PRICE', marginL + 4, y + 7.5);
+        pdf.text(`₹ ${cost.toLocaleString('en-IN')}`, marginR - 6, y + 7.5, { align: 'right' });
+        pdf.setFont(undefined, 'normal');
+        y += 14;
+
+        // if (tripDetails.pax && Number(tripDetails.pax) > 0) {
+        //     checkPage(7);
+        //     setC(MID); pdf.setFontSize(8);
+        //     const perPerson = Math.round(cost / Number(tripDetails.pax));
+        //     pdf.text(
+        //         `Per person (${tripDetails.pax} adults): ₹ ${perPerson.toLocaleString('en-IN')}`,
+        //         marginR, y, { align: 'right' }
+        //     );
+        //     y += 5;
+        // }
+
+        // if (tripDetails.duration) {
+        //     setC(ACCENT); pdf.setFontSize(8);
+        //     pdf.text(`${tripDetails.duration} Nights · ${totalDays} Days · ${tripDetails.location}`, marginL, y);
+        //     y += 6;
+        // }
+
+        // ── TERMS ───────────────────────────────────────────────
+        checkPage(22);
+        y += 4; hRule();
+        setC(MID); pdf.setFontSize(7.5); pdf.setFont(undefined, 'bold');
+        pdf.text('Terms & Conditions', marginL, y); y += 4;
+        pdf.setFont(undefined, 'normal');
+        [
+            '• This is a preliminary quotation and is subject to change based on availability.',
+            '• Rates are valid for the indicated travel dates only.',
+            '• 50% advance required to confirm bookings.',
+            '• Cancellation charges apply as per policy.',
+        ].forEach(t => { checkPage(5); setC(MID); pdf.setFontSize(7.5); pdf.text(t, marginL, y); y += 4.5; });
+
+        addFooter();
+
+        pdf.save(generatePdfFilename(guestInfo.guest_name, tripDetails.location));
+        showSnackbar('PDF exported successfully!', 'success');
+    } catch (error) {
+        console.error('Error exporting PDF:', error);
+        showSnackbar('Failed to export PDF', 'error');
+    } finally {
+        setLoading(false);
+    }
+};
+

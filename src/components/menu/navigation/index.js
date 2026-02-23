@@ -2,7 +2,7 @@
 // components/Navigation.js (With Badge Notification Counts + Clear on Click)
 // ===============================
 
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Drawer, List, ListItem, ListItemText, ListItemButton, Badge, ListItemIcon,
@@ -135,7 +135,7 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
       anchor="left"
       open={drawerOpen}
     >
-      <List sx={{ p: 2, pt: 3 }}>
+      <List sx={{ p: 0, pt: 1 }}>
         {fetchConfigData.navigationStrings
           .filter((item) => checkPermission(item.module, "view"))
           .map((item) => {
@@ -156,9 +156,9 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
                   onClick={() => navLinkClicked(item.link, item.label)}
                   selected={isActive}
                   sx={{
-                    px: 2.5,
-                    py: 1.75,
-                    borderRadius: 3,
+                    px: 1.5,
+                    py: 1.1,
+                    borderRadius: 2,
                     background: isActive
                       ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
                       : 'transparent',
@@ -205,7 +205,7 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
                   <ListItemIcon
                     sx={{
                       color: isActive ? '#ffffff' : '#667eea',
-                      minWidth: 42,
+                      minWidth: 40,
                       transition: 'all 0.3s ease',
                       opacity: isActive ? 1 : 0.85,
                     }}

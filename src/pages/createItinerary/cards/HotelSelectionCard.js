@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useSelector } from "react-redux";
 import {
     Paper, Box, Typography, FormControl, InputLabel, Select, MenuItem, Button, Grid, TextField, Autocomplete, Collapse, Chip, Stack
 } from '@mui/material';
@@ -17,7 +18,7 @@ const HotelSelectionCard = ({
     handleHotelChange
 }) => {
     const [isExpanded, setIsExpanded] = useState(true);
-
+    const { user } = useSelector(state => state.tokens);
     if (!tripDetails.duration || tripDetails.duration <= 0 || allHotels.length === 0) return null;
 
     const selectedHotelsCount = Object.values(hotelSelections).filter(h => h.hotelId).length;
@@ -59,7 +60,7 @@ const HotelSelectionCard = ({
                                 variant="outlined"
                             />
                         )}
-                        {totalHotelCost > 0 && (
+                        {(user?.permission === 'Admin' && totalHotelCost > 0) && (
                             <Chip
                                 label={`Total Hotel Cost: ₹${totalHotelCost.toLocaleString()}`}
                                 size="small"

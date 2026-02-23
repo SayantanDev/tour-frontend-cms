@@ -147,10 +147,23 @@ const TripDetailsCard = ({
                                 value=""
                                 label="Select Vehicles"
                                 disabled={!carSeason}
+                                displayEmpty
                                 renderValue={() => {
                                     const selectedCars = tripDetails.car_details?.filter(car => car.car_count > 0) || [];
                                     if (selectedCars.length === 0) return 'No vehicles selected';
-                                    return selectedCars.map(car => `${car.car_name} (${car.car_count})`).join(', ');
+                                    return (
+                                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                            {selectedCars.map((car, i) => (
+                                                <Chip
+                                                    key={i}
+                                                    label={`${car.car_name} × ${car.car_count}`}
+                                                    size="small"
+                                                    color="primary"
+                                                    variant="outlined"
+                                                />
+                                            ))}
+                                        </Box>
+                                    );
                                 }}
                                 MenuProps={{
                                     PaperProps: {
@@ -268,7 +281,7 @@ const TripDetailsCard = ({
                         <TextField
                             fullWidth
                             size="small"
-                            label="Duration (Days)"
+                            label="Duration (Nights)"
                             name="duration"
                             type="number"
                             value={tripDetails.duration}

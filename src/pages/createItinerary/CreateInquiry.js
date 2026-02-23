@@ -13,8 +13,6 @@ import { setAllPackages } from '../../reduxcomponents/slices/packagesSlice';
 import { setSelectedInquiry } from '../../reduxcomponents/slices/inquirySlice';
 import axios from '../../api/interceptor';
 // import PdfPreview from './PdfPreview';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import GuestInfoCard from './cards/GuestInfoCard';
 import TripDetailsCard from './cards/TripDetailsCard';
 // import SelectedPackageCard from './cards/SelectedPackageCard';
@@ -26,7 +24,6 @@ import {
     calculatePackageCost,
     updateItineraryByDuration,
     prePopulateHotelSelections,
-    calculatePdfDimensions,
     extractItineraryFromPackage,
     validateForm as validateFormData,
     buildPayload as buildPayloadData,
@@ -39,6 +36,7 @@ import {
     totalCostSandakphu,
     hotelCostCalculation,
     calculateCarCost,
+    exportQuotationPDF,
 } from './createInquiryCalculation';
 
 const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
@@ -493,37 +491,29 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         handleSubmit(true);
     };
 
-    const handleExportPDF = async () => {
-        if (!pdfRef.current) {
-            showSnackbar('PDF preview not available', 'error');
-            return;
-        }
-
-        setLoading(true);
-        try {
-            const canvas = await html2canvas(pdfRef.current, {
-                scale: 2,
-                useCORS: true,
-                logging: false,
-            });
-
-            const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const { imgX, imgY, imgWidth, imgHeight } = calculatePdfDimensions(canvas, pdf);
-
-            pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth, imgHeight);
-
-            const filename = generatePdfFilename(guestInfo.guest_name, tripDetails.location);
-            pdf.save(filename);
-
-            showSnackbar('PDF exported successfully!', 'success');
-        } catch (error) {
-            console.error('Error exporting PDF:', error);
-            showSnackbar('Failed to export PDF', 'error');
-        } finally {
-            setLoading(false);
-        }
+    const handleExportPDF = () => {
+        exportQuotationPDF(
+            {
+                guestInfo,
+                tripDetails,
+                stayInfo,
+                itinerary,
+                hotelSelections,
+                allHotels,
+                selectedPackage,
+                carSeason,
+                hotelSeason,
+                cost,
+                configData,
+                currentMargin,
+            },
+            setLoading,
+            showSnackbar
+        );
     };
+
+
+
 
     const handleEmailQuotation = async () => {
         if (!emailAddress || !/\S+@\S+\.\S+/.test(emailAddress)) {
@@ -639,7 +629,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                             variant="outlined"
                             startIcon={<PictureAsPdf />}
                             onClick={handleExportPDF}
-                            disabled={loading || !selectedPackage}
+                            disabled={loading}
                             size="small"
                         >
                             Export PDF
