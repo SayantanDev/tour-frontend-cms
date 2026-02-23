@@ -669,7 +669,12 @@ export const exportQuotationPDF = async (
                 pdf.text(`Night ${Number(dayIdx) + 1}`, marginL + 2, y + 3.5);
                 pdf.text(pdf.splitTextToSize(hotel?.hotel_name || '—', 75)[0], marginL + 20, y + 3.5);
                 pdf.text(sel.roomType || '—', marginL + 100, y + 3.5);
-                pdf.text(sel.mealPlan || '—', marginL + 140, y + 3.5);
+                const mealPlanLabel = {
+                    cp_plan: 'Breakfast',
+                    map_plan: 'Breakfast + 1 major meal',
+                    ap_plan: 'All meals',
+                }[sel.mealPlan] || sel.mealPlan || '—';
+                pdf.text(mealPlanLabel, marginL + 140, y + 3.5);
                 y += 7;
             });
             y += 2;
@@ -680,7 +685,7 @@ export const exportQuotationPDF = async (
         pdf.rect(marginL, y, contentW, 11, 'F');
         setC(WHITE); pdf.setFontSize(11); pdf.setFont(undefined, 'bold');
         pdf.text('TOTAL QUOTED PRICE', marginL + 4, y + 7.5);
-        pdf.text(`₹ ${cost.toLocaleString('en-IN')}`, marginR - 2, y + 7.5, { align: 'right' });
+        pdf.text(`₹ ${cost.toLocaleString('en-IN')}`, marginR - 6, y + 7.5, { align: 'right' });
         pdf.setFont(undefined, 'normal');
         y += 14;
 
