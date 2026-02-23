@@ -109,7 +109,8 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
     // Tab state for hotel selection
     const [selectedDay, setSelectedDay] = useState(0);
-    const [season, setSeason] = useState('');
+    const [carSeason, setCarSeason] = useState('');
+    const [hotelSeason, setHotelSeason] = useState('');
 
     // Fetch packages and hotels on mount
     useEffect(() => {
@@ -257,22 +258,22 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         let tCost = 0;
 
         if (tripDetails.location && tripDetails.location !== 'Sandakphu') {
-            const hCost = hotelCostCalculation(hotelSelections, allHotels, season, tripDetails, stayInfo);
-            const cCost = calculateCarCost(configData, season, tripDetails);
+            const hCost = hotelCostCalculation(hotelSelections, allHotels, hotelSeason, tripDetails, stayInfo);
+            const cCost = calculateCarCost(configData, carSeason, tripDetails);
             tCost = totalCost(hCost, cCost, currentMargin, northSikkimMargin);
             if (tCost > 0) {
                 setCost(tCost);
             }
         } else if (tripDetails.location === 'Sandakphu') {
-            const hCostSandakphu = hotelCostCalculation(hotelSelections, allHotels, season, tripDetails, stayInfo);
-            const cCostSandakphu = calculateCarCost(configData, season, tripDetails);
+            const hCostSandakphu = hotelCostCalculation(hotelSelections, allHotels, hotelSeason, tripDetails, stayInfo);
+            const cCostSandakphu = calculateCarCost(configData, carSeason, tripDetails);
             tCost = totalCostSandakphu(hCostSandakphu, cCostSandakphu, currentMargin, tripDetails, selectedPackage);
 
             if (tCost > 0) {
                 setCost(tCost);
             }
         }
-    }, [hotelSelections, tripDetails.car_details, tripDetails.duration, season, currentMargin, allHotels, configData, stayInfo, tripDetails.location]);
+    }, [hotelSelections, tripDetails.car_details, tripDetails.duration, carSeason, hotelSeason, currentMargin, allHotels, configData, stayInfo, tripDetails.location]);
 
     const handleGuestInfoChange = (e) => {
         const { name, value } = e.target;
@@ -368,7 +369,8 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         setCost(0);
         setItinerary([]);
         setHotelSelections({});
-        setSeason('');
+        setCarSeason('');
+        setHotelSeason('');
     };
 
     const handleLocationChange = (newValue) => {
@@ -377,7 +379,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     };
 
     const handleHotelReset = () => {
-        setSeason('');
+        setHotelSeason('');
         setHotelSelections(prev => resetHotelSelections(prev));
     };
 
@@ -389,7 +391,8 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         setCost(parseFloat(e.target.value) || 0);
     };
 
-    const handleSeasonChange = (e) => setSeason(e.target.value);
+    const handleCarSeasonChange = (e) => setCarSeason(e.target.value);
+    const handleHotelSeasonChange = (e) => setHotelSeason(e.target.value);
 
     const handleItineraryChange = (index, value) => {
         setItinerary(prev => updateItineraryItem(prev, index, value));
@@ -580,7 +583,8 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             hotel: '',
         });
         setEmailAddress('');
-        setSeason('');
+        setCarSeason('');
+        setHotelSeason('');
     };
 
     const showSnackbar = (message, severity = 'success') => {
@@ -680,8 +684,8 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     handleLocationChange={handleLocationChange}
                     allPackages={allPackages}
                     onPackageSelect={handlePackageSelect}
-                    season={season}
-                    handleSeasonChange={handleSeasonChange}
+                    carSeason={carSeason}
+                    handleCarSeasonChange={handleCarSeasonChange}
                     handleCarDetailsChange={handleCarDetailsChange}
                 />
 
@@ -712,8 +716,8 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     allHotels={allHotels}
                     hotelSelections={hotelSelections}
                     stayInfo={stayInfo}
-                    season={season}
-                    handleSeasonChange={handleSeasonChange}
+                    hotelSeason={hotelSeason}
+                    handleHotelSeasonChange={handleHotelSeasonChange}
                     handleHotelReset={handleHotelReset}
                     selectedDay={selectedDay}
                     setSelectedDay={setSelectedDay}
@@ -729,7 +733,8 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     stayInfo={stayInfo}
                     tripDetails={tripDetails}
                     configData={configData}
-                    season={season}
+                    carSeason={carSeason}
+                    hotelSeason={hotelSeason}
                     currentMargin={currentMargin}
                     setCurrentMargin={setCurrentMargin}
                 />

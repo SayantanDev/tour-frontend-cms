@@ -9,8 +9,8 @@ const HotelSelectionCard = ({
     allHotels,
     hotelSelections,
     stayInfo,
-    season,
-    handleSeasonChange,
+    hotelSeason,
+    handleHotelSeasonChange,
     handleHotelReset,
     selectedDay,
     setSelectedDay,
@@ -21,7 +21,7 @@ const HotelSelectionCard = ({
     if (!tripDetails.duration || tripDetails.duration <= 0 || allHotels.length === 0) return null;
 
     const selectedHotelsCount = Object.values(hotelSelections).filter(h => h.hotelId).length;
-    const totalHotelCost = hotelCostCalculation(hotelSelections, allHotels, season, tripDetails, stayInfo);
+    const totalHotelCost = hotelCostCalculation(hotelSelections, allHotels, hotelSeason, tripDetails, stayInfo);
 
     return (
         <Paper sx={{ p: 3, mb: 3 }}>
@@ -51,9 +51,9 @@ const HotelSelectionCard = ({
                                 variant="outlined"
                             />
                         )}
-                        {season && (
+                        {hotelSeason && (
                             <Chip
-                                label={`Season: ${season === 'off_season_price' ? 'Off Season' : 'Season'}`}
+                                label={`Hotel Season: ${hotelSeason === 'off_season_price' ? 'Off Season' : 'Season'}`}
                                 size="small"
                                 color="primary"
                                 variant="outlined"
@@ -72,11 +72,11 @@ const HotelSelectionCard = ({
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     {isExpanded && (
                         <FormControl size="small" sx={{ minWidth: 200 }}>
-                            <InputLabel>Season</InputLabel>
+                            <InputLabel>Hotel Season</InputLabel>
                             <Select
-                                value={season}
-                                label="Season"
-                                onChange={handleSeasonChange}
+                                value={hotelSeason}
+                                label="Hotel Season"
+                                onChange={handleHotelSeasonChange}
                             >
                                 <MenuItem value="off_season_price">Off Season</MenuItem>
                                 <MenuItem value="season_price">Season</MenuItem>
@@ -95,7 +95,7 @@ const HotelSelectionCard = ({
             <Collapse in={isExpanded}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                     {Array.from({ length: parseInt(tripDetails.duration) }, (_, dayIndex) => {
-                        const dayCost = calculateSingleHotelCost(hotelSelections[dayIndex], allHotels, season, tripDetails, stayInfo);
+                        const dayCost = calculateSingleHotelCost(hotelSelections[dayIndex], allHotels, hotelSeason, tripDetails, stayInfo);
                         return (
                             <Box
                                 key={dayIndex}
@@ -144,7 +144,7 @@ const HotelSelectionCard = ({
                                                 onChange={(e) => handleHotelChange(dayIndex, 'location', e.target.value)}
                                                 helperText="Location from package"
                                                 size="small"
-                                                disabled={!season}
+                                                disabled={!hotelSeason}
                                             />
                                         </Grid>
 
@@ -160,13 +160,13 @@ const HotelSelectionCard = ({
                                                     handleHotelChange(dayIndex, 'hotelId', newValue?._id || '');
                                                 }}
                                                 renderInput={(params) => <TextField {...params} label="Select Hotel" size="small" />}
-                                                disabled={!season}
+                                                disabled={!hotelSeason}
                                             />
                                         </Grid>
 
                                         {/* Step 3: Room Type */}
                                         <Grid item xs={12} md={3}>
-                                            <FormControl fullWidth size="small" disabled={!season || allHotels.find(h => h._id === hotelSelections[dayIndex]?.hotelId)?.type === 'Homestay'}>
+                                            <FormControl fullWidth size="small" disabled={!hotelSeason || allHotels.find(h => h._id === hotelSelections[dayIndex]?.hotelId)?.type === 'Homestay'}>
                                                 <InputLabel>Room Type</InputLabel>
                                                 <Select
                                                     value={hotelSelections[dayIndex]?.roomType || ''}
@@ -184,7 +184,7 @@ const HotelSelectionCard = ({
 
                                         {/* Step 4: Meal Plan */}
                                         <Grid item xs={12} md={3}>
-                                            <FormControl fullWidth size="small" disabled={!season}>
+                                            <FormControl fullWidth size="small" disabled={!hotelSeason}>
                                                 <InputLabel>Meal Plan</InputLabel>
                                                 <Select
                                                     value={hotelSelections[dayIndex]?.mealPlan || ''}

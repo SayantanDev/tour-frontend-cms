@@ -310,6 +310,8 @@ const Query = () => {
             return (
               <TextField
                 size="small"
+                type="number"
+                autoFocus
                 value={editedRowData.cost}
                 onChange={(e) => setEditedRowData({ ...editedRowData, cost: e.target.value })}
               />
@@ -327,6 +329,8 @@ const Query = () => {
             return (
               <TextField
                 size="small"
+                type="number"
+                autoFocus
                 value={editedRowData.advance}
                 onChange={(e) => setEditedRowData({ ...editedRowData, advance: e.target.value })}
               />
