@@ -19,8 +19,8 @@ const TripDetailsCard = ({
     handleLocationChange,
     allPackages,
     onPackageSelect,
-    season,
-    handleSeasonChange,
+    carSeason,
+    handleCarSeasonChange,
     handleCarDetailsChange
 }) => {
     const [isExpanded, setIsExpanded] = useState(true);
@@ -58,7 +58,7 @@ const TripDetailsCard = ({
                             color={selectedPackage ? "primary" : "warning"}
                             variant="outlined"
                         />
-                        {season && <Chip label={`Car Season: ${season === 'off_season_price' ? 'Off Season' : 'Season'}`} size="small" color="primary" variant="outlined" />}
+                        {carSeason && <Chip label={`Car Season: ${carSeason === 'off_season_price' ? 'Off Season' : 'Season'}`} size="small" color="primary" variant="outlined" />}
                         {tripDetails.car_details?.filter(car => car.car_count > 0).map((car, idx) => (
                             <Chip key={idx} label={`${car.car_name}: ${car.car_count}`} size="small" color="success" variant="outlined" />
                         ))}
@@ -124,14 +124,14 @@ const TripDetailsCard = ({
                         </FormControl>
                     </Grid>
 
-                    {/* Season Dropdown */}
+                    {/* Car Season Dropdown */}
                     <Grid item xs={12} md={3}>
                         <FormControl fullWidth size="small">
-                            <InputLabel>Season</InputLabel>
+                            <InputLabel>Car Season</InputLabel>
                             <Select
-                                value={season}
-                                label="Season"
-                                onChange={handleSeasonChange}
+                                value={carSeason}
+                                label="Car Season"
+                                onChange={handleCarSeasonChange}
                             >
                                 <MenuItem value="off_season_price">Off Season</MenuItem>
                                 <MenuItem value="season_price">Season</MenuItem>
@@ -146,7 +146,7 @@ const TripDetailsCard = ({
                             <Select
                                 value=""
                                 label="Select Vehicles"
-                                disabled={!season}
+                                disabled={!carSeason}
                                 renderValue={() => {
                                     const selectedCars = tripDetails.car_details?.filter(car => car.car_count > 0) || [];
                                     if (selectedCars.length === 0) return 'No vehicles selected';
@@ -205,13 +205,13 @@ const TripDetailsCard = ({
                                                         {car.type}
                                                     </Typography>
                                                     {(user?.permission === 'Admin') && <Typography variant="caption" color="text.secondary">
-                                                        {season ? `Price: ₹${car.cost?.[season] || 0}` : 'Select season to view price'}
+                                                        {carSeason ? `Price: ₹${car.cost?.[carSeason] || 0}` : 'Select season to view price'}
                                                     </Typography>}
                                                 </Box>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                     <IconButton
                                                         size="small"
-                                                        disabled={!season || count <= 0}
+                                                        disabled={!carSeason || count <= 0}
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleCarDetailsChange(car.type, count - 1);
@@ -230,7 +230,7 @@ const TripDetailsCard = ({
                                                     </Typography>
                                                     <IconButton
                                                         size="small"
-                                                        disabled={!season}
+                                                        disabled={!carSeason}
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleCarDetailsChange(car.type, count + 1);

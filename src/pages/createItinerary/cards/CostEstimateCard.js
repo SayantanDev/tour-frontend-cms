@@ -12,7 +12,8 @@ const CostEstimateCard = ({
     stayInfo = {},
     tripDetails = {},
     configData = {},
-    season = '',
+    carSeason = '',
+    hotelSeason = '',
     currentMargin,
     setCurrentMargin
 }) => {
@@ -22,8 +23,8 @@ const CostEstimateCard = ({
     const totalDays = (parseInt(tripDetails.duration) || 0) + 1;
     const carDetails = tripDetails?.car_details || [];
 
-    const carTotal = calculateCarCost(configData, season, tripDetails);
-    const hotelTotal = hotelCostCalculation(hotelSelections, allHotels, season, tripDetails, stayInfo);
+    const carTotal = calculateCarCost(configData, carSeason, tripDetails);
+    const hotelTotal = hotelCostCalculation(hotelSelections, allHotels, hotelSeason, tripDetails, stayInfo);
 
     return (
         <Paper sx={{ p: 3, mb: 3 }}>
@@ -228,11 +229,11 @@ const CostEstimateCard = ({
                         <Collapse in={showBreakdown}>
                             <Box sx={{ p: 1.5, bgcolor: 'background.paper' }}>
                                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
-                                    Breakdown ({totalDays} Days - {season === 'off_season_price' ? 'Off Season' : 'Season'})
+                                    Breakdown ({totalDays} Days - {carSeason === 'off_season_price' ? 'Off Season' : 'Season'})
                                 </Typography>
                                 {carDetails.filter(car => car.car_count > 0).map((carDetail, index) => {
                                     const carConfig = configData?.additionalCosts?.car?.find(c => c.type === carDetail.car_name);
-                                    const unitPrice = carConfig?.cost?.[season] || 0;
+                                    const unitPrice = carConfig?.cost?.[carSeason] || 0;
                                     const total = unitPrice * carDetail.car_count * totalDays;
                                     return (
                                         <Box key={index} sx={{ mb: 0.5 }}>
@@ -278,7 +279,7 @@ const CostEstimateCard = ({
                         <Collapse in={showHotelBreakdown}>
                             <Box sx={{ p: 1.5, bgcolor: 'background.paper' }}>
                                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
-                                    Hotel Selection ({season === 'off_season_price' ? 'Off Season' : 'Season'})
+                                    Hotel Selection ({hotelSeason === 'off_season_price' ? 'Off Season' : 'Season'})
                                 </Typography>
                                 {Object.keys(hotelSelections).map((dayIndex, index) => {
                                     const selection = hotelSelections[dayIndex];
@@ -287,7 +288,7 @@ const CostEstimateCard = ({
                                     const roomCat = selection.roomType;
                                     const plan = selection.mealPlan?.split('_')[0].toUpperCase();
 
-                                    const breakdown = calculateSingleHotelCostWithBreakdown(selection, allHotels, season, tripDetails, stayInfo);
+                                    const breakdown = calculateSingleHotelCostWithBreakdown(selection, allHotels, hotelSeason, tripDetails, stayInfo);
 
                                     return (
                                         <Box key={dayIndex} sx={{ mb: 1.5 }}>
