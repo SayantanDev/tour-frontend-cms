@@ -543,42 +543,108 @@ export const exportQuotationPDF = async (
 
         // ── TRIP DETAILS ────────────────────────────────────────
         sectionTitle('Trip Details');
-        row('Destination', tripDetails.location);
-        row('Travel Date', tripDetails.travel_date
-            ? new Date(tripDetails.travel_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-            : '—');
-        row('Duration', tripDetails.duration
-            ? `${tripDetails.duration} Nights / ${Number(tripDetails.duration) + 1} Days`
-            : '—');
-        row('Adults (Pax)', tripDetails.pax || '—');
-        row('Kids (5+)', tripDetails.kids_above_5 || 0);
-        row('Rooms', stayInfo.rooms || '—');
+        y += 1;
+
+        // Two-column helpers
+        const colL = marginL;          // left label x
+        const colLV = marginL + 42;    // left value x
+        const colR = marginL + (contentW / 2) + 4;   // right label x
+        const colRV = colR + 38;       // right value x
+
+        const twoCol = (lblL, valL, lblR, valR) => {
+            checkPage(7);
+            // Left label
+            setC(MID); pdf.setFontSize(8); pdf.setFont(undefined, 'normal');
+            pdf.text(lblL, colL, y);
+            // Left value
+            setC(DARK); pdf.setFont(undefined, 'bold'); pdf.setFontSize(8.5);
+            pdf.text(String(valL || '—'), colLV, y);
+            // Right label (only if provided)
+            if (lblR) {
+                setC(MID); pdf.setFontSize(8); pdf.setFont(undefined, 'normal');
+                pdf.text(lblR, colR, y);
+                setC(DARK); pdf.setFont(undefined, 'bold'); pdf.setFontSize(8.5);
+                pdf.text(String(valR || '—'), colRV, y);
+            }
+            pdf.setFont(undefined, 'normal');
+            y += 5.5;
+        };
 
         const activeCars = (tripDetails.car_details || []).filter(c => c.car_count > 0);
-        if (activeCars.length) {
-            row('Vehicles', activeCars.map(c => `${c.car_name} × ${c.car_count}`).join(', '));
-        }
-        if (selectedPackage?.label) row('Package', selectedPackage.label);
+        const vehicleStr = activeCars.length
+            ? activeCars.map(c => `${c.car_name} ×${c.car_count}`).join(', ')
+            : '—';
+
+        twoCol(
+            'Travel Date',
+            tripDetails.travel_date
+                ? new Date(tripDetails.travel_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                : '—',
+            'Rooms',
+            stayInfo.rooms || '—'
+        );
+        twoCol(
+            'Duration',
+            tripDetails.duration
+                ? `${tripDetails.duration} Nights / ${Number(tripDetails.duration) + 1} Days`
+                : '—',
+            'Vehicles',
+            vehicleStr
+        );
+        twoCol(
+            'Adults (Pax)',
+            tripDetails.pax || '—',
+            'Package',
+            selectedPackage?.label || '—'
+        );
+        twoCol(
+            'Kids (5+)',
+            tripDetails.kids_above_5 || 0,
+            null, null   // no right column for last row
+        );
         y += 2;
+
 
         // ── ITINERARY ───────────────────────────────────────────
         if (itinerary && itinerary.length > 0) {
             sectionTitle('Day-by-Day Itinerary');
             itinerary.forEach((item, idx) => {
-                checkPage(16);
-                fillC(LIGHT_BG);
-                pdf.rect(marginL, y - 1, contentW, 7, 'F');
-                setC(PRIMARY); pdf.setFontSize(8.5); pdf.setFont(undefined, 'bold');
-                pdf.text(`Day ${idx + 1}${item.title ? ` — ${item.title}` : ''}`, marginL + 2, y + 4);
-                pdf.setFont(undefined, 'normal');
-                y += 8;
-                if (item.description) {
-                    setC(DARK); pdf.setFontSize(8);
-                    const lines = pdf.splitTextToSize(item.description, contentW - 4);
-                    lines.forEach(line => { checkPage(6); pdf.text(line, marginL + 4, y); y += 5; });
+                const itemText = typeof item === 'string' ? item : (item?.tagValue || item?.tagName || '');
+                const label = `Day ${idx + 1}:  `;
+                const labelWidth = pdf.getStringUnitWidth(label) * 8.5 / pdf.internal.scaleFactor;
+
+                // Word-wrap the content to fit after the label on first line
+                const firstLineW = contentW - 6 - labelWidth;
+                const bodyLines = itemText
+                    ? pdf.splitTextToSize(itemText, firstLineW > 40 ? firstLineW : contentW - 6)
+                    : [];
+
+                const rowH = Math.max(7, 5 * (bodyLines.length || 1) + 2);
+                checkPage(rowH + 2);
+
+                // Alternating light bg
+                if (idx % 2 === 0) {
+                    fillC(LIGHT_BG);
+                    pdf.rect(marginL, y - 1, contentW, rowH, 'F');
                 }
-                y += 2;
+
+                // "Day N:" bold dark-green label
+                setC(DARK_GREEN); pdf.setFontSize(8.5); pdf.setFont(undefined, 'bold');
+                pdf.text(label, marginL + 2, y + 4);
+
+                // Content text — starts right after the label on the same line
+                if (bodyLines.length > 0) {
+                    setC(DARK); pdf.setFontSize(8); pdf.setFont(undefined, 'normal');
+                    pdf.text(bodyLines[0], marginL + 2 + labelWidth, y + 4);
+                    // Subsequent wrapped lines (if any) indented to match content start
+                    bodyLines.slice(1).forEach((line, li) => {
+                        pdf.text(line, marginL + 2 + labelWidth, y + 4 + (li + 1) * 5);
+                    });
+                }
+                pdf.setFont(undefined, 'normal');
+                y += rowH + 1;
             });
+            y += 2;
         }
 
         // ── HOTEL SELECTIONS ────────────────────────────────────
@@ -609,29 +675,6 @@ export const exportQuotationPDF = async (
             y += 2;
         }
 
-        // ── COST SUMMARY ────────────────────────────────────────
-        sectionTitle('Cost Summary');
-        const hCost = hotelCostCalculation(hotelSelections, allHotels, hotelSeason, tripDetails, stayInfo);
-        const cCost = calculateCarCost(configData, carSeason, tripDetails);
-        const margin = Number(currentMargin) || 0;
-        const totalDays = (Number(tripDetails.duration) || 0) + 1;
-
-        [
-            ['Hotel Cost', `₹ ${hCost.toLocaleString('en-IN')}`],
-            ['Transport Cost', `₹ ${cCost.toLocaleString('en-IN')}`],
-            ['Margin', `${margin}%`],
-        ].forEach(([lbl, val]) => {
-            checkPage(7);
-            setC(MID); pdf.setFontSize(8.5);
-            pdf.text(lbl, marginL + 4, y);
-            setC(DARK); pdf.setFont(undefined, 'bold');
-            pdf.text(val, marginR, y, { align: 'right' });
-            pdf.setFont(undefined, 'normal');
-            y += 6;
-        });
-
-        hRule(DARK_GREEN);
-
         checkPage(14);
         fillC(DARK_GREEN);
         pdf.rect(marginL, y, contentW, 11, 'F');
@@ -641,22 +684,22 @@ export const exportQuotationPDF = async (
         pdf.setFont(undefined, 'normal');
         y += 14;
 
-        if (tripDetails.pax && Number(tripDetails.pax) > 0) {
-            checkPage(7);
-            setC(MID); pdf.setFontSize(8);
-            const perPerson = Math.round(cost / Number(tripDetails.pax));
-            pdf.text(
-                `Per person (${tripDetails.pax} adults): ₹ ${perPerson.toLocaleString('en-IN')}`,
-                marginR, y, { align: 'right' }
-            );
-            y += 5;
-        }
+        // if (tripDetails.pax && Number(tripDetails.pax) > 0) {
+        //     checkPage(7);
+        //     setC(MID); pdf.setFontSize(8);
+        //     const perPerson = Math.round(cost / Number(tripDetails.pax));
+        //     pdf.text(
+        //         `Per person (${tripDetails.pax} adults): ₹ ${perPerson.toLocaleString('en-IN')}`,
+        //         marginR, y, { align: 'right' }
+        //     );
+        //     y += 5;
+        // }
 
-        if (tripDetails.duration) {
-            setC(ACCENT); pdf.setFontSize(8);
-            pdf.text(`${tripDetails.duration} Nights · ${totalDays} Days · ${tripDetails.location}`, marginL, y);
-            y += 6;
-        }
+        // if (tripDetails.duration) {
+        //     setC(ACCENT); pdf.setFontSize(8);
+        //     pdf.text(`${tripDetails.duration} Nights · ${totalDays} Days · ${tripDetails.location}`, marginL, y);
+        //     y += 6;
+        // }
 
         // ── TERMS ───────────────────────────────────────────────
         checkPage(22);
