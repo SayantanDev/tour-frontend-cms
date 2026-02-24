@@ -65,6 +65,8 @@ const TripDetailsCard = ({
                         {tripDetails.duration > 0 && <Chip label={`${tripDetails.duration} Nights & ${parseInt(tripDetails.duration) + 1} Days`} size="small" color="primary" variant="outlined" />}
                         {stayInfo.rooms > 0 && <Chip label={`Rooms: ${stayInfo.rooms}`} size="small" color="primary" variant="outlined" />}
                         {stayInfo.hotel && <Chip label={`Hotel: ${stayInfo.hotel}`} size="small" color="primary" variant="outlined" />}
+                        {tripDetails.pickup_location && tripDetails.pickup_location !== 'NJP / IXB' && <Chip label={`Pickup: ${tripDetails.pickup_location}`} size="small" color="secondary" variant="outlined" />}
+                        {tripDetails.dropoff_location && tripDetails.dropoff_location !== 'NJP / IXB' && <Chip label={`Dropoff: ${tripDetails.dropoff_location}`} size="small" color="secondary" variant="outlined" />}
                     </Stack>
                 </Box>
                 <Button
@@ -322,6 +324,28 @@ const TripDetailsCard = ({
                                     ]}
                             </Select>
                         </FormControl>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            label="Pickup Location"
+                            name="pickup_location"
+                            value={tripDetails.pickup_location || ''}
+                            onChange={handleTripDetailsChange}
+                            placeholder="NJP / IXB"
+                        />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            label="Dropoff Location"
+                            name="dropoff_location"
+                            value={tripDetails.dropoff_location || ''}
+                            onChange={handleTripDetailsChange}
+                            placeholder="NJP / IXB"
+                        />
                     </Grid>
                     <Grid item xs={12}>
                         <TextField
