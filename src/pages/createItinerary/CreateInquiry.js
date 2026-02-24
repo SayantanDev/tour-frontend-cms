@@ -90,6 +90,8 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         keywords: '',
         travel_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
         duration: '',
+        pickup_location: 'NJP / IXB',
+        dropoff_location: 'NJP / IXB',
     });
 
     const [selectedPackage, setSelectedPackage] = useState(null);
@@ -182,6 +184,8 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             keywords: '',
             travel_date: (inquiry.travel_date || inquiry.arrival_date) ? new Date(inquiry.travel_date || inquiry.arrival_date).toISOString().split('T')[0] : '',
             duration: inquiry.duration?.toString() || '',
+            pickup_location: inquiry.pickup_location || 'NJP / IXB',
+            dropoff_location: inquiry.dropoff_location || 'NJP / IXB',
         });
 
         // Load stay info
@@ -564,6 +568,8 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             keywords: '',
             travel_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
             duration: '0',
+            pickup_location: 'NJP / IXB',
+            dropoff_location: 'NJP / IXB',
         });
         setSelectedPackage(null);
         setHotelSelections({});

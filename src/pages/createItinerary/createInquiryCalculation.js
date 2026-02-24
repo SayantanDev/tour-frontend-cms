@@ -240,6 +240,8 @@ export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, st
             hotel: stayInfo.hotel,
         },
         travel_date: tripDetails.travel_date || '',
+        pickup_location: tripDetails.pickup_location || 'NJP / IXB',
+        dropoff_location: tripDetails.dropoff_location || 'NJP / IXB',
         lead_source: 'website',
         lead_stage: isDraft ? 'Draft' : 'New',
         verified: !isDraft,
@@ -465,8 +467,8 @@ export const exportQuotationPDF = async (
 
             // Three contact columns — white text
             setC(WHITE); pdf.setFontSize(8); pdf.setFont(undefined, 'normal');
-            pdf.text('\u{1F310} www.easotrip.com', marginL + 10, H - 8);
-            pdf.text('\u{1F4DE} +91 70017 24300', W / 2, H - 8, { align: 'center' });
+            pdf.text('\u2295  www.easotrip.com', marginL + 10, H - 8);
+            pdf.text('\u260E  +91 70017 24300', W / 2, H - 8, { align: 'center' });
             pdf.text('\u2709  easogroup@gmail.com', marginR - 10, H - 8, { align: 'right' });
 
             // Thin white separator line above footer
@@ -572,7 +574,7 @@ export const exportQuotationPDF = async (
 
         const activeCars = (tripDetails.car_details || []).filter(c => c.car_count > 0);
         const vehicleStr = activeCars.length
-            ? activeCars.map(c => `${c.car_name} ×${c.car_count}`).join(', ')
+            ? activeCars.map(c => `${c.car_name} (${c.car_count})`).join(', ')
             : '—';
 
         twoCol(
@@ -580,34 +582,35 @@ export const exportQuotationPDF = async (
             tripDetails.travel_date
                 ? new Date(tripDetails.travel_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
                 : '—',
-            'Rooms',
-            stayInfo.rooms || '—'
+            'Adults (Pax)',
+            tripDetails.pax || '—',
         );
         twoCol(
             'Duration',
             tripDetails.duration
                 ? `${tripDetails.duration} Nights / ${Number(tripDetails.duration) + 1} Days`
                 : '—',
-            'Vehicles',
-            vehicleStr
-        );
-        twoCol(
-            'Adults (Pax)',
-            tripDetails.pax || '—',
-            'Package',
-            selectedPackage?.label || '—'
-        );
-        twoCol(
             'Kids (5+)',
             tripDetails.kids_above_5 || 0,
-            null, null   // no right column for last row
+        );
+        twoCol(
+            'Pickup Location',
+            tripDetails.pickup_location || '—',
+            'Rooms',
+            stayInfo.rooms || '—'
+        );
+        twoCol(
+            'Dropoff Location',
+            tripDetails.dropoff_location || '—',
+            'Vehicles',
+            vehicleStr || '—'
         );
         y += 2;
 
 
         // ── ITINERARY ───────────────────────────────────────────
         if (itinerary && itinerary.length > 0) {
-            sectionTitle('Day-by-Day Itinerary');
+            sectionTitle('Short Itinerary');
             itinerary.forEach((item, idx) => {
                 const itemText = typeof item === 'string' ? item : (item?.tagValue || item?.tagName || '');
                 const label = `Day ${idx + 1}:  `;
@@ -652,7 +655,7 @@ export const exportQuotationPDF = async (
         if (hotelDays.length > 0) {
             sectionTitle('Hotel Selections');
             checkPage(8);
-            fillC(DARK_GREEN); pdf.rect(marginL, y - 1, contentW, 6, 'F');
+            fillC([100, 100, 100]); pdf.rect(marginL, y - 1, contentW, 6, 'F');
             setC(WHITE); pdf.setFontSize(7.5); pdf.setFont(undefined, 'bold');
             pdf.text('Night', marginL + 2, y + 3.5);
             pdf.text('Hotel', marginL + 20, y + 3.5);
@@ -684,27 +687,10 @@ export const exportQuotationPDF = async (
         fillC(DARK_GREEN);
         pdf.rect(marginL, y, contentW, 11, 'F');
         setC(WHITE); pdf.setFontSize(11); pdf.setFont(undefined, 'bold');
-        pdf.text('TOTAL QUOTED PRICE', marginL + 4, y + 7.5);
-        pdf.text(`₹ ${cost.toLocaleString('en-IN')}`, marginR - 6, y + 7.5, { align: 'right' });
+        pdf.text('TOTAL QUOTED PRICE : ', marginL + 4, y + 7.5);
+        pdf.text(`INR ${cost.toLocaleString('en-IN')}`, marginR - 27, y + 7.5);
         pdf.setFont(undefined, 'normal');
         y += 14;
-
-        // if (tripDetails.pax && Number(tripDetails.pax) > 0) {
-        //     checkPage(7);
-        //     setC(MID); pdf.setFontSize(8);
-        //     const perPerson = Math.round(cost / Number(tripDetails.pax));
-        //     pdf.text(
-        //         `Per person (${tripDetails.pax} adults): ₹ ${perPerson.toLocaleString('en-IN')}`,
-        //         marginR, y, { align: 'right' }
-        //     );
-        //     y += 5;
-        // }
-
-        // if (tripDetails.duration) {
-        //     setC(ACCENT); pdf.setFontSize(8);
-        //     pdf.text(`${tripDetails.duration} Nights · ${totalDays} Days · ${tripDetails.location}`, marginL, y);
-        //     y += 6;
-        // }
 
         // ── TERMS ───────────────────────────────────────────────
         checkPage(22);
