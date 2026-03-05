@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import { Save, Clear, PictureAsPdf, Email, SaveAlt, Edit as EditIcon } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
-import { getAllPackages } from '../../api/packageAPI';
+import { getAllPackages, createPackage } from '../../api/packageAPI';
 import { getAllHotels } from '../../api/hotelAPI';
 import { setAllHotels } from '../../reduxcomponents/slices/hotelsSlice';
 import { setAllPackages } from '../../reduxcomponents/slices/packagesSlice';
@@ -241,7 +241,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
     // Update itinerary based on duration for custom packages
     useEffect(() => {
-        if (!selectedPackage) {
+        if (!selectedPackage || selectedPackage._id === 'custom') {
             setItinerary(prev => updateItineraryByDuration(prev, tripDetails.duration));
         }
     }, [tripDetails.duration, selectedPackage]);
@@ -308,11 +308,11 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         setShowSuggestions(false);
 
         if (!pkg || pkg._id === 'custom') {
-            setSelectedPackage(null);
-            setItinerary([]);
+            setSelectedPackage({ _id: 'custom', label: 'Custom Package', location: tripDetails.location });
+            // Don't clear itinerary here, let the useEffect handle it based on duration
+            // or keep existing if switching back
             setHotelSelections({});
             setCost(0);
-            setTripDetails(prev => ({ ...prev, duration: '0' }));
             return;
         }
 
@@ -450,7 +450,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
         setLoading(true);
 
-        const payload = buildPayload(isDraft);
+        let payload = buildPayload(isDraft);
         const QRY_URL = `${process.env.REACT_APP_BASE_URL}/queries`;
 
         //important code
@@ -481,6 +481,97 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 error.response?.data?.message || 'Failed to save inquiry',
                 'error'
             );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCreatePackage = async () => {
+        if (!guestInfo.guest_name) {
+            showSnackbar('Please enter guest name first', 'warning');
+            return;
+        }
+        if (!tripDetails.location) {
+            showSnackbar('Please select a location first', 'warning');
+            return;
+        }
+        if (!tripDetails.duration || parseInt(tripDetails.duration) === 0) {
+            showSnackbar('Please enter trip duration (nights)', 'warning');
+            return;
+        }
+
+        setLoading(true);
+        console.log('Creating custom package with payload:', {
+            guestName: guestInfo.guest_name,
+            location: tripDetails.location,
+            duration: tripDetails.duration,
+            itineraryCount: itinerary.length
+        });
+
+        try {
+            const customPackagePayload = {
+                label: `Custom Package - ${guestInfo.guest_name}`,
+                location: tripDetails.location || '',
+                duration: tripDetails.duration || '0',
+                type: 'Custom',
+                url: `custom-package-${Date.now()}`,
+                isActive: false,
+                image: '',
+                tags: [],
+                meta: { title: '', description: '', keywords: [] },
+                shortInclusions: [],
+                details: {
+                    header: { h1: '', h2: '', h3: '' },
+                    overview: [],
+                    covering: [],
+                    shortItinerary: itinerary.map(item => ({
+                        tagName: '',
+                        tagValue: item || ''
+                    })),
+                    itinerary: [],
+                    howToReach: {
+                        para: [],
+                        itineraryReach: []
+                    },
+                    cost: {
+                        singleCost: '',
+                        multipleCost: [],
+                        daysCost: [],
+                        valueCost: [],
+                        inclusions: [],
+                        exclusions: []
+                    },
+                    thingsToCarry: {
+                        Basics: [],
+                        Documents: [],
+                        Clothing: [],
+                        Medicine: [],
+                        Toiletries: [],
+                        Accessories: [],
+                    }
+                }
+            };
+
+            const pkgRes = await createPackage(customPackagePayload);
+            const newPkg = pkgRes.data?.data;
+
+            if (newPkg && newPkg._id) {
+                // Refresh packages list to include the new one first
+                const packagesRes = await getAllPackages();
+                dispatch(setAllPackages(packagesRes.data));
+
+                // Then select the new package (find it in the fresh list for consistency)
+                const freshPkg = packagesRes.data.find(p => p._id === newPkg._id);
+                setSelectedPackage(freshPkg || newPkg);
+
+                showSnackbar('Custom package created and selected!', 'success');
+            } else {
+                throw new Error('Could not retrieve new package ID');
+            }
+        } catch (err) {
+            console.error('Error creating custom package:', err);
+            const errorMsg = err.response?.data?.message || err.message || 'Failed to create custom package';
+            showSnackbar(errorMsg, 'error');
         } finally {
             setLoading(false);
         }
@@ -737,12 +828,25 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
                 {/* Action Buttons */}
                 <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+                    {(!selectedPackage || selectedPackage?._id === 'custom') && (
+                        <Button
+                            variant="contained"
+                            color="secondary"
+                            size="small"
+                            startIcon={<Save />}
+                            onClick={handleCreatePackage}
+                            disabled={loading}
+                            fullWidth
+                        >
+                            {loading ? 'Creating...' : 'Create Package'}
+                        </Button>
+                    )}
                     <Button
                         variant="contained"
                         size="small"
                         startIcon={isEditMode ? <EditIcon /> : <Save />}
                         onClick={() => handleSubmit(false)}
-                        disabled={loading}
+                        disabled={loading || !selectedPackage || selectedPackage?._id === 'custom'}
                         fullWidth
                     >
                         {loading ? 'Saving...' : isEditMode ? 'Update Inquiry' : 'Create Inquiry'}
