@@ -70,6 +70,8 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     const [emailAddress, setEmailAddress] = useState('');
     const [emailSending, setEmailSending] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [itineraryDialogOpen, setItineraryDialogOpen] = useState(false);
+    const [detailedItinerary, setDetailedItinerary] = useState('');
 
     // Edit mode
     const isEditMode = Boolean(existingInquiry);
@@ -496,6 +498,11 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     };
 
     const handleExportPDF = () => {
+        setItineraryDialogOpen(true);
+    };
+
+    const handleConfirmExportPDF = () => {
+        setItineraryDialogOpen(false);
         exportQuotationPDF(
             {
                 guestInfo,
@@ -510,6 +517,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 cost,
                 configData,
                 currentMargin,
+                detailedItinerary,
             },
             setLoading,
             showSnackbar
@@ -758,6 +766,36 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     </Button>
                 </Box>
             </Box>
+
+            {/* Detailed Itinerary Dialog (before PDF export) */}
+            <Dialog open={itineraryDialogOpen} onClose={() => setItineraryDialogOpen(false)} maxWidth="md" fullWidth>
+                <DialogTitle>Detailed Itinerary</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        fullWidth
+                        multiline
+                        minRows={8}
+                        maxRows={20}
+                        label="Detailed Itinerary"
+                        value={detailedItinerary}
+                        onChange={(e) => setDetailedItinerary(e.target.value)}
+                        sx={{ mt: 2 }}
+                        placeholder="Paste or type the detailed itinerary here..."
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setItineraryDialogOpen(false)}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleConfirmExportPDF}
+                        variant="contained"
+                        startIcon={<PictureAsPdf />}
+                    >
+                        Export PDF
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {/* Email Dialog */}
             <Dialog open={emailDialogOpen} onClose={() => setEmailDialogOpen(false)} maxWidth="sm" fullWidth>
