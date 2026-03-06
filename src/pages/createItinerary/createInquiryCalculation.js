@@ -396,6 +396,148 @@ export const calculateCarCost = (configData, season, tripDetails) => {
 };
 
 /**
+ * Parses and renders a formatted detailed itinerary into the PDF.
+ * Returns the updated `y` cursor position.
+ *
+ * Line-type detection (by trimmed prefix):
+ *   "Day "          → bold dark-green day header
+ *   starts with ⚠   → warning/note highlight box
+ *   starts with ● or • → main bullet (filled circle)
+ *   starts with ○    → sub-bullet (open circle, indented)
+ *   "Overnight Stay:" → bold overnight-stay line
+ *   anything else    → regular body text
+ */
+export const formatDetailedItinerary = (pdf, text, opts) => {
+    const {
+        marginL, contentW, DARK, DARK_GREEN, MID,
+        WHITE, LIGHT_BG,
+        checkPage, y: startY,
+    } = opts;
+
+    let y = startY;
+
+    const setC = (c) => pdf.setTextColor(...c);
+    const fillC = (c) => pdf.setFillColor(...c);
+    const drawC = (c) => pdf.setDrawColor(...c);
+
+    const rawLines = text.trim().split(/\r?\n/);
+
+    rawLines.forEach((rawLine) => {
+        const trimmed = rawLine.trim();
+        if (!trimmed) {
+            y += 2; // blank line gap
+            return;
+        }
+
+        // ── Day header ──────────────────────────────────────────
+        if (/^Day\s+\d+/i.test(trimmed)) {
+            checkPage(12);
+            y += 3;
+            setC(DARK_GREEN);
+            pdf.setFontSize(9);
+            pdf.setFont(undefined, 'bold');
+            const wrapped = pdf.splitTextToSize(trimmed, contentW - 4);
+            wrapped.forEach((wl) => {
+                pdf.text(wl, marginL + 2, y);
+                // underline
+                const lineW = pdf.getStringUnitWidth(wl) * 9 / pdf.internal.scaleFactor;
+                drawC(DARK_GREEN);
+                pdf.setLineWidth(0.3);
+                pdf.line(marginL + 2, y + 0.8, marginL + 2 + lineW, y + 0.8);
+                y += 6;
+            });
+            pdf.setFont(undefined, 'normal');
+            return;
+        }
+
+        // ── Warning / Note line ──────────────────────────────────
+        if (trimmed.startsWith('⚠') || trimmed.startsWith('\u26A0') || trimmed.toLowerCase().startsWith('note:')) {
+            const noteText = trimmed.replace(/^[⚠\u26A0]\s*/, '');
+            const wrapped = pdf.splitTextToSize(noteText, contentW - 16);
+            const boxH = Math.max(7, wrapped.length * 5 + 3);
+            checkPage(boxH + 3);
+            // light amber background
+            fillC([255, 243, 205]);
+            drawC([255, 193, 7]);
+            pdf.setLineWidth(0.4);
+            pdf.roundedRect(marginL + 2, y - 1, contentW - 4, boxH, 1, 1, 'FD');
+            // ⚠ symbol
+            pdf.setFontSize(8); pdf.setFont(undefined, 'bold');
+            setC([133, 77, 14]);
+            pdf.text('⚠', marginL + 5, y + 4);
+            // note text
+            pdf.setFont(undefined, 'normal'); pdf.setFontSize(7.5);
+            wrapped.forEach((wl, wi) => {
+                pdf.text(wl, marginL + 11, y + 4 + wi * 5);
+            });
+            y += boxH + 3;
+            pdf.setFont(undefined, 'normal');
+            return;
+        }
+
+        // ── Overnight Stay ───────────────────────────────────────
+        if (/^Overnight\s+Stay/i.test(trimmed)) {
+            checkPage(8);
+            y += 2;
+            // thin rule above
+            drawC([200, 200, 200]); pdf.setLineWidth(0.2);
+            pdf.line(marginL, y - 1, marginL + contentW, y - 1);
+            setC(DARK_GREEN); pdf.setFontSize(8.5); pdf.setFont(undefined, 'bolditalic');
+            pdf.text(trimmed, marginL + 2, y + 3);
+            y += 8;
+            pdf.setFont(undefined, 'normal');
+            return;
+        }
+
+        // ── Main bullet (● or •) ─────────────────────────────────
+        if (trimmed.startsWith('●') || trimmed.startsWith('•')) {
+            const bulletText = trimmed.replace(/^[●•]\s*/, '');
+            const wrapW = contentW - 14;
+            const wrapped = pdf.splitTextToSize(bulletText, wrapW);
+            const rowH = Math.max(6, wrapped.length * 5 + 1);
+            checkPage(rowH + 1);
+            setC(DARK_GREEN); pdf.setFontSize(10); pdf.setFont(undefined, 'normal');
+            pdf.text('●', marginL + 4, y + 3.5);
+            setC(DARK); pdf.setFontSize(8);
+            wrapped.forEach((wl, wi) => {
+                pdf.text(wl, marginL + 10, y + 3.5 + wi * 5);
+            });
+            y += rowH + 1;
+            return;
+        }
+
+        // ── Sub-bullet (○) ───────────────────────────────────────
+        if (trimmed.startsWith('○')) {
+            const subText = trimmed.replace(/^○\s*/, '');
+            const wrapW = contentW - 22;
+            const wrapped = pdf.splitTextToSize(subText, wrapW);
+            const rowH = Math.max(6, wrapped.length * 5 + 1);
+            checkPage(rowH + 1);
+            setC(MID); pdf.setFontSize(9); pdf.setFont(undefined, 'normal');
+            pdf.text('○', marginL + 10, y + 3.5);
+            setC(DARK); pdf.setFontSize(7.5);
+            wrapped.forEach((wl, wi) => {
+                pdf.text(wl, marginL + 17, y + 3.5 + wi * 5);
+            });
+            y += rowH + 1;
+            return;
+        }
+
+        // ── Regular body text ────────────────────────────────────
+        const wrapped = pdf.splitTextToSize(trimmed, contentW - 6);
+        const rowH = Math.max(5, wrapped.length * 5);
+        checkPage(rowH + 1);
+        setC(DARK); pdf.setFontSize(8); pdf.setFont(undefined, 'normal');
+        wrapped.forEach((wl, wi) => {
+            pdf.text(wl, marginL + 3, y + wi * 5);
+        });
+        y += rowH + 2;
+    });
+
+    return y;
+};
+
+/**
  * Generates and downloads a professional A4 PDF quotation.
 **/
 export const exportQuotationPDF = async (
@@ -412,6 +554,7 @@ export const exportQuotationPDF = async (
         cost,
         configData,
         currentMargin,
+        detailedItinerary,
     },
     setLoading,
     showSnackbar
@@ -650,7 +793,17 @@ export const exportQuotationPDF = async (
             y += 2;
         }
 
-        // ── HOTEL SELECTIONS ────────────────────────────────────
+        // ── DETAILED ITINERARY ──────────────────────────────────
+        if (detailedItinerary && detailedItinerary.trim()) {
+            sectionTitle('Detailed Itinerary');
+            y = formatDetailedItinerary(pdf, detailedItinerary, {
+                marginL, contentW, DARK, DARK_GREEN, MID,
+                WHITE, LIGHT_BG,
+                checkPage, y,
+            });
+            y += 4;
+        }
+
         const hotelDays = Object.keys(hotelSelections).filter(d => hotelSelections[d]?.hotelId);
         if (hotelDays.length > 0) {
             sectionTitle('Hotel Selections');
