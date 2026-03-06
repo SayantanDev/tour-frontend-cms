@@ -248,7 +248,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         }
     }, [tripDetails.duration, selectedPackage]);
 
-    // Auto-calculate Total Cost based on Hotel, Car and Margin selections
     useEffect(() => {
         const currentItinerary = selectedPackage?._id === 'custom' ? itinerary : (selectedPackage?.details?.shortItinerary || []);
 
@@ -268,19 +267,14 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             const hCost = hotelCostCalculation(hotelSelections, allHotels, hotelSeason, tripDetails, stayInfo);
             const cCost = calculateCarCost(configData, carSeason, tripDetails);
             tCost = totalCost(hCost, cCost, currentMargin, northSikkimMargin);
-            if (tCost > 0) {
-                setCost(tCost);
-            }
+            setCost(tCost);
         } else if (tripDetails.location === 'Sandakphu') {
             const hCostSandakphu = hotelCostCalculation(hotelSelections, allHotels, hotelSeason, tripDetails, stayInfo);
             const cCostSandakphu = calculateCarCost(configData, carSeason, tripDetails);
             tCost = totalCostSandakphu(hCostSandakphu, cCostSandakphu, currentMargin, tripDetails, selectedPackage);
-
-            if (tCost > 0) {
-                setCost(tCost);
-            }
+            setCost(tCost);
         }
-    }, [hotelSelections, tripDetails.car_details, tripDetails.duration, carSeason, hotelSeason, currentMargin, allHotels, configData, stayInfo, tripDetails.location, itinerary, selectedPackage]);
+    }, [hotelSelections, tripDetails.car_details, tripDetails.duration, tripDetails.pax, tripDetails.kids_above_5, carSeason, hotelSeason, currentMargin, allHotels, configData, stayInfo, stayInfo.rooms, tripDetails.location, itinerary, selectedPackage]);
 
     const handleGuestInfoChange = (e) => {
         const { name, value } = e.target;
