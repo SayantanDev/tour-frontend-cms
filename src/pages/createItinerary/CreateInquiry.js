@@ -249,9 +249,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     }, [tripDetails.duration, selectedPackage]);
 
     useEffect(() => {
-        const currentItinerary = selectedPackage?._id === 'custom' ? itinerary : (selectedPackage?.details?.shortItinerary || []);
-
-        const hasNorthSikkimInItinerary = currentItinerary.some(item => {
+        const hasNorthSikkimInItinerary = itinerary.some(item => {
             const val = typeof item === 'string' ? item : (item?.tagValue || item?.tagName || '');
             return val?.toLowerCase().includes("lachung") || val?.toLowerCase().includes("lachen");
         });
