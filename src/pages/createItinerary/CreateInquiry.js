@@ -19,6 +19,7 @@ import TripDetailsCard from './cards/TripDetailsCard';
 import ItineraryCard from './cards/ItineraryCard';
 import HotelSelectionCard from './cards/HotelSelectionCard';
 import CostEstimateCard from './cards/CostEstimateCard';
+import InquiryPreview from './InquiryPreview';
 import {
     filterPackages,
     calculatePackageCost,
@@ -72,6 +73,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [itineraryDialogOpen, setItineraryDialogOpen] = useState(false);
     const [detailedItinerary, setDetailedItinerary] = useState('');
+    const [previewOpen, setPreviewOpen] = useState(false);
 
     // Edit mode
     const isEditMode = Boolean(existingInquiry);
@@ -583,6 +585,12 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         handleSubmit(true);
     };
 
+    const handleOpenPreview = () => {
+        if (validateForm()) {
+            setPreviewOpen(true);
+        }
+    };
+
     const handleExportPDF = () => {
         setItineraryDialogOpen(true);
     };
@@ -847,7 +855,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                         variant="contained"
                         size="small"
                         startIcon={isEditMode ? <EditIcon /> : <Save />}
-                        onClick={() => handleSubmit(false)}
+                        onClick={handleOpenPreview}
                         disabled={loading || !selectedPackage || selectedPackage?._id === 'custom'}
                         fullWidth
                     >
@@ -921,6 +929,52 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     >
                         {emailSending ? 'Sending...' : 'Send Email'}
                     </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Inquiry Preview Dialog */}
+            <Dialog open={previewOpen} onClose={() => setPreviewOpen(false)} maxWidth="md" fullWidth>
+                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#f5f5f5' }}>
+                    Preview Inquiry Details
+                    <Box>
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<PictureAsPdf />}
+                            onClick={handleConfirmExportPDF}
+                            sx={{ mr: 1 }}
+                        >
+                            Download PDF
+                        </Button>
+                        <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={<Save />}
+                            onClick={() => {
+                                setPreviewOpen(false);
+                                handleSubmit(false);
+                            }}
+                        >
+                            Confirm & {isEditMode ? 'Update' : 'Create'}
+                        </Button>
+                    </Box>
+                </DialogTitle>
+                <DialogContent sx={{ p: 0, bgcolor: '#eee' }}>
+                    <InquiryPreview
+                        guestInfo={guestInfo}
+                        tripDetails={tripDetails}
+                        stayInfo={stayInfo}
+                        itinerary={itinerary}
+                        hotelSelections={hotelSelections}
+                        allHotels={allHotels}
+                        selectedPackage={selectedPackage}
+                        cost={cost}
+                        detailedItinerary={detailedItinerary}
+                        onDetailedItineraryChange={setDetailedItinerary}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setPreviewOpen(false)}>Back to Edit</Button>
                 </DialogActions>
             </Dialog>
 
