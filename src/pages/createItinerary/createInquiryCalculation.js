@@ -74,7 +74,7 @@ export const calculatePackageCost = (packageDetails, tripDetails) => {
 };
 
 export const totalCost = (hotelCost, carCost, margin, northSikkimMargin) => {
-    const subtotal = (parseFloat(hotelCost) || 0) + (parseFloat(carCost) || 0) + parseFloat(northSikkimMargin);
+    const subtotal = (parseFloat(hotelCost) || 0) + (parseFloat(carCost) || 0) + parseFloat(northSikkimMargin || 0);
     const marginAmount = subtotal * (parseFloat(margin) / 100 || 0);
     return Math.round(subtotal + marginAmount);
 };
@@ -382,15 +382,29 @@ export const calculateCarCost = (configData, season, tripDetails) => {
     const oneNightPerDayCarAmount = 4000;
     const twoNightPerDayCarAmount = 8500;
     const threeNightPerDayCarAmount = 13500;
+
     if (!carDetails || !configData) return 0;
+
     const totalDays = (parseInt(tripDetails.duration) || 0) + 1;
+
     if (tripDetails.location === 'Sandakphu') {
         return totalDays === 3 ? (twoNightPerDayCarAmount * carDetails[0].car_count) :
             totalDays === 4 ? (threeNightPerDayCarAmount * carDetails[0].car_count) : (oneNightPerDayCarAmount * carDetails[0].car_count);
     }
+
     return carDetails.reduce((acc, carDetail) => {
         const carConfig = configData?.additionalCosts?.car?.find(c => c.type === carDetail.car_name);
-        const unitPrice = carConfig?.cost?.[season] || 0;
+        let unitPrice = carConfig?.cost?.[season] || 0;
+
+        // Restore Darjeeling Logic
+        if (tripDetails.location === 'Darjeeling') {
+            if (carDetail.car_name === 'Bolero') {
+                unitPrice = season === 'off_season_price' ? 3500 : 4000;
+            } else if (carDetail.car_name === 'Innova') {
+                unitPrice = season === 'off_season_price' ? 4000 : 4500;
+            }
+        }
+
         return acc + (unitPrice * carDetail.car_count * totalDays);
     }, 0);
 };

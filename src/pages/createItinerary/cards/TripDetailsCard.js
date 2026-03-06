@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-    Paper, Box, Typography, Button, Grid, TextField, Autocomplete, FormControl, InputLabel, Select, MenuItem, Chip, Stack, IconButton, List, ListItem, ListItemText, Collapse
+    Paper, Box, Typography, Button, Grid, TextField, Autocomplete, FormControl, InputLabel, Select, MenuItem, Chip, Stack, IconButton, List, ListItem, ListItemText, Collapse, Checkbox, FormControlLabel
 } from '@mui/material';
 import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 
@@ -32,8 +32,8 @@ const TripDetailsCard = ({
     };
 
     return (
-        <Paper sx={{ p: 3, mb: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: isExpanded ? 2 : 0 }}>
+        <Paper sx={{ p: 3, mb: 3, borderRadius: 2, boxShadow: '0 4px 20px rgba(0,0,0,0.08)', border: '1px solid #eee' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: isExpanded ? 3 : 0 }}>
                 <Box
                     sx={{
                         display: 'flex',
@@ -47,38 +47,36 @@ const TripDetailsCard = ({
                     }}
                     onClick={() => setIsExpanded(!isExpanded)}
                 >
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#333' }}>
                         Trip Details
                     </Typography>
                     <Stack direction="row" spacing={1} flexWrap="wrap">
-                        {tripDetails.location && <Chip label={`Location: ${tripDetails.location}`} size="small" color="primary" variant="outlined" />}
+                        {tripDetails.location && <Chip label={`Location: ${tripDetails.location}`} size="small" sx={{ borderColor: '#2196f3', color: '#1976d2', fontWeight: 500 }} variant="outlined" />}
                         <Chip
                             label={`Package: ${selectedPackage?.label || 'Custom Package'}`}
                             size="small"
-                            color={selectedPackage ? "primary" : "warning"}
+                            sx={{ borderColor: '#ff9800', color: '#ed6c02', fontWeight: 500 }}
                             variant="outlined"
                         />
-                        {carSeason && <Chip label={`Car Season: ${carSeason === 'off_season_price' ? 'Off Season' : 'Season'}`} size="small" color="primary" variant="outlined" />}
+                        {carSeason && <Chip label={`Car Season: ${carSeason === 'off_season_price' ? 'Off Season' : 'Season'}`} size="small" sx={{ borderColor: '#00bcd4', color: '#0097a7', fontWeight: 500 }} variant="outlined" />}
                         {tripDetails.car_details?.filter(car => car.car_count > 0).map((car, idx) => (
-                            <Chip key={idx} label={`${car.car_name}: ${car.car_count}`} size="small" color="success" variant="outlined" />
+                            <Chip key={idx} label={`${car.car_name}: ${car.car_count}`} size="small" sx={{ borderColor: '#4caf50', color: '#2e7d32', fontWeight: 500 }} variant="outlined" />
                         ))}
-                        {tripDetails.duration > 0 && <Chip label={`${tripDetails.duration} Nights & ${parseInt(tripDetails.duration) + 1} Days`} size="small" color="primary" variant="outlined" />}
-                        {stayInfo.rooms > 0 && <Chip label={`Rooms: ${stayInfo.rooms}`} size="small" color="primary" variant="outlined" />}
-                        {stayInfo.hotel && <Chip label={`Hotel: ${stayInfo.hotel}`} size="small" color="primary" variant="outlined" />}
-                        {tripDetails.pickup_location && tripDetails.pickup_location !== 'NJP / IXB' && <Chip label={`Pickup: ${tripDetails.pickup_location}`} size="small" color="secondary" variant="outlined" />}
-                        {tripDetails.dropoff_location && tripDetails.dropoff_location !== 'NJP / IXB' && <Chip label={`Dropoff: ${tripDetails.dropoff_location}`} size="small" color="secondary" variant="outlined" />}
+                        {tripDetails.duration > 0 && <Chip label={`${tripDetails.duration} Nights & ${parseInt(tripDetails.duration) + 1} Days`} size="small" sx={{ borderColor: '#2196f3', color: '#1976d2', fontWeight: 500 }} variant="outlined" />}
                     </Stack>
                 </Box>
                 <Button
                     size="small"
                     color="warning"
                     onClick={onReset}
+                    sx={{ fontWeight: 600, letterSpacing: '0.5px' }}
                 >
-                    Reset
+                    RESET
                 </Button>
             </Box>
             <Collapse in={isExpanded}>
-                <Grid container spacing={2}>
+                <Grid container spacing={2.5}>
+                    {/* Location and Package Row */}
                     <Grid item xs={12} md={6}>
                         <Autocomplete
                             size="small"
@@ -126,8 +124,8 @@ const TripDetailsCard = ({
                         </FormControl>
                     </Grid>
 
-                    {/* Car Season Dropdown */}
-                    <Grid item xs={12} md={3}>
+                    {/* Car Season Row */}
+                    <Grid item xs={12} md={4}>
                         <FormControl fullWidth size="small">
                             <InputLabel>Car Season</InputLabel>
                             <Select
@@ -140,9 +138,12 @@ const TripDetailsCard = ({
                             </Select>
                         </FormControl>
                     </Grid>
+                    <Grid item xs={12} md={8}>
+                        {/* Space placeholder for alignment with previous 3-column layout if needed, or leave empty if north sikkim is removed */}
+                    </Grid>
 
-                    {/* Cars Selection with +/- Controls */}
-                    <Grid item xs={12} md={9}>
+                    {/* Vehicles Selection Row */}
+                    <Grid item xs={12}>
                         <FormControl fullWidth size="small">
                             <InputLabel>Select Vehicles</InputLabel>
                             <Select
@@ -192,7 +193,7 @@ const TripDetailsCard = ({
                                     ?.map((car, index) => {
                                         const count = getCarCount(car.type);
                                         const isSelected = count > 0;
-                                        const backgroundColor = isSelected ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)';
+                                        const backgroundColor = isSelected ? 'rgba(0, 255, 0, 0.05)' : 'transparent';
 
                                         return (
                                             <MenuItem
@@ -200,14 +201,12 @@ const TripDetailsCard = ({
                                                 value={car.type}
                                                 sx={{
                                                     backgroundColor,
-                                                    border: '1px solid',
-                                                    borderColor: isSelected ? 'rgba(0, 200, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)',
-                                                    mb: 0.5,
-                                                    mx: 1,
-                                                    borderRadius: 1,
-                                                    transition: 'all 0.3s ease',
+                                                    borderBottom: '1px solid #f0f0f0',
+                                                    py: 1,
+                                                    px: 2,
+                                                    transition: 'all 0.2s ease',
                                                     '&:hover': {
-                                                        backgroundColor: isSelected ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255, 0, 0, 0.2)',
+                                                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
                                                     },
                                                     display: 'flex',
                                                     justifyContent: 'space-between',
@@ -219,11 +218,20 @@ const TripDetailsCard = ({
                                                     <Typography variant="body2" fontWeight={600}>
                                                         {car.type}
                                                     </Typography>
-                                                    {(user?.permission === 'Admin') && <Typography variant="caption" color="text.secondary">
-                                                        {carSeason ? `Price: ₹${car.cost?.[carSeason] || 0}` : 'Select season to view price'}
-                                                    </Typography>}
+                                                    {(user?.permission === 'Admin') && (
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {(() => {
+                                                                if (!carSeason) return 'Select season to view price';
+                                                                if (tripDetails.location === 'Darjeeling') {
+                                                                    if (car.type === 'Bolero') return `Price: ₹${carSeason === 'off_season_price' ? 3500 : 4000}`;
+                                                                    if (car.type === 'Innova') return `Price: ₹${carSeason === 'off_season_price' ? 4000 : 4500}`;
+                                                                }
+                                                                return `Price: ₹${car.cost?.[carSeason] || 0}`;
+                                                            })()}
+                                                        </Typography>
+                                                    )}
                                                 </Box>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                                                     <IconButton
                                                         size="small"
                                                         disabled={!carSeason || count <= 0}
@@ -232,15 +240,15 @@ const TripDetailsCard = ({
                                                             handleCarDetailsChange(car.type, count - 1);
                                                         }}
                                                         sx={{
-                                                            backgroundColor: '#f44336',
-                                                            color: 'white',
-                                                            '&:hover': { backgroundColor: '#d32f2f' },
-                                                            '&:disabled': { backgroundColor: '#e0e0e0', color: '#9e9e9e' }
+                                                            border: '1px solid #ffcdd2',
+                                                            color: '#f44336',
+                                                            '&:hover': { backgroundColor: '#ffebee' },
+                                                            '&:disabled': { opacity: 0.5, border: '1px solid #eee' }
                                                         }}
                                                     >
                                                         <RemoveIcon fontSize="small" />
                                                     </IconButton>
-                                                    <Typography sx={{ minWidth: 30, textAlign: 'center', fontWeight: 600 }}>
+                                                    <Typography sx={{ minWidth: 30, textAlign: 'center', fontWeight: 700, color: '#333' }}>
                                                         {count}
                                                     </Typography>
                                                     <IconButton
@@ -251,10 +259,10 @@ const TripDetailsCard = ({
                                                             handleCarDetailsChange(car.type, count + 1);
                                                         }}
                                                         sx={{
-                                                            backgroundColor: '#4caf50',
-                                                            color: 'white',
-                                                            '&:hover': { backgroundColor: '#388e3c' },
-                                                            '&:disabled': { backgroundColor: '#e0e0e0', color: '#9e9e9e' }
+                                                            border: '1px solid #c8e6c9',
+                                                            color: '#4caf50',
+                                                            '&:hover': { backgroundColor: '#e8f5e9' },
+                                                            '&:disabled': { opacity: 0.5, border: '1px solid #eee' }
                                                         }}
                                                     >
                                                         <AddIcon fontSize="small" />
@@ -267,7 +275,8 @@ const TripDetailsCard = ({
                         </FormControl>
                     </Grid>
 
-                    <Grid item xs={12} md={6}>
+                    {/* Travel Date and Duration Row */}
+                    < Grid item xs={12} md={6} >
                         <TextField
                             fullWidth
                             size="small"
@@ -278,7 +287,7 @@ const TripDetailsCard = ({
                             onChange={handleTripDetailsChange}
                             InputLabelProps={{ shrink: true }}
                         />
-                    </Grid>
+                    </Grid >
                     <Grid item xs={12} md={6}>
                         <TextField
                             fullWidth
@@ -291,6 +300,8 @@ const TripDetailsCard = ({
                             inputProps={{ min: 0 }}
                         />
                     </Grid>
+
+                    {/* Rooms and Hotel Type Row */}
                     <Grid item xs={12} md={6}>
                         <TextField
                             fullWidth
@@ -325,6 +336,8 @@ const TripDetailsCard = ({
                             </Select>
                         </FormControl>
                     </Grid>
+
+                    {/* Pickup and Dropoff Row */}
                     <Grid item xs={12} md={6}>
                         <TextField
                             fullWidth
@@ -347,6 +360,8 @@ const TripDetailsCard = ({
                             placeholder="NJP / IXB"
                         />
                     </Grid>
+
+                    {/* Keywords Row */}
                     <Grid item xs={12}>
                         <TextField
                             fullWidth
@@ -358,9 +373,9 @@ const TripDetailsCard = ({
                             placeholder="e.g., adventure, honeymoon"
                         />
                     </Grid>
-                </Grid>
-            </Collapse>
-        </Paper>
+                </Grid >
+            </Collapse >
+        </Paper >
     );
 };
 

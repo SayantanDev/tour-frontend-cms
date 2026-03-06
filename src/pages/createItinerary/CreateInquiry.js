@@ -250,15 +250,18 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
     // Auto-calculate Total Cost based on Hotel, Car and Margin selections
     useEffect(() => {
-        const shortItinerary = selectedPackage?.details?.shortItinerary || [];
+        const currentItinerary = selectedPackage?._id === 'custom' ? itinerary : (selectedPackage?.details?.shortItinerary || []);
 
-        const hasNorthSikkim = shortItinerary.some(item =>
-            item?.tagValue?.toLowerCase().includes("lachung") ||
-            item?.tagValue?.toLowerCase().includes("lachen")
-        );
+        const hasNorthSikkimInItinerary = currentItinerary.some(item => {
+            const val = typeof item === 'string' ? item : (item?.tagValue || item?.tagName || '');
+            return val?.toLowerCase().includes("lachung") || val?.toLowerCase().includes("lachen");
+        });
 
-        const northSikkimMargin = hasNorthSikkim
-            ? configData?.additionalCosts?.north_sikkim_extra : 0;
+        const isNorthSikkimLocation = tripDetails.location?.toLowerCase().includes("north sikkim");
+
+        const northSikkimMargin = (hasNorthSikkimInItinerary || isNorthSikkimLocation)
+            ? (configData?.additionalCosts?.north_sikkim_extra || 3000) : 0;
+
         let tCost = 0;
 
         if (tripDetails.location && tripDetails.location !== 'Sandakphu') {
@@ -277,7 +280,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 setCost(tCost);
             }
         }
-    }, [hotelSelections, tripDetails.car_details, tripDetails.duration, carSeason, hotelSeason, currentMargin, allHotels, configData, stayInfo, tripDetails.location]);
+    }, [hotelSelections, tripDetails.car_details, tripDetails.duration, carSeason, hotelSeason, currentMargin, allHotels, configData, stayInfo, tripDetails.location, itinerary, selectedPackage]);
 
     const handleGuestInfoChange = (e) => {
         const { name, value } = e.target;
@@ -667,7 +670,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             keywords: '',
             travel_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
             duration: '0',
-            pickup_location: 'NJP / IXB',
             dropoff_location: 'NJP / IXB',
         });
         setSelectedPackage(null);
