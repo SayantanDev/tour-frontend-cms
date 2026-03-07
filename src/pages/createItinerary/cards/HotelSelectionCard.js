@@ -24,6 +24,36 @@ const HotelSelectionCard = ({
     const selectedHotelsCount = Object.values(hotelSelections).filter(h => h.hotelId).length;
     const totalHotelCost = hotelCostCalculation(hotelSelections, allHotels, hotelSeason, tripDetails, stayInfo);
 
+    // Helpers for Pricing Status
+    const hasHotelPrice = (hotelId) => {
+        if (!hotelSeason) return false;
+        const hotel = allHotels.find(h => h._id === hotelId);
+        if (!hotel) return false;
+        return hotel.category?.some(cat => {
+            const pricing = cat[hotelSeason];
+            if (!pricing) return false;
+            return ['cp_plan', 'map_plan', 'ap_plan'].some(plan => pricing[plan] > 0);
+        });
+    };
+
+    const hasRoomPrice = (hotelId, roomCat) => {
+        if (!hotelSeason) return false;
+        const hotel = allHotels.find(h => h._id === hotelId);
+        const cat = hotel?.category?.find(c => c.room_cat === roomCat);
+        if (!cat) return false;
+        const pricing = cat[hotelSeason];
+        if (!pricing) return false;
+        return ['cp_plan', 'map_plan', 'ap_plan'].some(plan => pricing[plan] > 0);
+    };
+
+    const hasMealPlanPrice = (hotelId, roomCat, mealPlan) => {
+        if (!hotelSeason || !mealPlan) return false;
+        const hotel = allHotels.find(h => h._id === hotelId);
+        const cat = hotel?.category?.find(c => c.room_cat === roomCat);
+        const pricing = cat?.[hotelSeason];
+        return pricing?.[mealPlan] > 0;
+    };
+
     return (
         <Paper sx={{ p: 3, mb: 3 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: isExpanded ? 2 : 0 }}>
@@ -160,6 +190,25 @@ const HotelSelectionCard = ({
                                                 onChange={(event, newValue) => {
                                                     handleHotelChange(dayIndex, 'hotelId', newValue?._id || '');
                                                 }}
+                                                renderOption={(props, option) => {
+                                                    const { key, ...optionProps } = props;
+                                                    const priced = hasHotelPrice(option._id);
+                                                    return (
+                                                        <Box
+                                                            key={key}
+                                                            component="li"
+                                                            {...optionProps}
+                                                            sx={{
+                                                                backgroundColor: priced ? '#e8f5e9 !important' : '#ffebee !important',
+                                                                '&:hover': {
+                                                                    backgroundColor: priced ? '#c8e6c9 !important' : '#ffcdd2 !important',
+                                                                }
+                                                            }}
+                                                        >
+                                                            {option.hotel_name} ({option.sub_destination || option.location})
+                                                        </Box>
+                                                    );
+                                                }}
                                                 renderInput={(params) => <TextField {...params} label="Select Hotel" size="small" />}
                                                 disabled={!hotelSeason}
                                             />
@@ -176,9 +225,29 @@ const HotelSelectionCard = ({
                                                         handleHotelChange(dayIndex, 'roomType', e.target.value);
                                                     }}
                                                 >
-                                                    {allHotels.find(h => h._id === hotelSelections[dayIndex]?.hotelId)?.category?.map((cat, index) => (
-                                                        <MenuItem key={index} value={cat.room_cat}>{cat.room_cat}</MenuItem>
-                                                    ))}
+                                                    {allHotels.find(h => h._id === hotelSelections[dayIndex]?.hotelId)?.category?.map((cat, index) => {
+                                                        const priced = hasRoomPrice(hotelSelections[dayIndex]?.hotelId, cat.room_cat);
+                                                        return (
+                                                            <MenuItem
+                                                                key={index}
+                                                                value={cat.room_cat}
+                                                                sx={{
+                                                                    backgroundColor: priced ? '#e8f5e9' : '#ffebee',
+                                                                    '&:hover': {
+                                                                        backgroundColor: priced ? '#c8e6c9' : '#ffcdd2',
+                                                                    },
+                                                                    '&.Mui-selected': {
+                                                                        backgroundColor: priced ? '#a5d6a7' : '#ef9a9a',
+                                                                        '&:hover': {
+                                                                            backgroundColor: priced ? '#81c784' : '#e57373',
+                                                                        }
+                                                                    }
+                                                                }}
+                                                            >
+                                                                {cat.room_cat}
+                                                            </MenuItem>
+                                                        );
+                                                    })}
                                                 </Select>
                                             </FormControl>
                                         </Grid>
@@ -194,9 +263,37 @@ const HotelSelectionCard = ({
                                                         handleHotelChange(dayIndex, 'mealPlan', e.target.value);
                                                     }}
                                                 >
-                                                    <MenuItem value="cp_plan">CP (Breakfast)</MenuItem>
-                                                    <MenuItem value="map_plan">MAP (Breakfast + 1 major meal)</MenuItem>
-                                                    <MenuItem value="ap_plan">AP (All Meals)</MenuItem>
+                                                    {[
+                                                        { value: 'cp_plan', label: 'CP (Breakfast)' },
+                                                        { value: 'map_plan', label: 'MAP (Breakfast + 1 major meal)' },
+                                                        { value: 'ap_plan', label: 'AP (All Meals)' }
+                                                    ].map((plan) => {
+                                                        const priced = hasMealPlanPrice(
+                                                            hotelSelections[dayIndex]?.hotelId,
+                                                            hotelSelections[dayIndex]?.roomType,
+                                                            plan.value
+                                                        );
+                                                        return (
+                                                            <MenuItem
+                                                                key={plan.value}
+                                                                value={plan.value}
+                                                                sx={{
+                                                                    backgroundColor: priced ? '#e8f5e9' : '#ffebee',
+                                                                    '&:hover': {
+                                                                        backgroundColor: priced ? '#c8e6c9' : '#ffcdd2',
+                                                                    },
+                                                                    '&.Mui-selected': {
+                                                                        backgroundColor: priced ? '#a5d6a7' : '#ef9a9a',
+                                                                        '&:hover': {
+                                                                            backgroundColor: priced ? '#81c784' : '#e57373',
+                                                                        }
+                                                                    }
+                                                                }}
+                                                            >
+                                                                {plan.label}
+                                                            </MenuItem>
+                                                        );
+                                                    })}
                                                 </Select>
                                             </FormControl>
                                         </Grid>
