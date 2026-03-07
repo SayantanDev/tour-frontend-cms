@@ -214,12 +214,50 @@ export const validateForm = (guestInfo, tripDetails, selectedPackage) => {
     return { isValid: true };
 };
 
-export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, stayInfo, isDraft = false }) => {
+export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, stayInfo, hotelSelections, allHotels, hotelSeason, isDraft = false }) => {
     const gPhone = guestInfo.guest_phone || '';
     const gCountryCode = guestInfo.country_code || '+91';
     const cleanedPhone = gPhone.startsWith(gCountryCode)
         ? gPhone.replace(gCountryCode, '').trim()
         : gPhone;
+
+    // Map hotelSelections to followup_details
+    const followup_details = [];
+    const duration = parseInt(tripDetails.duration) || 0;
+    const startDate = tripDetails.travel_date ? new Date(tripDetails.travel_date) : null;
+
+    for (let i = 0; i <= duration; i++) {
+        let journeyDate = '';
+        let checkinDate = '';
+        let checkoutDate = '';
+
+        if (startDate) {
+            const currentDate = new Date(startDate);
+            currentDate.setDate(startDate.getDate() + i);
+            journeyDate = currentDate.toISOString();
+            checkinDate = currentDate.toISOString();
+            const nextDay = new Date(currentDate);
+            nextDay.setDate(nextDay.getDate() + 1);
+            checkoutDate = nextDay.toISOString();
+        }
+
+        const selection = hotelSelections?.[i];
+        const hotel = allHotels?.find(h => h._id === selection?.hotelId);
+
+        followup_details.push({
+            journey_date: journeyDate,
+            destination: selection?.location || '',
+            hotel_id: selection?.hotelId || '',
+            hotel_name: hotel?.hotel_name || '',
+            hotel_amount: calculateSingleHotelCost(selection, allHotels, hotelSeason, tripDetails, stayInfo) || 0,
+            checkin_date: checkinDate,
+            checkout_date: checkoutDate,
+            room_type: selection?.roomType || '',
+            meal_plan: selection?.mealPlan || '',
+            approved_status: 'Pending',
+            rejected_reason: []
+        });
+    }
 
     return {
         guest_info: {
@@ -234,11 +272,13 @@ export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, st
         cost: cost,
         destination: tripDetails.location || selectedPackage?.location || '',
         duration: parseInt(tripDetails.duration) || selectedPackage?.duration || 0,
-        package_id: selectedPackage._id,
+        package_id: selectedPackage?._id,
         stay_info: {
             rooms: parseInt(stayInfo.rooms) || 0,
             hotel: stayInfo.hotel,
         },
+        followup_details, // New field for day-wise details
+        hotel_selections: hotelSelections, // Add raw hotel selections
         travel_date: tripDetails.travel_date || '',
         pickup_location: tripDetails.pickup_location || 'NJP / IXB',
         dropoff_location: tripDetails.dropoff_location || 'NJP / IXB',
