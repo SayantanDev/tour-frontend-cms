@@ -6,7 +6,11 @@ import {
   DialogTitle,
   Dialog,
   DialogContent,
-  DialogActions
+  DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
 } from '@mui/material';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useSelector } from 'react-redux';
@@ -14,6 +18,7 @@ import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-tabl
 import { getAllHotels } from '../../api/hotelsAPI';
 import { getAllVehicle } from '../../api/vehicleAPI';
 import { addChangeRequest, addChangeRequestForItineray, getQueriesByoperation, getSingleOperation, updateFollowupDetails } from '../../api/operationAPI';
+import { calculateSingleHotelCost } from '../createItinerary/createInquiryCalculation';
 // import { fetchOperationByQueries } from '../../api/queriesAPI';
 import useSnackbar from '../../hooks/useSnackbar';
 import usePermissions from '../../hooks/UsePermissions';
@@ -33,6 +38,7 @@ const columnsData = [
   { label: 'Hotel Confirmation', field: 'hotelConfirmation' },
   { label: 'Checkin Date', field: 'checkinDate' },
   { label: 'Checkout Date', field: 'checkoutDate' },
+  { label: 'Room Type', field: 'roomType' },
   { label: 'Meal Plan', field: 'mealPlan' },
   { label: 'Vehicle Name', field: 'vehicleName' },
   { label: 'Vehicle Payment', field: 'vehiclePayment' },
@@ -54,12 +60,16 @@ const SingleQueriesView = () => {
   const [editIndex, setEditIndex] = useState(null);
   const [editRow, setEditRow] = useState({});
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [operationId, setOperationId] = useState(null);
   const [guestDrawer, setGuestDrawer] = useState(false);
   const [bookingDrawer, setBookingDrawer] = useState(false);
   const [guestInfo, setGuestInfo] = useState({});
   const [changeRequestOpen, setChangeRequestOpen] = useState(false);
   const [description, setDescription] = useState('');
   const [editHistory, setEditHistory] = useState([]);
+  const [hotelSeason, setHotelSeason] = useState('off_season_price');
+  const [stayInfo, setStayInfo] = useState({ rooms: 0, hotel: '' });
+  const [tripDetails, setTripDetails] = useState({ pax: 0, kids_above_5: 0, duration: 0 });
 
   const [verifyPopupOpen, setVerifyPopupOpen] = useState(false);
   const [verifyStatus, setVerifyStatus] = useState('');
@@ -76,6 +86,7 @@ const SingleQueriesView = () => {
     try {
       const operationData = await getSingleOperation(fetchSelectedquerie?._id);
       if (!operationData) return;
+      setOperationId(operationData._id);
 
       const followUpData = operationData?.followup_details?.map((item, index) => ({
         id: item._id,
@@ -92,11 +103,27 @@ const SingleQueriesView = () => {
         vehiclePayment: item.vehicle_payment || '',
         vehicleStatus: item.vehicle_status || '',
         driverName: item.driver || '',
+        hotelId: item.hotel_id || '',
+        roomType: item.room_type || '',
+        mealPlan: item.meal_plan || '',
         status: item.approved_status || '',
+        rejected_reason: item.rejected_reason || [],
       })) || []
 
       setItineraryData(followUpData);
       const queriesData = await getQueriesByoperation(operationData._id);
+
+      setTripDetails({
+        pax: operationData?.trip_details?.number_of_adults || 0,
+        kids_above_5: operationData?.trip_details?.number_of_kids || 0,
+        duration: operationData?.trip_details?.duration || 0,
+      });
+
+      setStayInfo({
+        hotel: queriesData?.stay_info?.hotel || '',
+        rooms: queriesData?.stay_info?.rooms || 0,
+      });
+
       const guestAndStayData = {
         name: operationData?.guest_info?.name || '',
         country_code: operationData?.guest_info?.country_code || '+91',
@@ -140,15 +167,67 @@ const SingleQueriesView = () => {
     setEditIndex(index);
     setDrawerOpen(true);
 
-    const selectedHotel = hotels.find(h => h.hotel_name === row.hotelName);
+    const selectedHotel = hotels.find(h => h.hotel_name === row.hotelName || h._id === row.hotelId);
     setRoomOptions(selectedHotel?.category || []);
 
     const owner = vehicles.find(v => v.vehicles.some(veh => veh.vehicle_name === row.vehicleName));
     setDriverOptions(owner?.drivers || []);
   };
 
+  // Helpers for Pricing Status (Matched with HotelSelectionCard.js)
+  const hasHotelPrice = (hotelId) => {
+    if (!hotelSeason) return false;
+    const hotel = hotels.find(h => h._id === hotelId);
+    if (!hotel) return false;
+    return hotel.category?.some(cat => {
+      const pricing = cat[hotelSeason];
+      if (!pricing) return false;
+      return ['cp_plan', 'map_plan', 'ap_plan'].some(plan => pricing[plan] > 0);
+    });
+  };
+
+  const hasRoomPrice = (hotelId, roomCat) => {
+    if (!hotelSeason) return false;
+    const hotel = hotels.find(h => h._id === hotelId);
+    const cat = hotel?.category?.find(c => c.room_cat === roomCat);
+    if (!cat) return false;
+    const pricing = cat[hotelSeason];
+    if (!pricing) return false;
+    return ['cp_plan', 'map_plan', 'ap_plan'].some(plan => pricing[plan] > 0);
+  };
+
+  const hasMealPlanPrice = (hotelId, roomCat, mealPlan) => {
+    if (!hotelSeason || !mealPlan) return false;
+    const hotel = hotels.find(h => h._id === hotelId);
+    const cat = hotel?.category?.find(c => c.room_cat === roomCat);
+    const pricing = cat?.[hotelSeason];
+    return pricing?.[mealPlan] > 0;
+  };
+
   const handleEditChange = (e) => {
     setEditRow({ ...editRow, [e.target.name]: e.target.value });
+  };
+
+  const mapItineraryToPayload = (data) => {
+    return data.map(item => ({
+      _id: item.id,
+      journey_date: item.date,
+      destination: item.place,
+      hotel_name: item.hotelName,
+      hotel_amount: item.hotelAmount,
+      hotel_confirmation: item.hotelConfirmation,
+      checkin_date: item.checkinDate,
+      checkout_date: item.checkoutDate,
+      meal_plan: item.mealPlan,
+      room_type: item.roomType,
+      hotel_id: item.hotelId,
+      vehicle_name: item.vehicleName,
+      vehicle_payment: item.vehiclePayment,
+      vehicle_status: item.vehicleStatus,
+      driver: item.driverName,
+      approved_status: item.status,
+      rejected_reason: item.rejected_reason || []
+    }));
   };
 
   // const saveEdit = async () => {
@@ -164,43 +243,81 @@ const SingleQueriesView = () => {
   // };
 
   const saveEdit = async () => {
-    const newData = [...itineraryData];
-    const originalRow = itineraryData[editIndex];
-    const updatedRow = { ...editRow };
+    try {
+      console.log("Saving edit...", { editIndex, editRow, itineraryData });
 
-    const changedFields = { day: updatedRow.day };
-    let hasChanged = false;
+      if (editIndex === null || !itineraryData[editIndex]) {
+        showSnackbar("Error: Invalid edit state", "error");
+        return;
+      }
 
-    // Compare and collect changed fields
-    for (const key in updatedRow) {
-      if (key !== 'day' && updatedRow[key] !== originalRow[key]) {
-        changedFields[key] = updatedRow[key];
-        hasChanged = true;
+      const newData = [...itineraryData];
+      const originalRow = itineraryData[editIndex];
+      const updatedRow = { ...editRow };
+
+      const changedFields = [];
+      let hasChanged = false;
+
+      // Compare and collect changed fields
+      for (const key in updatedRow) {
+        if (key !== 'day' && key !== 'rejected_reason' && updatedRow[key] !== originalRow[key]) {
+          changedFields.push(`${key}: ${originalRow[key]} -> ${updatedRow[key]}`);
+          hasChanged = true;
+        }
+      }
+
+      if (!hasChanged) {
+        showSnackbar("No changes detected.", "info");
+        setDrawerOpen(false);
+        return;
+      }
+
+      if (hasPermission("operation", "alter")) {
+        // DIRECT SAVE logic for authorized roles
+        updatedRow.status = "Pending";
+        newData[editIndex] = updatedRow;
+
+        const payload = mapItineraryToPayload(newData);
+        const res = await updateFollowupDetails(operationId, { followup_details: payload });
+
+        if (res) {
+          showSnackbar(res.message || "Changes saved successfully", "success");
+          setItineraryData(newData);
+          setDrawerOpen(false);
+        }
+      } else if (hasPermission("operation", "changeRequest")) {
+        // CHANGE REQUEST logic for roles like 'User'
+        const changeDescription = `Day ${updatedRow.day} changes: ${changedFields.join(", ")}`;
+        const res = await addChangeRequestForItineray(operationId, { description: changeDescription });
+
+        if (res) {
+          showSnackbar("Change request submitted successfully", "success");
+          setDrawerOpen(false);
+        }
+      } else {
+        showSnackbar("Resource not allowed", "error");
+      }
+    } catch (error) {
+      console.error("Error in saveEdit:", error);
+      showSnackbar(error.response?.data?.message || "Failed to process request", "error");
+    }
+  };
+
+  // Auto-update cost when season changes in drawer
+  useEffect(() => {
+    if (drawerOpen && editRow.hotelId && editRow.roomType && editRow.mealPlan) {
+      const cost = calculateSingleHotelCost(
+        { hotelId: editRow.hotelId, roomType: editRow.roomType, mealPlan: editRow.mealPlan },
+        hotels,
+        hotelSeason,
+        tripDetails,
+        stayInfo
+      );
+      if (cost !== editRow.hotelAmount) {
+        setEditRow(prev => ({ ...prev, hotelAmount: cost || 0 }));
       }
     }
-
-    if (!hasChanged) {
-      showSnackbar("No changes detected.", "info");
-      setDrawerOpen(false);
-      return;
-    }
-
-    // ⬇️ Store in edit history
-    setEditHistory((prev) => [...prev, changedFields]);
-
-    // ⬇️ Set status to "pending" only for this changed row
-    updatedRow.status = "Pending";
-    newData[editIndex] = updatedRow;
-
-    const itnObj = { followup_details: newData };
-    const res = await updateFollowupDetails(fetchSelectedquerie?._id, itnObj);
-    if (res) {
-      // await addChangeRequestForItineray(fetchSelectedquerie?._id, { description: changedFields });
-      showSnackbar(res.message, "success");
-    }
-
-    setDrawerOpen(false);
-  };
+  }, [hotelSeason]);
 
   const saveGuestInfo = () => {
     setGuestDrawer(false);
@@ -259,14 +376,15 @@ const SingleQueriesView = () => {
       cell: ({ row }) => {
         const rowData = row.original;
         const rowIndex = row.index;
-        return (
+        const canEdit = hasPermission("operation", "alter") || hasPermission("operation", "changeRequest");
+        return canEdit ? (
           <IconButton onClick={() => openEditDrawer(rowData, rowIndex)}>
             <EditOutlinedIcon color="primary" />
           </IconButton>
-        );
+        ) : null;
       },
     },
-  ], [openEditDrawer]);
+  ], [openEditDrawer, hasPermission]);
 
   // Table instance
   const table = useReactTable({
@@ -418,40 +536,167 @@ const SingleQueriesView = () => {
       {/* Edit Itinerary Drawer */}
       <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
         <Box sx={{ width: 500, p: 3 }}>
-          <Typography variant="h6" fontWeight="bold" gutterBottom>Edit Itinerary</Typography>
+          <Typography variant="h6" fontWeight="bold" gutterBottom>
+            {hasPermission("operation", "alter") ? "Edit Itinerary" : "Submit Change Request"}
+          </Typography>
           <Divider sx={{ mb: 2 }} />
           <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Hotel Season</InputLabel>
+                <Select
+                  value={hotelSeason}
+                  label="Hotel Season"
+                  onChange={(e) => setHotelSeason(e.target.value)}
+                >
+                  <MenuItem value="off_season_price">Off Season</MenuItem>
+                  <MenuItem value="season_price">Season</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
             {columnsData.map((col) => {
               if (col.field === 'hotelName') {
                 return (
                   <Grid item xs={12} key={col.field}>
                     <Autocomplete
                       fullWidth
+                      size="small"
                       options={hotels}
-                      getOptionLabel={(option) => option.hotel_name}
-                      renderInput={(params) => <TextField {...params} label="Hotel Name" />}
-                      value={hotels.find(h => h.hotel_name === editRow.hotelName) || null}
+                      getOptionLabel={(option) => `${option.hotel_name} (${option.sub_destination || option.location})`}
+                      value={hotels.find(h => h._id === editRow.hotelId || h.hotel_name === editRow.hotelName) || null}
                       onChange={(e, value) => {
-                        setEditRow({ ...editRow, hotelName: value?.hotel_name || '', hotelAmount: '' });
+                        const updatedRow = {
+                          ...editRow,
+                          hotelId: value?._id || '',
+                          hotelName: value?.hotel_name || '',
+                          roomType: '',
+                          mealPlan: ''
+                        };
+                        const cost = calculateSingleHotelCost(
+                          { hotelId: updatedRow.hotelId, roomType: updatedRow.roomType, mealPlan: updatedRow.mealPlan },
+                          hotels,
+                          hotelSeason,
+                          tripDetails,
+                          stayInfo
+                        );
+                        setEditRow({ ...updatedRow, hotelAmount: cost || 0 });
                         setRoomOptions(value?.category || []);
                       }}
+                      renderOption={(props, option) => {
+                        const { key, ...optionProps } = props;
+                        const priced = hasHotelPrice(option._id);
+                        return (
+                          <Box
+                            key={key}
+                            component="li"
+                            {...optionProps}
+                            sx={{
+                              backgroundColor: priced ? '#e8f5e9 !important' : '#ffebee !important',
+                              '&:hover': {
+                                backgroundColor: priced ? '#c8e6c9 !important' : '#ffcdd2 !important',
+                              }
+                            }}
+                          >
+                            {option.hotel_name} ({option.sub_destination || option.location})
+                          </Box>
+                        );
+                      }}
+                      renderInput={(params) => <TextField {...params} label="Hotel Name" size="small" />}
                     />
                   </Grid>
                 );
               }
               if (col.field === 'hotelAmount') {
                 return (
-                  <Grid item xs={12} key={col.field}>
-                    <Autocomplete
-                      fullWidth
-                      options={roomOptions}
-                      getOptionLabel={(option) => `${option.room_cat} - ₹${option.room_price}`}
-                      renderInput={(params) => <TextField {...params} label="Room Category" />}
-                      onChange={(e, value) => {
-                        setEditRow({ ...editRow, hotelAmount: value?.room_price || '' });
-                      }}
-                    />
-                  </Grid>
+                  <React.Fragment key={col.field}>
+                    <Grid item xs={12} md={6}>
+                      <FormControl fullWidth size="small" disabled={!editRow.hotelId}>
+                        <InputLabel>Room Type</InputLabel>
+                        <Select
+                          value={editRow.roomType || ''}
+                          label="Room Type"
+                          onChange={(e) => {
+                            const updatedRow = { ...editRow, roomType: e.target.value };
+                            const cost = calculateSingleHotelCost(
+                              { hotelId: updatedRow.hotelId, roomType: updatedRow.roomType, mealPlan: updatedRow.mealPlan },
+                              hotels,
+                              hotelSeason,
+                              tripDetails,
+                              stayInfo
+                            );
+                            setEditRow({ ...updatedRow, hotelAmount: cost || 0 });
+                          }}
+                        >
+                          {roomOptions.map((cat, index) => {
+                            const priced = hasRoomPrice(editRow.hotelId, cat.room_cat);
+                            return (
+                              <MenuItem
+                                key={index}
+                                value={cat.room_cat}
+                                sx={{
+                                  backgroundColor: priced ? '#e8f5e9' : '#ffebee',
+                                  '&:hover': { backgroundColor: priced ? '#c8e6c9' : '#ffcdd2' }
+                                }}
+                              >
+                                {cat.room_cat}
+                              </MenuItem>
+                            );
+                          })}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <FormControl fullWidth size="small" disabled={!editRow.roomType}>
+                        <InputLabel>Meal Plan</InputLabel>
+                        <Select
+                          value={editRow.mealPlan || ''}
+                          label="Meal Plan"
+                          onChange={(e) => {
+                            const updatedRow = { ...editRow, mealPlan: e.target.value };
+                            const cost = calculateSingleHotelCost(
+                              { hotelId: updatedRow.hotelId, roomType: updatedRow.roomType, mealPlan: updatedRow.mealPlan },
+                              hotels,
+                              hotelSeason,
+                              tripDetails,
+                              stayInfo
+                            );
+                            setEditRow({ ...updatedRow, hotelAmount: cost || 0 });
+                          }}
+                        >
+                          {[
+                            { value: 'cp_plan', label: 'CP (Breakfast)' },
+                            { value: 'map_plan', label: 'MAP (Breakfast + 1 major meal)' },
+                            { value: 'ap_plan', label: 'AP (All Meals)' }
+                          ].map((plan) => {
+                            const priced = hasMealPlanPrice(editRow.hotelId, editRow.roomType, plan.value);
+                            return (
+                              <MenuItem
+                                key={plan.value}
+                                value={plan.value}
+                                sx={{
+                                  backgroundColor: priced ? '#e8f5e9' : '#ffebee',
+                                  '&:hover': { backgroundColor: priced ? '#c8e6c9' : '#ffcdd2' }
+                                }}
+                              >
+                                {plan.label}
+                              </MenuItem>
+                            );
+                          })}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Hotel Amount"
+                        size="small"
+                        type="number"
+                        value={editRow.hotelAmount || ''}
+                        onChange={(e) => setEditRow({ ...editRow, hotelAmount: e.target.value })}
+                        helperText="Calculated automatically, but can be overridden"
+                      />
+                    </Grid>
+                  </React.Fragment>
                 );
               }
               if (col.field === 'vehicleName') {
@@ -487,6 +732,7 @@ const SingleQueriesView = () => {
                   </Grid>
                 );
               }
+              if (['roomType', 'mealPlan'].includes(col.field)) return null;
               return (
                 <Grid item xs={12} key={col.field}>
                   <TextField
@@ -506,7 +752,9 @@ const SingleQueriesView = () => {
             })}
           </Grid>
           <Box textAlign="right" mt={3}>
-            <Button variant="contained" color="primary" onClick={saveEdit}>Save</Button>
+            <Button variant="contained" color="primary" onClick={saveEdit}>
+              {hasPermission("operation", "alter") ? "Save" : "Submit Request"}
+            </Button>
             {hasPermission("operation", "verify") && (
               <Button variant="contained" color="success" sx={{ ml: 1 }} onClick={handleVerifyItineray}>Verify</Button>
             )}
@@ -640,7 +888,7 @@ const SingleQueriesView = () => {
               }
 
               const res = await updateFollowupDetails(fetchSelectedquerie?._id, {
-                followup_details: updatedItinerary
+                followup_details: mapItineraryToPayload(updatedItinerary)
               });
 
               if (res) {
