@@ -113,7 +113,8 @@ const AllUserPermissions = () => {
   const handleSavePermissions = async () => {
     try {
       if (!selectedId) return;
-      const updatedPermissionArr = filteredPermissions.filter((mod) => mod.enabled).map((mod) => ({
+      // ALWAYS use permissionDialogData for saving to prevent data loss from active filters
+      const updatedPermissionArr = permissionDialogData.filter((mod) => mod.enabled).map((mod) => ({
         module: mod.module,
         value: Object.keys(mod.values).filter((key) => mod.values[key]),
       }));
@@ -123,8 +124,6 @@ const AllUserPermissions = () => {
       };
 
       await updateUserPermission(selectedId, payload);
-
-
 
       setAllUserPermissions((prev) =>
         prev.map((user) =>
@@ -150,15 +149,17 @@ const AllUserPermissions = () => {
 
   // ===================== HANDLE CHECKBOX LOGIC =====================
   const handleModuleToggle = (moduleName) => {
-    setFilteredPermissions((prev) =>
+    const updateFn = (prev) =>
       prev.map((m) =>
         m.module === moduleName ? { ...m, enabled: !m.enabled } : m
-      )
-    );
+      );
+
+    setPermissionDialogData(updateFn);
+    setFilteredPermissions(updateFn);
   };
 
   const handleValueChange = (moduleName, valueName) => {
-    setFilteredPermissions((prev) =>
+    const updateFn = (prev) =>
       prev.map((m) =>
         m.module === moduleName
           ? {
@@ -169,8 +170,10 @@ const AllUserPermissions = () => {
             },
           }
           : m
-      )
-    );
+      );
+
+    setPermissionDialogData(updateFn);
+    setFilteredPermissions(updateFn);
   };
 
 

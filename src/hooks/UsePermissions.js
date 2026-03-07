@@ -45,7 +45,7 @@ const userPermissionData = [
 ];
 
 const usePermissions = () => {
-  const userRole = useSelector((state) => state.tokens.user.permission);
+  const userRole = useSelector((state) => state.tokens?.user?.permission);
 
   return useCallback(
     (moduleName, permissionType) => {

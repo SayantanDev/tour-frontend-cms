@@ -80,7 +80,7 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
   const drawer = (
     <div>
       <List>
-        {fetchConfigData.navigationStrings
+        {(fetchConfigData.navigationStrings || [])
           .filter((element) => checkPermission(element.module, "view"))
           .map((element) => {
             const IconComponent = iconMap[element.icon];
@@ -136,7 +136,7 @@ const Navigation = ({ drawerOpen, setDrawerOpen }) => {
       open={drawerOpen}
     >
       <List sx={{ p: 0, pt: 1 }}>
-        {fetchConfigData.navigationStrings
+        {(fetchConfigData.navigationStrings || [])
           .filter((item) => checkPermission(item.module, "view"))
           .map((item) => {
             const Icon = iconMap[item.icon];
