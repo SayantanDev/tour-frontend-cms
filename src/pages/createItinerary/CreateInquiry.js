@@ -101,7 +101,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     const [selectedPackage, setSelectedPackage] = useState(null);
     const [hotelSelections, setHotelSelections] = useState({});
     const [cost, setCost] = useState(0);
-    const [advance, setAdvance] = useState(0);
     const [stayInfo, setStayInfo] = useState({
         rooms: '',
         hotel: '',
@@ -128,7 +127,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         const inquiryToLoad = existingInquiry || (Object.keys(reduxSelectedInquiry || {}).length > 0 ? reduxSelectedInquiry : null);
         if (inquiryToLoad) {
             loadExistingInquiry(inquiryToLoad);
-            if (inquiryToLoad.advance) setAdvance(inquiryToLoad.advance);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [existingInquiry, reduxSelectedInquiry, allPackages.length > 0]);
@@ -439,7 +437,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             tripDetails,
             selectedPackage,
             cost,
-            advance,
             stayInfo,
             hotelSelections,
             allHotels,
@@ -830,9 +827,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 <CostEstimateCard
                     selectedPackage={selectedPackage}
                     cost={cost}
-                    handleCostChange={(e) => setCost(parseFloat(e.target.value) || 0)}
-                    advance={advance}
-                    handleAdvanceChange={(e) => setAdvance(parseFloat(e.target.value) || 0)}
+                    handleCostChange={handleCostChange}
                     hotelSelections={hotelSelections}
                     allHotels={allHotels}
                     stayInfo={stayInfo}
