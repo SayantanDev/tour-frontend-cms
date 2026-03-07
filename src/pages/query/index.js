@@ -2,9 +2,27 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 import {
   Container, Typography, IconButton, Tooltip, Box, Chip, MenuItem, Modal, Paper,
   TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Select, Checkbox, Dialog, DialogTitle, DialogContent, DialogActions
+  Select, Checkbox, Dialog, DialogTitle, DialogContent, DialogActions,
+  Stack, Avatar, InputAdornment, CircularProgress, Divider, Grid as MuiGrid
 } from "@mui/material";
 import { useReactTable, getCoreRowModel, getPaginationRowModel, flexRender } from "@tanstack/react-table";
+import SearchIcon from '@mui/icons-material/Search';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import AddIcon from '@mui/icons-material/Add';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import PendingActionsIcon from '@mui/icons-material/PendingActions';
+import EventIcon from '@mui/icons-material/Event';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+
 import { deleteQueries, getAllQueries, updateQueries } from "../../api/queriesAPI";
 import usePermissions from "../../hooks/UsePermissions";
 import { useDispatch } from "react-redux";
@@ -13,6 +31,38 @@ import { useNavigate } from "react-router-dom";
 import useSnackbar from "../../hooks/useSnackbar";
 import { getAllUsers } from "../../api/userAPI";
 import { getChangeRequest, getRejectedChanges, handleChangeRequestApproval } from "../../api/operationAPI";
+
+const getStatusStyles = (status) => {
+  switch (status) {
+    case "Confirm": return { color: "#2e7d32", bg: "#e8f5e9", icon: <CheckCircleIcon sx={{ fontSize: 14 }} /> };
+    case "Cancel": return { color: "#d32f2f", bg: "#ffebee", icon: <ErrorOutlineIcon sx={{ fontSize: 14 }} /> };
+    case "FollowUp": return { color: "#ed6c02", bg: "#fff3e0", icon: <PendingActionsIcon sx={{ fontSize: 14 }} /> };
+    case "Postponed": return { color: "#0288d1", bg: "#e1f5fe", icon: <EventIcon sx={{ fontSize: 14 }} /> };
+    case "Higher Priority": return { color: "#9c27b0", bg: "#f3e5f5", icon: <TrendingUpIcon sx={{ fontSize: 14 }} /> };
+    default: return { color: "#475569", bg: "#f1f5f9", icon: null };
+  }
+};
+
+const ModernStatusChip = ({ status }) => {
+  const styles = getStatusStyles(status);
+  return (
+    <Chip
+      label={status}
+      size="small"
+      icon={styles.icon}
+      sx={{
+        height: 24,
+        fontSize: '0.7rem',
+        fontWeight: 'bold',
+        color: styles.color,
+        backgroundColor: styles.bg,
+        border: `1px solid ${styles.color}40`,
+        '& .MuiChip-icon': { color: 'inherit' },
+        borderRadius: '6px'
+      }}
+    />
+  );
+};
 
 const Query = () => {
   const checkPermission = usePermissions();
@@ -130,15 +180,18 @@ const Query = () => {
   }, [editedRowData, fetchQuery, showSnackbar]);
 
   const getStatusColor = useCallback((status) => {
-    switch (status) {
-      case "Confirm": return "success";
-      case "Cancel": return "default";
-      case "FollowUp": return "warning";
-      case "Postponed": return "info";
-      case "Higher Priority": return "error";
-      default: return "default";
-    }
+    return getStatusStyles(status).color;
   }, []);
+
+  const stats = useMemo(() => {
+    const s = { total: queries.length, confirm: 0, followUp: 0, pending: 0 };
+    queries.forEach(q => {
+      if (q.lead_stage === "Confirm") s.confirm++;
+      else if (q.lead_stage === "FollowUp") s.followUp++;
+      else s.pending++;
+    });
+    return s;
+  }, [queries]);
 
   const handleEditOpen = useCallback((rowData) => {
     dispatch(setSelectedquerie({ ...rowData, id: rowData.operation_id }));
@@ -237,7 +290,7 @@ const Query = () => {
     const cols = [
       {
         accessorKey: "guest_info.guest_name",
-        header: "Name",
+        header: "Lead Name",
         cell: ({ row }) => {
           const rowData = row.original;
           if (editingRowId === rowData._id) {
@@ -247,16 +300,25 @@ const Query = () => {
                 autoFocus
                 value={editedRowData.guest_name}
                 onChange={(e) => setEditedRowData({ ...editedRowData, guest_name: e.target.value })}
-                sx={{ '& .MuiInputBase-input': { py: '3px', fontSize: '0.75rem' } }}
+                sx={{ '& .MuiInputBase-input': { py: '4px', fontSize: '0.8rem' } }}
               />
             );
           }
-          return <Typography variant="caption">{rowData.guest_info?.guest_name || ""}</Typography>;
+          return (
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Avatar sx={{ bgcolor: 'primary.main', width: 28, height: 28, fontSize: '0.8rem', fontWeight: 'bold' }}>
+                {rowData.guest_info?.guest_name?.charAt(0) || 'G'}
+              </Avatar>
+              <Typography variant="body2" fontWeight={600} color="text.primary">
+                {rowData.guest_info?.guest_name || "N/A"}
+              </Typography>
+            </Stack>
+          );
         },
       },
       {
         accessorKey: "guest_info.guest_phone",
-        header: "Contact",
+        header: "Contact Details",
         cell: ({ row }) => {
           const rowData = row.original;
           if (editingRowId === rowData._id) {
@@ -264,29 +326,31 @@ const Query = () => {
               <Box sx={{ display: 'flex', gap: 0.5 }}>
                 <TextField
                   size="small"
-                  sx={{ width: 55, '& .MuiInputBase-input': { py: '3px', fontSize: '0.75rem' } }}
+                  sx={{ width: 60, '& .MuiInputBase-input': { py: '4px', fontSize: '0.8rem' } }}
                   value={editedRowData.guest_country_code}
                   onChange={(e) => setEditedRowData({ ...editedRowData, guest_country_code: e.target.value })}
                   placeholder="+91"
                 />
                 <TextField
                   size="small"
-                  autoFocus
-                  sx={{ '& .MuiInputBase-input': { py: '3px', fontSize: '0.75rem' } }}
+                  sx={{ '& .MuiInputBase-input': { py: '4px', fontSize: '0.8rem' } }}
                   value={editedRowData.guest_phone}
                   onChange={(e) => setEditedRowData({ ...editedRowData, guest_phone: e.target.value })}
                 />
               </Box>
             );
           }
-          const cCode = rowData.guest_info?.guest_country_code || rowData.guest_country_code || "+91";
-          const phone = rowData.guest_info?.guest_phone || "";
-          return <Typography variant="caption">{`${cCode} ${phone}`}</Typography>;
+          return (
+            <Box>
+              <Typography variant="body2" fontWeight={500}>{`${rowData.guest_info?.guest_country_code || "+91"} ${rowData.guest_info?.guest_phone || ""}`}</Typography>
+              <Typography variant="caption" color="text.secondary">{rowData.guest_info?.guest_email || ""}</Typography>
+            </Box>
+          );
         },
       },
       {
         accessorKey: "lead_stage",
-        header: "Status",
+        header: "Stage",
         cell: ({ row }) => {
           const rowData = row.original;
           if (editingRowId === rowData._id) {
@@ -295,20 +359,20 @@ const Query = () => {
                 size="small"
                 value={editedRowData.lead_stage}
                 onChange={(e) => setEditedRowData({ ...editedRowData, lead_stage: e.target.value })}
-                sx={{ fontSize: '0.75rem', '& .MuiSelect-select': { py: '3px' } }}
+                sx={{ height: 32, fontSize: '0.8rem' }}
               >
                 {["Confirm", "Cancel", "FollowUp", "Postponed", "Higher Priority"].map((status) => (
-                  <MenuItem key={status} value={status} sx={{ fontSize: '0.75rem', py: 0.5 }}>{status}</MenuItem>
+                  <MenuItem key={status} value={status} sx={{ fontSize: '0.8rem' }}>{status}</MenuItem>
                 ))}
               </Select>
             );
           }
-          return <Chip label={rowData.lead_stage} size="small" color={getStatusColor(rowData.lead_stage)} sx={{ height: 18, fontSize: '0.65rem' }} />;
+          return <ModernStatusChip status={rowData.lead_stage} />;
         },
       },
       {
         accessorKey: "cost",
-        header: "Cost",
+        header: "Total Cost",
         cell: ({ row }) => {
           const rowData = row.original;
           if (editingRowId === rowData._id) {
@@ -316,14 +380,17 @@ const Query = () => {
               <TextField
                 size="small"
                 type="number"
-                autoFocus
                 value={editedRowData.cost}
                 onChange={(e) => setEditedRowData({ ...editedRowData, cost: e.target.value })}
-                sx={{ width: 90, '& .MuiInputBase-input': { py: '3px', fontSize: '0.75rem' } }}
+                sx={{ width: 100, '& .MuiInputBase-input': { py: '4px', fontSize: '0.8rem' } }}
               />
             );
           }
-          return <Typography variant="caption">{rowData.cost || "N/A"}</Typography>;
+          return (
+            <Typography variant="body2" fontWeight={700} color="primary.main">
+              ₹{Number(rowData.cost || 0).toLocaleString('en-IN')}
+            </Typography>
+          );
         },
       },
       {
@@ -336,14 +403,17 @@ const Query = () => {
               <TextField
                 size="small"
                 type="number"
-                autoFocus
                 value={editedRowData.advance}
                 onChange={(e) => setEditedRowData({ ...editedRowData, advance: e.target.value })}
-                sx={{ width: 90, '& .MuiInputBase-input': { py: '3px', fontSize: '0.75rem' } }}
+                sx={{ width: 100, '& .MuiInputBase-input': { py: '4px', fontSize: '0.8rem' } }}
               />
             );
           }
-          return <Typography variant="caption">{rowData.advance ? `${rowData.advance}` : "0"}</Typography>;
+          return (
+            <Typography variant="body2" fontWeight={600} color={rowData.advance > 0 ? "success.main" : "text.secondary"}>
+              ₹{Number(rowData.advance || 0).toLocaleString('en-IN')}
+            </Typography>
+          );
         },
       },
       {
@@ -353,16 +423,20 @@ const Query = () => {
           const rowData = row.original;
           if (editingRowId === rowData._id) {
             return (
-              <>
-                <Button onClick={() => handleSaveEdit(rowData._id)} size="small" variant="contained" sx={{ py: '1px', px: 1, fontSize: '0.7rem', minWidth: 0, mr: 0.5 }}>Save</Button>
-                <Button onClick={() => { setEditingRowId(null); setEditedRowData({}); }} size="small" sx={{ py: '1px', px: 1, fontSize: '0.7rem', minWidth: 0 }}>Cancel</Button>
-              </>
+              <Stack direction="row" spacing={0.5}>
+                <IconButton size="small" color="success" onClick={() => handleSaveEdit(rowData._id)}>
+                  <CheckCircleIcon fontSize="small" />
+                </IconButton>
+                <IconButton size="small" color="error" onClick={() => { setEditingRowId(null); setEditedRowData({}); }}>
+                  <ErrorOutlineIcon fontSize="small" />
+                </IconButton>
+              </Stack>
             );
           }
           return (
-            <>
-              <Tooltip title="Edit">
-                <IconButton size="small" sx={{ p: '2px' }} onClick={() => {
+            <Stack direction="row" spacing={1}>
+              <Tooltip title="Quick Edit">
+                <IconButton size="small" color="primary" onClick={() => {
                   setEditingRowId(rowData._id);
                   setEditedRowData({
                     guest_name: rowData.guest_info?.guest_name || "",
@@ -373,24 +447,24 @@ const Query = () => {
                     lead_stage: rowData.lead_stage || "",
                   });
                 }}>
-                  <Typography variant="caption" color="success.main" fontWeight={600}>Edit</Typography>
+                  <EditOutlinedIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
               {rowData.advance > 0 && (
-                <Tooltip title="Manage Operation">
-                  <IconButton size="small" sx={{ p: '2px' }} onClick={() => handleEditOpen(rowData)}>
-                    <Typography variant="caption" color="primary.main" fontWeight={600}>Manage</Typography>
+                <Tooltip title="Manage Itinerary">
+                  <IconButton size="small" color="info" onClick={() => handleEditOpen(rowData)}>
+                    <VisibilityIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
               )}
               {checkPermission("queries", "assuser") && (
                 <Tooltip title="Assign Users">
-                  <IconButton size="small" sx={{ p: '2px' }} onClick={() => openUserModal(rowData)}>
-                    <Typography variant="caption" color="secondary.main" fontWeight={600}>Assign</Typography>
+                  <IconButton size="small" color="secondary" onClick={() => openUserModal(rowData)}>
+                    <AssignmentIndIcon fontSize="small" />
                   </IconButton>
                 </Tooltip>
               )}
-            </>
+            </Stack>
           );
         },
       },
@@ -399,22 +473,22 @@ const Query = () => {
     if (checkPermission("operation", "change-request")) {
       cols.push({
         id: "changeRequest",
-        header: "Change Request",
+        header: "Requests",
         cell: ({ row }) => {
           const rowData = row.original;
           return (
-            <>
-              <Tooltip title="View Rejected Changes">
-                <IconButton size="small" sx={{ p: '2px' }} onClick={() => openRejectedChangeModal(rowData.operation_id)}>
-                  <Typography variant="caption" color="error.main" fontWeight={600}>Rejected</Typography>
+            <Stack direction="row" spacing={0.5}>
+              <Tooltip title="Rejected Changes">
+                <IconButton size="small" color="error" onClick={() => openRejectedChangeModal(rowData.operation_id)}>
+                  <ErrorOutlineIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
-              <Tooltip title="View Changes Request">
-                <IconButton size="small" sx={{ p: '2px' }} onClick={() => openChangeRequestModal(rowData.operation_id)}>
-                  <Button size="small" sx={{ py: '1px', px: 1, fontSize: '0.7rem', minWidth: 0 }}>CRV</Button>
+              <Tooltip title="Review Requests">
+                <IconButton size="small" color="warning" onClick={() => openChangeRequestModal(rowData.operation_id)}>
+                  <ChangeCircleIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
-            </>
+            </Stack>
           );
         },
       });
@@ -423,22 +497,19 @@ const Query = () => {
     if (checkPermission("queries", "delete")) {
       cols.push({
         id: "delete",
-        header: "Delete",
-        cell: ({ row }) => {
-          const rowData = row.original;
-          return (
-            <Tooltip title="Delete">
-              <IconButton size="small" sx={{ p: '2px' }} onClick={() => handleOpenDeleteDialog(rowData)}>
-                <Typography variant="caption" color="error.main" fontWeight={600}>Delete</Typography>
-              </IconButton>
-            </Tooltip>
-          );
-        },
+        header: "",
+        cell: ({ row }) => (
+          <Tooltip title="Delete Lead">
+            <IconButton size="small" color="error" onClick={() => handleOpenDeleteDialog(row.original)}>
+              <DeleteOutlineIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        ),
       });
     }
 
     return cols;
-  }, [editingRowId, editedRowData, checkPermission, handleSaveEdit, handleEditOpen, openUserModal, openRejectedChangeModal, openChangeRequestModal, handleOpenDeleteDialog, getStatusColor]);
+  }, [editingRowId, editedRowData, checkPermission, handleSaveEdit, handleEditOpen, openUserModal, openRejectedChangeModal, openChangeRequestModal, handleOpenDeleteDialog]);
 
   // Table instance
   const table = useReactTable({
@@ -456,40 +527,176 @@ const Query = () => {
   });
 
   return (
-    <Container maxWidth={false} sx={{ height: 'calc(100vh - 100px)', display: 'flex', flexDirection: 'column', px: 1, py: 1 }}>
-      <Typography variant="h6" gutterBottom sx={{ mb: 0.5 }}>Leads</Typography>
-      <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 1 }}>
-        <TextField label="Search" size="small" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} sx={{ '& .MuiInputBase-input': { py: '4px', fontSize: '0.75rem' }, '& .MuiInputLabel-root': { fontSize: '0.75rem' } }} />
-        <TextField type="date" label="Date" size="small" value={dateQuery} onChange={(e) => setDateQuery(e.target.value)} InputLabelProps={{ shrink: true }} sx={{ '& .MuiInputBase-input': { py: '4px', fontSize: '0.75rem' }, '& .MuiInputLabel-root': { fontSize: '0.75rem' } }} />
-        <TextField select label="Status" size="small" value={statusQuery} onChange={(e) => setStatusQuery(e.target.value)} sx={{ minWidth: 140, '& .MuiInputBase-input': { py: '4px', fontSize: '0.75rem' }, '& .MuiInputLabel-root': { fontSize: '0.75rem' } }}>
-          {["", "Confirm", "Cancel", "FollowUp", "Postponed", "Higher Priority"].map((status) => (
-            <MenuItem key={status} value={status} sx={{ fontSize: '0.75rem', py: 0.5 }}>{status || "All"}</MenuItem>
+    <Container maxWidth={false} sx={{ height: '100vh', py: 2, bgcolor: '#f8fafc', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      {/* Premium Header & Stats */}
+      <Box sx={{ mb: 3 }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+          <Box>
+            <Typography variant="h4" fontWeight={850} color="primary.main" sx={{ letterSpacing: '-0.5px' }}>
+              Lead Management
+            </Typography>
+            <Typography variant="body2" color="text.secondary" fontWeight={500}>
+              Monitor and manage your travel inquiries in real-time
+            </Typography>
+          </Box>
+          <Stack direction="row" spacing={1.5}>
+            <Button
+              variant="outlined"
+              startIcon={<RefreshIcon />}
+              onClick={() => fetchQuery(1)}
+              sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600 }}
+            >
+              Refresh
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => navigate("/createItinerary")}
+              sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600, boxShadow: '0 4px 12px rgba(25, 118, 210, 0.2)' }}
+            >
+              New Lead
+            </Button>
+          </Stack>
+        </Stack>
+
+        <MuiGrid container spacing={2}>
+          {[
+            { label: 'Total Leads', value: stats.total, color: '#1e293b', icon: <MoreVertIcon fontSize="small" /> },
+            { label: 'Confirmed', value: stats.confirm, color: '#2e7d32', icon: <CheckCircleIcon fontSize="small" /> },
+            { label: 'Follow Ups', value: stats.followUp, color: '#ed6c02', icon: <PendingActionsIcon fontSize="small" /> },
+            { label: 'Pending/New', value: stats.pending, color: '#0288d1', icon: <TrendingUpIcon fontSize="small" /> },
+          ].map((stat, i) => (
+            <MuiGrid item xs={12} sm={6} md={3} key={i}>
+              <Paper sx={{ p: 2, borderRadius: '12px', borderLeft: `4px solid ${stat.color}`, display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar sx={{ bgcolor: `${stat.color}15`, color: stat.color, width: 40, height: 40 }}>
+                  {stat.icon}
+                </Avatar>
+                <Box>
+                  <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    {stat.label}
+                  </Typography>
+                  <Typography variant="h6" fontWeight={800} color="text.primary">
+                    {stat.value}
+                  </Typography>
+                </Box>
+              </Paper>
+            </MuiGrid>
           ))}
-        </TextField>
-        <TextField select label="Location" size="small" value={locationQuery} onChange={(e) => setLocationQuery(e.target.value)} sx={{ minWidth: 140, '& .MuiInputBase-input': { py: '4px', fontSize: '0.75rem' }, '& .MuiInputLabel-root': { fontSize: '0.75rem' } }}>
-          {["", "Darjeeling", "Sikkim", "Sandakphu"].map((loc) => (
-            <MenuItem key={loc} value={loc} sx={{ fontSize: '0.75rem', py: 0.5 }}>{loc || "All"}</MenuItem>
-          ))}
-        </TextField>
+        </MuiGrid>
       </Box>
 
+      {/* Filter Section */}
+      <Paper sx={{ p: 2, mb: 2, borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+        <MuiGrid container spacing={2} alignItems="center">
+          <MuiGrid item xs={12} md={4}>
+            <TextField
+              fullWidth
+              placeholder="Search by name, phone or email..."
+              size="small"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" fontSize="small" />
+                  </InputAdornment>
+                ),
+                sx: { borderRadius: '8px', bgcolor: '#fcfcfc' }
+              }}
+            />
+          </MuiGrid>
+          <MuiGrid item xs={6} md={2}>
+            <TextField
+              fullWidth
+              select
+              label="Stage"
+              size="small"
+              value={statusQuery}
+              onChange={(e) => setStatusQuery(e.target.value)}
+              InputProps={{ sx: { borderRadius: '8px' } }}
+            >
+              <MenuItem value="">All Stages</MenuItem>
+              {["Confirm", "Cancel", "FollowUp", "Postponed", "Higher Priority"].map((status) => (
+                <MenuItem key={status} value={status}>{status}</MenuItem>
+              ))}
+            </TextField>
+          </MuiGrid>
+          <MuiGrid item xs={6} md={2}>
+            <TextField
+              fullWidth
+              select
+              label="Location"
+              size="small"
+              value={locationQuery}
+              onChange={(e) => setLocationQuery(e.target.value)}
+              InputProps={{ sx: { borderRadius: '8px' } }}
+            >
+              <MenuItem value="">All Locations</MenuItem>
+              {["Darjeeling", "Sikkim", "Sandakphu"].map((loc) => (
+                <MenuItem key={loc} value={loc}>{loc}</MenuItem>
+              ))}
+            </TextField>
+          </MuiGrid>
+          <MuiGrid item xs={12} md={3}>
+            <TextField
+              fullWidth
+              type="date"
+              label="Travel Date"
+              size="small"
+              value={dateQuery}
+              onChange={(e) => setDateQuery(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              InputProps={{
+                sx: { borderRadius: '8px' },
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <EventIcon color="action" fontSize="small" />
+                  </InputAdornment>
+                )
+              }}
+            />
+          </MuiGrid>
+          <MuiGrid item xs={12} md={1}>
+            <Tooltip title="Clear Filters">
+              <IconButton onClick={() => { setSearchQuery(""); setStatusQuery(""); setLocationQuery(""); setDateQuery(""); }}>
+                <FilterListIcon />
+              </IconButton>
+            </Tooltip>
+          </MuiGrid>
+        </MuiGrid>
+      </Paper>
+
+      {/* Table Section */}
       <TableContainer
         component={Paper}
-        sx={{ flexGrow: 1, overflowY: "auto", mb: 1 }}
+        sx={{
+          flexGrow: 1,
+          borderRadius: '12px',
+          border: '1px solid #e2e8f0',
+          boxShadow: 'none',
+          bgcolor: 'background.paper',
+          overflowY: "auto",
+          position: 'relative'
+        }}
         onScroll={handleScroll}
       >
-        <Table size="small" stickyHeader sx={{ '& .MuiTableCell-root': { py: '2px', px: '6px', fontSize: '0.72rem' }, '& .MuiTableCell-head': { py: '4px', px: '6px', fontSize: '0.72rem', fontWeight: 700 } }}>
+        <Table stickyHeader>
           <TableHead>
             {table.getHeaderGroups().map(headerGroup => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
-                  <TableCell key={header.id} sx={{ backgroundColor: 'background.paper' }}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
+                  <TableCell
+                    key={header.id}
+                    sx={{
+                      bgcolor: '#f1f5f9',
+                      color: '#475569',
+                      fontWeight: 700,
+                      fontSize: '0.8rem',
+                      py: 2,
+                      borderBottom: '2px solid #e2e8f0'
+                    }}
+                  >
+                    {flexRender(header.column.columnDef.header, header.getContext())}
                   </TableCell>
                 ))}
               </TableRow>
@@ -498,50 +705,68 @@ const Query = () => {
           <TableBody>
             {table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map(row => (
-                <TableRow key={row.original._id} hover sx={{ '&:hover': { backgroundColor: 'action.hover' } }}>
+                <TableRow
+                  key={row.original._id}
+                  hover
+                  sx={{
+                    cursor: 'pointer',
+                    '&:hover': { bgcolor: '#f8fafc' },
+                    '& td': { py: 1.5, borderBottom: '1px solid #f1f5f9' }
+                  }}
+                >
                   {row.getVisibleCells().map(cell => (
                     <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} align="center" sx={{ py: 2 }}>
-                  No queries found
+                <TableCell colSpan={queries.length > 0 ? columns.length : 10} align="center" sx={{ py: 10 }}>
+                  <Box sx={{ textAlign: 'center', opacity: 0.5 }}>
+                    <SearchIcon sx={{ fontSize: 48, mb: 1 }} />
+                    <Typography variant="h6">No leads found</Typography>
+                    <Typography variant="body2">Try adjusting your filters or search query</Typography>
+                  </Box>
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
+        {loading && (
+          <Box sx={{ position: 'sticky', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
+            <CircularProgress size={32} />
+          </Box>
+        )}
       </TableContainer>
-
 
       {/* User Assign Modal */}
       <Modal open={userModalOpen} onClose={() => setUserModalOpen(false)}>
-        <Box sx={{
+        <Paper sx={{
           position: 'absolute', top: '50%', left: '50%',
           transform: 'translate(-50%, -50%)',
-          bgcolor: 'background.paper', boxShadow: 24,
-          p: 2, width: 360, borderRadius: 2
+          p: 3, width: 400, borderRadius: '16px',
+          boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
         }}>
-          <Typography variant="subtitle1" fontWeight={600} mb={1}>Assign Users</Typography>
-
+          <Typography variant="h6" fontWeight={700} mb={2}>Assign Team Members</Typography>
+          <Divider sx={{ mb: 2 }} />
           <Select
             multiple
             fullWidth
+            size="small"
             value={assignedUsers}
             onChange={(e) => setAssignedUsers(e.target.value)}
-            renderValue={(selected) =>
-              allUsers
-                .filter(user => selected.includes(user.id))
-                .map(user => user.fullName)
-                .join(", ")
-            }
+            renderValue={(selected) => (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                {allUsers
+                  .filter(user => selected.includes(user.id))
+                  .map(user => (
+                    <Chip key={user.id} label={user.fullName} size="small" />
+                  ))}
+              </Box>
+            )}
+            sx={{ borderRadius: '8px' }}
           >
             {allUsers.map(user => (
               <MenuItem key={user.id} value={user.id}>
@@ -553,132 +778,128 @@ const Query = () => {
 
           <Button
             fullWidth
-            sx={{ mt: 2 }}
+            sx={{ mt: 3, borderRadius: '8px', height: 44, fontWeight: 600 }}
             variant="contained"
             onClick={saveUserAssignments}
           >
-            Save Changes
+            Update Permissions
           </Button>
-        </Box>
+        </Paper>
       </Modal>
 
-      {/* change request view */}
+      {/* Change Request View */}
       <Modal open={changeModalOpen} onClose={() => setChangeModalOpen(false)}>
         <Box sx={{
           position: 'absolute', top: '50%', left: '50%',
           transform: 'translate(-50%, -50%)',
-          bgcolor: '#f5f5f5', boxShadow: 24, p: 2,
-          width: 560, maxHeight: "90vh", overflowY: "auto", borderRadius: 2
+          bgcolor: '#f8fafc', boxShadow: 24, p: 3,
+          width: 600, maxHeight: "85vh", overflowY: "auto", borderRadius: '16px'
         }}>
-          <Typography variant="subtitle1" fontWeight={600} gutterBottom>Change Requests</Typography>
-          {selectedChangeRequests.map(change => (
-            <Paper key={change._id} sx={{ p: 2, mb: 2 }}>
-              <Typography><b>Description:</b> {change.description}</Typography>
-              <Typography><b>Status:</b> {change.approved_status}</Typography>
-              <Typography><b>User:</b> {change.user_id?.fullName} ({change.user_id?.email})</Typography>
-              <Typography>
-                <b>Submitted On:</b>{" "}
-                {new Date(change.date_time).toLocaleString("en-IN", {
-                  dateStyle: "medium",
-                  timeStyle: "short",
-                })}
-              </Typography>
+          <Typography variant="h6" fontWeight={700} gutterBottom>Review Change Requests</Typography>
+          <Divider sx={{ mb: 2 }} />
+          {selectedChangeRequests.length === 0 ? (
+            <Typography variant="body2" sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>No pending requests</Typography>
+          ) : (
+            selectedChangeRequests.map(change => (
+              <Paper key={change._id} sx={{ p: 2, mb: 2, borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1.5 }}>
+                  <Avatar sx={{ bgcolor: 'warning.main', width: 32, height: 32 }}>
+                    <ChangeCircleIcon fontSize="small" />
+                  </Avatar>
+                  <Box>
+                    <Typography variant="subtitle2" fontWeight={700}>{change.user_id?.fullName || 'User'}</Typography>
+                    <Typography variant="caption" color="text.secondary">{new Date(change.date_time).toLocaleString()}</Typography>
+                  </Box>
+                  <Chip label={change.approved_status} size="small" color="primary" variant="outlined" sx={{ ml: 'auto' }} />
+                </Stack>
 
-              {change.approved_status === "Pending" && (
-                <Box sx={{ mt: 1 }}>
-                  <Button
-                    size="small"
-                    variant="contained"
-                    color="success"
-                    onClick={() => handleChangeRequestAction(change._id, "Approved")}
-                    sx={{ mr: 1 }}
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    color="error"
-                    onClick={() => {
-                      const reason = prompt("Enter rejection reason:");
-                      if (reason) handleChangeRequestAction(change._id, "Rejected", reason);
-                    }}
-                  >
-                    Reject
-                  </Button>
-                </Box>
-              )}
-
-              {change.approved_status === "Rejected" && change.rejected_reason && (
-                <Typography sx={{ mt: 1, color: "error.main" }}>
-                  <b>Rejection Reason:</b> {change.rejected_reason}
+                <Typography variant="body2" sx={{ bgcolor: '#ffffff', p: 1.5, borderRadius: '8px', border: '1px dashed #cbd5e1', mb: 2 }}>
+                  {change.description}
                 </Typography>
-              )}
-            </Paper>
-          ))}
 
-          <Button onClick={() => setChangeModalOpen(false)} fullWidth sx={{ mt: 2 }}>Close</Button>
+                {change.approved_status === "Pending" && (
+                  <Stack direction="row" spacing={1}>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="success"
+                      onClick={() => handleChangeRequestAction(change._id, "Approved")}
+                      sx={{ borderRadius: '6px', px: 3 }}
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="error"
+                      onClick={() => {
+                        const reason = prompt("Enter rejection reason:");
+                        if (reason) handleChangeRequestAction(change._id, "Rejected", reason);
+                      }}
+                      sx={{ borderRadius: '6px' }}
+                    >
+                      Reject
+                    </Button>
+                  </Stack>
+                )}
+              </Paper>
+            ))
+          )}
+          <Button onClick={() => setChangeModalOpen(false)} fullWidth sx={{ mt: 1, color: 'text.secondary' }}>Close</Button>
         </Box>
       </Modal>
 
-      {/* rejected reason view */}
+      {/* Rejected Reason View */}
       <Modal open={rejectedModalOpen} onClose={() => setRejectedModalOpen(false)}>
         <Box sx={{
           position: 'absolute', top: '50%', left: '50%',
           transform: 'translate(-50%, -50%)',
-          bgcolor: '#fff3f3', p: 2, width: 560,
-          borderRadius: 2, boxShadow: 24, maxHeight: '80vh', overflowY: 'auto'
+          bgcolor: '#fff', p: 3, width: 500,
+          borderRadius: '16px', boxShadow: 24, maxHeight: '80vh', overflowY: 'auto'
         }}>
-          <Typography variant="subtitle1" fontWeight={600} gutterBottom>Rejected Change Requests</Typography>
+          <Typography variant="h6" fontWeight={700} gutterBottom>History of Rejections</Typography>
+          <Divider sx={{ mb: 2 }} />
           {rejectedChanges.length === 0 ? (
-            <Typography>No rejected requests found.</Typography>
+            <Typography variant="body2" color="text.secondary" align="center" py={4}>No history found.</Typography>
           ) : (
             rejectedChanges.map(change => (
-              <Paper key={change._id} sx={{ p: 2, mb: 2 }}>
-                <Typography><b>Description:</b> {change.description}</Typography>
-                <Typography><b>User:</b> {change.user_id?.fullName} ({change.user_id?.email})</Typography>
-                <Typography><b>Date:</b> {new Date(change.date_time).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</Typography>
-                <Typography sx={{ mt: 1, color: "error.main" }}>
-                  <b>Rejection Reason:</b> {change.rejected_reason}
-                </Typography>
+              <Paper key={change._id} sx={{ p: 2, mb: 2, bgcolor: '#fef2f2', border: '1px solid #fee2e2', borderRadius: '12px' }}>
+                <Typography variant="subtitle2" fontWeight={700}>{new Date(change.date_time).toLocaleDateString()}</Typography>
+                <Typography variant="body2" sx={{ my: 1 }}>{change.description}</Typography>
+                <Box sx={{ p: 1, bgcolor: '#ffffff', borderRadius: '6px', borderLeft: '3px solid #ef4444' }}>
+                  <Typography variant="caption" color="error.main" fontWeight={700}>REJECTION REASON:</Typography>
+                  <Typography variant="body2" color="error.main">{change.rejected_reason}</Typography>
+                </Box>
               </Paper>
             ))
           )}
-          <Button onClick={() => setRejectedModalOpen(false)} fullWidth sx={{ mt: 2 }}>Close</Button>
+          <Button onClick={() => setRejectedModalOpen(false)} fullWidth color="inherit">Close</Button>
         </Box>
       </Modal>
 
-
       <SnackbarComponent />
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
+
+      {/* Delete Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} PaperProps={{ sx: { borderRadius: '16px', p: 1 } }}>
+        <DialogTitle sx={{ fontWeight: 800 }}>Confirm Deletion</DialogTitle>
         <DialogContent>
+          <Typography variant="body2" color="text.secondary" mb={2}>
+            Are you sure you want to permanently delete this lead? This action cannot be undone.
+          </Typography>
           {queryToDelete && (
-            <>
-              <Typography sx={{ mb: 1 }}>
-                Are you sure you want to delete this query?
-              </Typography>
-              <Paper variant="outlined" sx={{ p: 2, bgcolor: "#fafafa" }}>
-                <Typography><b>Name:</b> {queryToDelete.guest_info?.guest_name || "N/A"}</Typography>
-                <Typography><b>Phone:</b> {queryToDelete.guest_info?.guest_phone || "N/A"}</Typography>
-                <Typography><b>Status:</b> {queryToDelete.lead_stage || "N/A"}</Typography>
-                {queryToDelete.destination && (
-                  <Typography><b>Destination:</b> {queryToDelete.destination}</Typography>
-                )}
-              </Paper>
-            </>
+            <Paper variant="outlined" sx={{ p: 2, bgcolor: "#f8fafc", borderRadius: '8px' }}>
+              <Typography variant="subtitle2" fontWeight={700}>{queryToDelete.guest_info?.guest_name}</Typography>
+              <Typography variant="caption" color="text.secondary">ID: {queryToDelete._id}</Typography>
+            </Paper>
           )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button color="error" variant="contained" onClick={handleDeleteQuery}>
-            Delete
+        <DialogActions sx={{ p: 2, pt: 0 }}>
+          <Button onClick={() => setDeleteDialogOpen(false)} sx={{ color: 'text.secondary' }}>Keep Lead</Button>
+          <Button color="error" variant="contained" onClick={handleDeleteQuery} sx={{ borderRadius: '8px', px: 3 }}>
+            Delete Permanently
           </Button>
         </DialogActions>
       </Dialog>
-
-
     </Container>
   );
 };
