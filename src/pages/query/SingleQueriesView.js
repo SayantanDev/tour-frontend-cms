@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 
 import {
   Box, Button, Divider, Drawer, Grid, IconButton, Paper, Table, TableBody, TableCell, TableContainer,
@@ -10,9 +10,33 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  Chip,
+  Stack,
+  Tooltip,
+  Card,
+  CardContent,
+  Avatar,
+  CircularProgress
 } from '@mui/material';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import PendingActionsIcon from '@mui/icons-material/PendingActions';
+import PersonIcon from '@mui/icons-material/Person';
+import PhoneIcon from '@mui/icons-material/Phone';
+import EmailIcon from '@mui/icons-material/Email';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import HotelIcon from '@mui/icons-material/Hotel';
+import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
+import InfoIcon from '@mui/icons-material/Info';
+import VerifiedIcon from '@mui/icons-material/Verified';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import LocalDiningIcon from '@mui/icons-material/LocalDining';
+import BedroomParentIcon from '@mui/icons-material/BedroomParent';
+import ContactPhoneIcon from '@mui/icons-material/ContactPhone';
+import GroupsIcon from '@mui/icons-material/Groups';
 import { useSelector } from 'react-redux';
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
 import { getAllHotels } from '../../api/hotelsAPI';
@@ -47,8 +71,35 @@ const columnsData = [
   { label: 'CRV', field: 'status' }
 ];
 
+const getStatusChip = (status) => {
+  const s = typeof status === 'string' ? status : (status?.status || status?.label || '');
+  switch (s.toLowerCase()) {
+    case 'approved':
+      return <Chip label="Approved" color="success" size="small" icon={<VerifiedIcon />} variant="filled" sx={{ fontWeight: 'bold' }} />;
+    case 'rejected':
+      return <Chip label="Rejected" color="error" size="small" icon={<ErrorOutlineIcon />} variant="filled" sx={{ fontWeight: 'bold' }} />;
+    case 'pending':
+      return <Chip label="Pending" color="warning" size="small" icon={<PendingActionsIcon />} variant="filled" sx={{ fontWeight: 'bold' }} />;
+    case 'change request':
+    case 'change-request':
+      return <Chip label="Change Request" color="info" size="small" icon={<EditOutlinedIcon />} variant="filled" sx={{ fontWeight: 'bold' }} />;
+    default:
+      return <Chip label={s || 'N/A'} size="small" variant="outlined" sx={{ fontWeight: '500' }} />;
+  }
+};
+
+const getMealPlanLabel = (plan) => {
+  const plans = {
+    'cp_plan': 'CP (Breakfast)',
+    'map_plan': 'MAP (Bf + 1 Meal)',
+    'ap_plan': 'AP (All Meals)',
+    'ep_plan': 'EP (No Meals)'
+  };
+  return plans[plan] || plan || '-';
+};
+
 const SingleQueriesView = () => {
-  const { fetchSelectedquerie } = useSelector((state) => state.queries);
+  const { fetchSelectedquerie } = useSelector((state) => state.queries || {});
   const hasPermission = usePermissions();
   const { showSnackbar, SnackbarComponent } = useSnackbar();
   const [hotels, setHotels] = useState([]);
@@ -75,13 +126,17 @@ const SingleQueriesView = () => {
   const [verifyStatus, setVerifyStatus] = useState('');
   const [rejectedReason, setRejectedReason] = useState('');
   const [verifyIndex, setVerifyIndex] = useState(null); // index of the itinerary row
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [rejectedViewOpen, setRejectedViewOpen] = useState(false);
 
-  const fetchOperationData = async () => {
+  const fetchOperationData = useCallback(async () => {
     if (!fetchSelectedquerie?._id) {
-      console.error("No selected query ID found");
+      setLoading(false);
       return;
     }
+    setLoading(true);
+    setError(null);
 
     try {
       const operationData = await getSingleOperation(fetchSelectedquerie?._id);
@@ -104,8 +159,8 @@ const SingleQueriesView = () => {
         vehicleStatus: item.vehicle_status || '',
         driverName: item.driver || '',
         hotelId: item.hotel_id || '',
-        roomType: item.room_type || '',
-        mealPlan: item.meal_plan || '',
+        roomType: item.room_type || item.roomType || '',
+        mealPlan: item.meal_plan || item.mealPlan || '',
         status: item.approved_status || '',
         rejected_reason: item.rejected_reason || [],
       })) || []
@@ -131,6 +186,7 @@ const SingleQueriesView = () => {
         email: operationData?.guest_info?.email || '',
         pax: operationData?.trip_details?.number_of_adults || '',
         hotel: queriesData?.stay_info?.hotel || '',
+        roomType: queriesData?.stay_info?.room_type || queriesData?.stay_info?.roomType || '',
         rooms: queriesData?.stay_info?.rooms || '',
         carname: queriesData?.car_details?.car_name || '',
         carcount: queriesData?.car_details?.car_count || '',
@@ -146,11 +202,14 @@ const SingleQueriesView = () => {
             : '',
       }
       setGuestInfo(guestAndStayData);
+      setLoading(false);
     } catch (error) {
       console.error("Error fetching operation data:", error);
+      setError("Failed to load data. Please try again.");
       showSnackbar("Failed to fetch operation data", "error");
+      setLoading(false);
     }
-  }
+  }, [fetchSelectedquerie?._id]);
 
   useEffect(() => {
     fetchOperationData();
@@ -162,17 +221,21 @@ const SingleQueriesView = () => {
     setGuestInfo({ ...guestInfo, [e.target.name]: e.target.value });
   };
 
-  const openEditDrawer = (row, index) => {
+  const openEditDrawer = useCallback((row, index) => {
     setEditRow(row);
     setEditIndex(index);
     setDrawerOpen(true);
 
-    const selectedHotel = hotels.find(h => h.hotel_name === row.hotelName || h._id === row.hotelId);
-    setRoomOptions(selectedHotel?.category || []);
+    if (hotels && hotels.length > 0) {
+      const selectedHotel = hotels.find(h => h.hotel_name === row.hotelName || h._id === row.hotelId);
+      setRoomOptions(selectedHotel?.category || []);
+    }
 
-    const owner = vehicles.find(v => v.vehicles.some(veh => veh.vehicle_name === row.vehicleName));
-    setDriverOptions(owner?.drivers || []);
-  };
+    if (vehicles && vehicles.length > 0) {
+      const owner = vehicles.find(v => v.vehicles.some(veh => veh.vehicle_name === row.vehicleName));
+      setDriverOptions(owner?.drivers || []);
+    }
+  }, [hotels, vehicles]);
 
   // Helpers for Pricing Status (Matched with HotelSelectionCard.js)
   const hasHotelPrice = (hotelId) => {
@@ -285,7 +348,7 @@ const SingleQueriesView = () => {
           setItineraryData(newData);
           setDrawerOpen(false);
         }
-      } else if (hasPermission("operation", "changeRequest")) {
+      } else if (hasPermission("operation", "changeRequest") || hasPermission("operation", "change-request")) {
         // CHANGE REQUEST logic for roles like 'User'
         const changeDescription = `Day ${updatedRow.day} changes: ${changedFields.join(", ")}`;
         const res = await addChangeRequestForItineray(operationId, { description: changeDescription });
@@ -336,25 +399,25 @@ const SingleQueriesView = () => {
   }
 
   const guestFields = [
-    { label: 'Name', field: 'name' },
-    { label: 'Country Code', field: 'country_code' },
-    { label: 'Contact', field: 'contact' },
-    { label: 'Email', field: 'email' },
-    { label: 'Pax', field: 'pax' },
-    { label: 'Hotel', field: 'hotel' },
-    { label: 'Rooms', field: 'rooms' },
-    { label: 'Car Name', field: 'carname' },
-    { label: 'Car Count', field: 'carcount' },
+    { label: 'Name', field: 'name', icon: <PersonIcon /> },
+    { label: 'Contact', field: 'contact', icon: <PhoneIcon /> },
+    { label: 'Email', field: 'email', icon: <EmailIcon /> },
+    { label: 'Pax', field: 'pax', icon: <GroupsIcon /> },
+    { label: 'Hotel', field: 'hotel', icon: <HotelIcon /> },
+    { label: 'Room Type', field: 'roomType', icon: <BedroomParentIcon /> },
+    { label: 'Rooms', field: 'rooms', icon: <BedroomParentIcon /> },
+    { label: 'Car Name', field: 'carname', icon: <DirectionsCarIcon /> },
+    { label: 'Car Count', field: 'carcount', icon: <InfoIcon /> },
   ];
 
   const bookingFields = [
-    { label: 'Source', field: 'source' },
-    { label: 'Booking Date', field: 'bookingDate' },
-    { label: 'Tour Date', field: 'tourDate' },
-    { label: 'Booking Status', field: 'bookingStatus' },
-    { label: 'Cost', field: 'cost' },
-    { label: 'Advance Payment', field: 'advancePayment' },
-    { label: 'Due Payment', field: 'duePayment' },
+    { label: 'Source', field: 'source', icon: <InfoIcon /> },
+    { label: 'Booking Date', field: 'bookingDate', icon: <CalendarMonthIcon /> },
+    { label: 'Tour Date', field: 'tourDate', icon: <CalendarMonthIcon /> },
+    { label: 'Booking Status', field: 'bookingStatus', icon: <VerifiedIcon /> },
+    { label: 'Cost', field: 'cost', icon: <InfoIcon /> },
+    { label: 'Advance Payment', field: 'advancePayment', icon: <InfoIcon /> },
+    { label: 'Due Payment', field: 'duePayment', icon: <InfoIcon /> },
   ];
 
   // Column definitions for @tanstack/react-table
@@ -376,7 +439,7 @@ const SingleQueriesView = () => {
       cell: ({ row }) => {
         const rowData = row.original;
         const rowIndex = row.index;
-        const canEdit = hasPermission("operation", "alter") || hasPermission("operation", "changeRequest");
+        const canEdit = hasPermission("operation", "alter") || hasPermission("operation", "changeRequest") || hasPermission("operation", "change-request");
         return canEdit ? (
           <IconButton onClick={() => openEditDrawer(rowData, rowIndex)}>
             <EditOutlinedIcon color="primary" />
@@ -407,141 +470,306 @@ const SingleQueriesView = () => {
     showSnackbar("Change Request Submitted Successfully", "success");
   };
 
+  if (!fetchSelectedquerie?._id) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" p={3}>
+        <Paper elevation={2} sx={{ p: 4, textAlign: 'center', borderRadius: 4, maxWidth: 500 }}>
+          <WarningAmberIcon color="warning" sx={{ fontSize: 60, mb: 2 }} />
+          <Typography variant="h6" fontWeight="bold" gutterBottom>No Query Selected</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Please select a query from the list to view its details.
+          </Typography>
+        </Paper>
+      </Box>
+    );
+  }
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <Stack spacing={2} alignItems="center">
+          <CircularProgress />
+          <Typography variant="body1" color="text.secondary">Loading query details...</Typography>
+        </Stack>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" p={3}>
+        <Paper elevation={2} sx={{ p: 4, textAlign: 'center', borderRadius: 4, maxWidth: 400 }}>
+          <ErrorOutlineIcon color="error" sx={{ fontSize: 60, mb: 2 }} />
+          <Typography variant="h6" fontWeight="bold" gutterBottom>{error}</Typography>
+          <Button variant="contained" onClick={fetchOperationData} sx={{ mt: 2 }}>Retry</Button>
+        </Paper>
+      </Box>
+    );
+  }
+
   return (
-    <Box p={2}>
-      {/* Guest & Booking Details */}
-      <Paper elevation={4} sx={{ p: 3, m: 2, border: '2px solid #1976d2', borderRadius: 3 }}>
-        <Typography variant="h5" align="center" fontWeight="bold" color="primary" gutterBottom>
-          Guest & Booking Details
-        </Typography>
-        <Grid container spacing={4} sx={{ mt: 3 }}>
-          <Grid item xs={12} md={6}>
-            <Box sx={{ border: '1px solid #ccc', borderRadius: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
-                <Typography variant="subtitle1" fontWeight="bold" color="secondary">Guest & Stay Information</Typography>
-                {hasPermission("operation", "alter") && (
-                  <IconButton onClick={() => setGuestDrawer(true)}>
-                    <EditOutlinedIcon />
+    <Box p={3} sx={{ backgroundColor: '#f5f7fa', minHeight: '100vh' }}>
+      {/* Premium Guest & Booking Details Header */}
+      <Paper elevation={0} sx={{ p: 4, mb: 4, borderRadius: 4, background: 'linear-gradient(135deg, #1976d2 0%, #115293 100%)', color: 'white' }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Box>
+            <Typography variant="h4" fontWeight="800" sx={{ letterSpacing: '0.02em' }}>Query Details</Typography>
+            <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>Overview of guest information and booking status</Typography>
+          </Box>
+          <Stack direction="row" spacing={2}>
+            {(hasPermission("operation", "changeRequest") || hasPermission("operation", "change-request")) && (
+              <Button
+                variant="contained"
+                sx={{ bgcolor: 'white', color: '#1976d2', '&:hover': { bgcolor: '#f0f0f0' }, fontWeight: 'bold', borderRadius: 2 }}
+                onClick={() => setChangeRequestOpen(true)}
+              >
+                Change Request
+              </Button>
+            )}
+          </Stack>
+        </Stack>
+      </Paper>
+
+      <Grid container spacing={3}>
+        {/* Guest Information Card */}
+        <Grid item xs={12} md={6}>
+          <Card elevation={3} sx={{ borderRadius: 4, height: '100%', border: '1px solid #e0e0e0' }}>
+            <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#f8fbfc', borderBottom: '1px solid #eef2f6' }}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Avatar sx={{ bgcolor: '#1976d2', width: 32, height: 32 }}>
+                  <PersonIcon fontSize="small" />
+                </Avatar>
+                <Typography variant="h6" fontWeight="bold" color="text.primary">Guest & Stay Information</Typography>
+              </Stack>
+              {hasPermission("operation", "alter") && (
+                <Tooltip title="Edit Guest Details">
+                  <IconButton size="small" onClick={() => setGuestDrawer(true)} sx={{ color: '#1976d2' }}>
+                    <EditOutlinedIcon fontSize="small" />
                   </IconButton>
-                )}
-              </Box>
-              <Divider />
-              <TableContainer>
-                <Table size="small">
-                  <TableBody>
-                    {guestFields.map((item) => (
-                      <TableRow key={item.field}>
-                        <TableCell sx={{ fontWeight: 'bold' }}>{item.label}</TableCell>
-                        <TableCell>
+                </Tooltip>
+              )}
+            </Box>
+            <CardContent>
+              <Grid container spacing={2}>
+                {guestFields.map((item) => (
+                  <Grid item xs={12} sm={6} key={item.field}>
+                    <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                      <Box sx={{ color: '#64748b', mt: 0.5 }}>{item.icon}</Box>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary" fontWeight="bold" display="block" sx={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          {item.label}
+                        </Typography>
+                        <Typography variant="body1" fontWeight="500">
                           {item.field === 'contact'
                             ? `${guestInfo.country_code || ''} ${guestInfo.contact || ''}`
                             : guestInfo[item.field] || 'N/A'}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Box>
-          </Grid>
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Grid>
+                ))}
+              </Grid>
+            </CardContent>
+          </Card>
+        </Grid>
 
-          <Grid item xs={12} md={6}>
-            <Box sx={{ border: '1px solid #ccc', borderRadius: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2 }}>
-                <Typography variant="subtitle1" fontWeight="bold" color="secondary">Booking & Payment</Typography>
-                {hasPermission("operation", "alter") && (
-                  <IconButton onClick={() => setBookingDrawer(true)}>
-                    <EditOutlinedIcon />
+        {/* Booking Details Card */}
+        <Grid item xs={12} md={6}>
+          <Card elevation={3} sx={{ borderRadius: 4, height: '100%', border: '1px solid #e0e0e0' }}>
+            <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#f8fbfc', borderBottom: '1px solid #eef2f6' }}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Avatar sx={{ bgcolor: '#d32f2f', width: 32, height: 32 }}>
+                  <CalendarMonthIcon fontSize="small" />
+                </Avatar>
+                <Typography variant="h6" fontWeight="bold" color="text.primary">Booking & Payment</Typography>
+              </Stack>
+              {hasPermission("operation", "alter") && (
+                <Tooltip title="Edit Booking Details">
+                  <IconButton size="small" onClick={() => setBookingDrawer(true)} sx={{ color: '#d32f2f' }}>
+                    <EditOutlinedIcon fontSize="small" />
                   </IconButton>
-                )}
-              </Box>
-              <Divider />
-              <TableContainer>
-                <Table size="small">
-                  <TableBody>
-                    {bookingFields.map((item) => (
-                      <TableRow key={item.field}>
-                        <TableCell sx={{ fontWeight: 'bold' }}>{item.label}</TableCell>
-                        <TableCell>
+                </Tooltip>
+              )}
+            </Box>
+            <CardContent>
+              <Grid container spacing={2}>
+                {bookingFields.map((item) => (
+                  <Grid item xs={12} sm={6} key={item.field}>
+                    <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                      <Box sx={{ color: '#64748b', mt: 0.5 }}>{item.icon}</Box>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary" fontWeight="bold" display="block" sx={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          {item.label}
+                        </Typography>
+                        <Typography variant="body1" fontWeight="500">
                           {['bookingDate', 'tourDate'].includes(item.field)
                             ? formatDate(guestInfo[item.field])
-                            : guestInfo[item.field] || 'N/A'}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Box>
-          </Grid>
-          {hasPermission("operation", "changeRequest") && (
-            <Grid xs={12} >
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-                <Button variant="contained" color="secondary" onClick={() => setChangeRequestOpen(true)} >
-                  Change Request
-                </Button>
-              </Box>
-            </Grid>
-          )}
+                            : item.field === 'bookingStatus'
+                              ? <Chip label={guestInfo[item.field] || 'N/A'} size="small" color="primary" variant="outlined" sx={{ height: 20, fontSize: '0.75rem', fontWeight: 'bold' }} />
+                              : guestInfo[item.field] || 'N/A'}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Grid>
+                ))}
+              </Grid>
+            </CardContent>
+          </Card>
         </Grid>
-      </Paper>
+      </Grid>
 
-      {/* Itinerary Table */}
-      <Typography variant="h5" align="center" fontWeight="bold" color="primary" gutterBottom mt={5}>
-        Short Itinerary
-      </Typography>
-      <Box display="flex" justifyContent="flex-end" mb={1}>
-        <Button variant="outlined" color="error" onClick={() => setRejectedViewOpen(true)}>
-          rejected
-        </Button>
+      {/* Premium Short Itinerary Section */}
+      <Box sx={{ mt: 6, mb: 4 }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="flex-end" sx={{ mb: 3 }}>
+          <Box>
+            <Typography variant="h5" fontWeight="800" color="text.primary">Short Itinerary</Typography>
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
+              <VerifiedIcon sx={{ color: '#1976d2', fontSize: 18 }} />
+              <Typography variant="body2" color="text.secondary" fontWeight="500">
+                {itineraryData.filter(d => d.status === 'Approved').length} of {itineraryData.length} days verified
+              </Typography>
+            </Stack>
+          </Box>
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<ErrorOutlineIcon />}
+            onClick={() => setRejectedViewOpen(true)}
+            sx={{ borderRadius: 2, fontWeight: 'bold', textTransform: 'none' }}
+          >
+            View Rejections
+          </Button>
+        </Stack>
+
+        <Stack spacing={2.5}>
+          {itineraryData.length === 0 ? (
+            <Paper sx={{ p: 8, textAlign: 'center', borderRadius: 4, bgcolor: '#f8fbfc', border: '2px dashed #e0e0e0' }}>
+              <InfoIcon color="disabled" sx={{ fontSize: 48, mb: 1 }} />
+              <Typography variant="h6" color="text.secondary">No itinerary details available for this query.</Typography>
+            </Paper>
+          ) : itineraryData.map((day, index) => (
+            <Card key={index} elevation={2} sx={{ borderRadius: 3, border: '1px solid #e0e0e0', transition: '0.3s', '&:hover': { boxShadow: 6, borderColor: '#1976d2' } }}>
+              <Grid container>
+                {/* Day/Date Sidebar */}
+                <Grid item xs={12} sm={2} sx={{ bgcolor: '#f8fbfc', p: 2, borderRight: { sm: '1px solid #eef2f6' }, textAlign: 'center' }}>
+                  <Typography variant="h4" fontWeight="950" color="primary" sx={{ mb: 0 }}>D{day.day}</Typography>
+                  <Typography variant="caption" color="text.secondary" fontWeight="700" sx={{ display: 'block', mb: 1 }}>{formatDate(day.date)}</Typography>
+                  <Box sx={{ mb: 1 }}>
+                    {getStatusChip(day.status)}
+                  </Box>
+                  <Box sx={{ mt: 2 }}>
+                    <Tooltip title="Edit this day">
+                      <IconButton size="small" onClick={() => openEditDrawer(day, index)} sx={{ color: '#1976d2', border: '1px solid #e0e0e0' }}>
+                        <EditOutlinedIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Grid>
+
+                {/* Main Content */}
+                <Grid item xs={12} sm={10} sx={{ p: 2.5 }}>
+                  <Grid container spacing={3}>
+                    {/* Destination & Basic Info */}
+                    <Grid item xs={12}>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <LocationOnIcon color="error" fontSize="small" />
+                        <Typography variant="h6" fontWeight="bold">{day.place}</Typography>
+                      </Stack>
+                      <Divider sx={{ my: 1.5 }} />
+                    </Grid>
+
+                    {/* Hotel Content */}
+                    <Grid item xs={12} md={6}>
+                      <Stack direction="row" spacing={2}>
+                        <Avatar sx={{ bgcolor: '#e3f2fd', color: '#1976d2' }}>
+                          <HotelIcon />
+                        </Avatar>
+                        <Box>
+                          <Typography variant="subtitle2" color="text.secondary" fontWeight="bold">HOTEL ACCOMMODATION</Typography>
+                          <Typography variant="body2" fontWeight="700">{day.hotelName || 'No Hotel Selected'}</Typography>
+                          <Stack direction="row" spacing={3} sx={{ mt: 1.5 }} flexWrap="wrap">
+                            <Box>
+                              <Typography variant="caption" color="text.secondary" fontWeight="bold">Stay Period</Typography>
+                              <Typography variant="body2" fontWeight="500">
+                                {day.checkinDate && day.checkoutDate
+                                  ? `${formatDate(day.checkinDate)} - ${formatDate(day.checkoutDate)}`
+                                  : '-'}
+                              </Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary" fontWeight="bold">Room Type</Typography>
+                              <Typography variant="body2" fontWeight="500">{day.roomType || '-'}</Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary" fontWeight="bold">Meal Plan</Typography>
+                              <Typography variant="body2" fontWeight="500">{getMealPlanLabel(day.mealPlan)}</Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary" fontWeight="bold">Amount</Typography>
+                              <Typography variant="body2" fontWeight="700" color="success.main">₹{day.hotelAmount || '0'}</Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary" fontWeight="bold">Confirm No.</Typography>
+                              <Typography variant="body2" fontWeight="600" color="primary">{day.hotelConfirmation || '-'}</Typography>
+                            </Box>
+                          </Stack>
+                        </Box>
+                      </Stack>
+                    </Grid>
+
+                    {/* Vehicle Content */}
+                    <Grid item xs={12} md={6}>
+                      <Stack direction="row" spacing={2}>
+                        <Avatar sx={{ bgcolor: '#f1f8e9', color: '#388e3c' }}>
+                          <DirectionsCarIcon />
+                        </Avatar>
+                        <Box>
+                          <Typography variant="subtitle2" color="text.secondary" fontWeight="bold">VEHICLE & DRIVER</Typography>
+                          <Typography variant="body2" fontWeight="700">{day.vehicleName || 'No Vehicle Assigned'}</Typography>
+                          <Stack direction="row" spacing={3} sx={{ mt: 1.5 }} flexWrap="wrap">
+                            <Box>
+                              <Typography variant="caption" color="text.secondary" fontWeight="bold">Driver Name</Typography>
+                              <Typography variant="body2" fontWeight="500">{day.driverName || '-'}</Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary" fontWeight="bold">Payment Status</Typography>
+                              <Typography variant="body2" fontWeight="500">{day.vehiclePayment || '-'}</Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary" fontWeight="bold">Logistics Status</Typography>
+                              <Typography variant="body2" fontWeight="500">{day.vehicleStatus || '-'}</Typography>
+                            </Box>
+                          </Stack>
+                        </Box>
+                      </Stack>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              </Grid>
+            </Card>
+          ))}
+        </Stack>
       </Box>
 
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead sx={{ backgroundColor: '#e8f5e9' }}>
-            {table.getHeaderGroups().map(headerGroup => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableCell key={header.id}>
-                    <strong>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                    </strong>
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableHead>
-          <TableBody>
-            {table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(
-                      cell.column.columnDef.cell,
-                      cell.getContext()
-                    )}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* Edit Itinerary Drawer */}
       <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
-        <Box sx={{ width: 500, p: 3 }}>
-          <Typography variant="h6" fontWeight="bold" gutterBottom>
-            {hasPermission("operation", "alter") ? "Edit Itinerary" : "Submit Change Request"}
-          </Typography>
-          <Divider sx={{ mb: 2 }} />
-          <Grid container spacing={2}>
+        <Box sx={{ width: 550, p: 4 }}>
+          <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
+            <Avatar sx={{ bgcolor: '#1976d2' }}><EditOutlinedIcon /></Avatar>
+            <Box>
+              <Typography variant="h5" fontWeight="bold">
+                {hasPermission("operation", "alter") ? "Edit Itinerary" : "Change Request"}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">Modify day details and accommodations</Typography>
+            </Box>
+          </Stack>
+          <Divider sx={{ mb: 4 }} />
+
+          <Grid container spacing={3}>
+            {/* Season Selection */}
             <Grid item xs={12}>
+              <Typography variant="subtitle2" fontWeight="bold" color="primary" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CalendarMonthIcon fontSize="small" /> PRICING SEASON
+              </Typography>
               <FormControl fullWidth size="small">
                 <InputLabel>Hotel Season</InputLabel>
                 <Select
@@ -553,6 +781,13 @@ const SingleQueriesView = () => {
                   <MenuItem value="season_price">Season</MenuItem>
                 </Select>
               </FormControl>
+            </Grid>
+
+            {/* Hotel Section */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle2" fontWeight="bold" color="primary" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                <HotelIcon fontSize="small" /> ACCOMMODATION DETAILS
+              </Typography>
             </Grid>
             {columnsData.map((col) => {
               if (col.field === 'hotelName') {
@@ -734,9 +969,15 @@ const SingleQueriesView = () => {
               }
               if (['roomType', 'mealPlan'].includes(col.field)) return null;
               return (
-                <Grid item xs={12} key={col.field}>
+                <Grid item xs={12} sm={6} key={col.field}>
+                  {col.field === 'vehicleName' && (
+                    <Typography variant="subtitle2" fontWeight="bold" color="primary" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2, mb: 1 }}>
+                      <DirectionsCarIcon fontSize="small" /> VEHICLE & LOGISTICS
+                    </Typography>
+                  )}
                   <TextField
                     fullWidth
+                    size="small"
                     type={['date', 'checkinDate', 'checkoutDate'].includes(col.field) ? 'date' : 'text'}
                     label={col.label}
                     name={col.field}
@@ -751,12 +992,18 @@ const SingleQueriesView = () => {
               );
             })}
           </Grid>
-          <Box textAlign="right" mt={3}>
-            <Button variant="contained" color="primary" onClick={saveEdit}>
-              {hasPermission("operation", "alter") ? "Save" : "Submit Request"}
+
+          <Box sx={{ mt: 5, pt: 3, borderTop: '1px solid #eef2f6', display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+            <Button variant="outlined" onClick={() => setDrawerOpen(false)} sx={{ borderRadius: 2, px: 3 }}>
+              Cancel
+            </Button>
+            <Button variant="contained" color="primary" onClick={saveEdit} sx={{ borderRadius: 2, px: 4, fontWeight: 'bold' }}>
+              {hasPermission("operation", "alter") ? "Save Changes" : "Submit Request"}
             </Button>
             {hasPermission("operation", "verify") && (
-              <Button variant="contained" color="success" sx={{ ml: 1 }} onClick={handleVerifyItineray}>Verify</Button>
+              <Button variant="contained" color="success" onClick={handleVerifyItineray} sx={{ borderRadius: 2, px: 3 }}>
+                Verify
+              </Button>
             )}
           </Box>
         </Box>
@@ -837,7 +1084,7 @@ const SingleQueriesView = () => {
       </Dialog>
 
       <Dialog open={verifyPopupOpen} onClose={() => setVerifyPopupOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Verify Itinerary (Day {itineraryData[editIndex]?.day})</DialogTitle>
+        <DialogTitle>Verify Itinerary (Day {editIndex !== null && itineraryData[editIndex] ? itineraryData[editIndex].day : ''})</DialogTitle>
         <DialogContent>
           <Typography>Select Status</Typography>
           <Box mt={1}>
@@ -878,7 +1125,12 @@ const SingleQueriesView = () => {
             disabled={!verifyStatus || (verifyStatus === 'Rejected' && !rejectedReason.trim())}
             onClick={async () => {
               const updatedItinerary = [...itineraryData];
-              const item = updatedItinerary[editIndex];
+              const item = editIndex !== null ? updatedItinerary[editIndex] : null;
+
+              if (!item) {
+                showSnackbar("Error: No item selected for verification", "error");
+                return;
+              }
 
               item.status = verifyStatus;
 
