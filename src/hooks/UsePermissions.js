@@ -16,23 +16,23 @@ const userPermissionData = [
   {
     role: "Manager",
     permissions: [
-      { module: "inquiry", value: ["view", "create", "alter", ] },
+      { module: "inquiry", value: ["view", "create", "alter",] },
       // { module: "user", value: ["view", "create", "alter", "delete"] },
-      { module: "queries", value: ["view", "create", "alter",  "assuser"] },
+      { module: "queries", value: ["view", "create", "alter", "assuser"] },
       { module: "operation", value: ["view", "create", "alter", "change-request", "verify"] },
       { module: "dashboard", value: ["view"] },
-      { module: "hotel", value: ["view","alter"] },
+      { module: "hotel", value: ["view", "alter"] },
     ],
   },
   {
     role: "Operation",
     permissions: [
-      { module: "inquiry", value: ["view", "create", "alter", ] },
+      { module: "inquiry", value: ["view", "create", "alter",] },
       // { module: "user", value: ["view", "create", "alter", "delete"] },
-      { module: "queries", value: ["view", "create", "alter",  "assuser"] },
-      { module: "operation", value: ["view", "create",  "change-request"] },
+      { module: "queries", value: ["view", "create", "alter", "assuser"] },
+      { module: "operation", value: ["view", "create", "change-request"] },
       { module: "dashboard", value: ["view"] },
-      { module: "hotel", value: ["view","alter"] },
+      { module: "hotel", value: ["view", "alter"] },
     ],
   },
   {
@@ -50,7 +50,7 @@ const userPermissionData = [
       { module: "queries", value: ["view", "create"] },
       { module: "dashboard", value: ["view"] },
       { module: "logout", value: ["view"] },
-      { module: "operation", value: ["changeRequest"] },
+      { module: "operation", value: ["change-request"] },
     ],
   },
   {

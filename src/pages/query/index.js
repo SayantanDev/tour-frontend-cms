@@ -251,7 +251,8 @@ const Query = () => {
       if (!res) throw new Error("Action failed");
 
       showSnackbar(`Change ${action.toLowerCase()} successfully`, "success");
-      openChangeRequestModal(currentQueryId); // Refresh list
+      openChangeRequestModal(currentQueryId); // Refresh modal list
+      fetchQuery(1); // Refresh main list to update counts
     } catch (err) {
       console.error(err);
       showSnackbar("Action failed", "error");
@@ -490,16 +491,42 @@ const Query = () => {
         cell: ({ row }) => {
           const rowData = row.original;
           return (
-            <Stack direction="row" spacing={0.5}>
-              <Tooltip title="Rejected Changes">
-                <IconButton size="small" color="error" onClick={() => openRejectedChangeModal(rowData.operation_id)}>
-                  <ErrorOutlineIcon fontSize="small" />
-                </IconButton>
+            <Stack direction="row" spacing={1.5}>
+              <Tooltip title={`${rowData.rejected_changes || 0} Rejected Changes`}>
+                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                  <IconButton size="small" color="error" onClick={() => openRejectedChangeModal(rowData.operation_id || rowData._id)}>
+                    <ErrorOutlineIcon fontSize="small" />
+                  </IconButton>
+                  {rowData.rejected_changes > 0 && (
+                    <Box sx={{
+                      position: 'absolute', top: -4, right: -4,
+                      bgcolor: 'error.main', color: 'white',
+                      borderRadius: '50%', width: 16, height: 16,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '10px', fontWeight: 'bold', border: '2px solid white'
+                    }}>
+                      {rowData.rejected_changes}
+                    </Box>
+                  )}
+                </Box>
               </Tooltip>
-              <Tooltip title="Review Requests">
-                <IconButton size="small" color="warning" onClick={() => openChangeRequestModal(rowData.operation_id)}>
-                  <ChangeCircleIcon fontSize="small" />
-                </IconButton>
+              <Tooltip title={`${rowData.pending_changes || 0} Pending Requests`}>
+                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
+                  <IconButton size="small" color="warning" onClick={() => openChangeRequestModal(rowData.operation_id || rowData._id)}>
+                    <ChangeCircleIcon fontSize="small" />
+                  </IconButton>
+                  {rowData.pending_changes > 0 && (
+                    <Box sx={{
+                      position: 'absolute', top: -4, right: -4,
+                      bgcolor: 'warning.main', color: 'white',
+                      borderRadius: '50%', width: 16, height: 16,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '10px', fontWeight: 'bold', border: '2px solid white'
+                    }}>
+                      {rowData.pending_changes}
+                    </Box>
+                  )}
+                </Box>
               </Tooltip>
             </Stack>
           );

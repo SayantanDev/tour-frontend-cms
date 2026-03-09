@@ -348,7 +348,7 @@ const SingleQueriesView = () => {
           setItineraryData(newData);
           setDrawerOpen(false);
         }
-      } else if (hasPermission("operation", "changeRequest") || hasPermission("operation", "change-request")) {
+      } else if (hasPermission("operation", "change-request")) {
         // CHANGE REQUEST logic for roles like 'User'
         const changeDescription = `Day ${updatedRow.day} changes: ${changedFields.join(", ")}`;
         const res = await addChangeRequestForItineray(operationId, { description: changeDescription });
@@ -439,7 +439,7 @@ const SingleQueriesView = () => {
       cell: ({ row }) => {
         const rowData = row.original;
         const rowIndex = row.index;
-        const canEdit = hasPermission("operation", "alter") || hasPermission("operation", "changeRequest") || hasPermission("operation", "change-request");
+        const canEdit = hasPermission("operation", "alter") || hasPermission("operation", "change-request");
         return canEdit ? (
           <IconButton onClick={() => openEditDrawer(rowData, rowIndex)}>
             <EditOutlinedIcon color="primary" />
@@ -466,7 +466,7 @@ const SingleQueriesView = () => {
     setDescription('');
     setChangeRequestOpen(false);
 
-    await addChangeRequest(fetchSelectedquerie?._id, { description });
+    await addChangeRequest(operationId, { description });
     showSnackbar("Change Request Submitted Successfully", "success");
   };
 
@@ -517,7 +517,7 @@ const SingleQueriesView = () => {
             <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>Overview of guest information and booking status</Typography>
           </Box>
           <Stack direction="row" spacing={2}>
-            {(hasPermission("operation", "changeRequest") || hasPermission("operation", "change-request")) && (
+            {hasPermission("operation", "change-request") && (
               <Button
                 variant="contained"
                 sx={{ bgcolor: 'white', color: '#1976d2', '&:hover': { bgcolor: '#f0f0f0' }, fontWeight: 'bold', borderRadius: 2 }}
@@ -1139,7 +1139,7 @@ const SingleQueriesView = () => {
                 item.rejected_reason.push({ description: rejectedReason });
               }
 
-              const res = await updateFollowupDetails(fetchSelectedquerie?._id, {
+              const res = await updateFollowupDetails(operationId, {
                 followup_details: mapItineraryToPayload(updatedItinerary)
               });
 
