@@ -22,7 +22,6 @@ const userPermissionData = [
       { module: "operation", value: ["view", "create", "alter", "change-request", "verify"] },
       { module: "dashboard", value: ["view"] },
       { module: "hotel", value: ["view","alter"] },
-
     ],
   },
   {
