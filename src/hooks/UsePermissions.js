@@ -14,6 +14,18 @@ const userPermissionData = [
     ],
   },
   {
+    role: "Operation",
+    permissions: [
+      { module: "inquiry", value: ["view", "create", "alter", ] },
+      // { module: "user", value: ["view", "create", "alter", "delete"] },
+      { module: "queries", value: ["view", "create", "alter",  "assuser"] },
+      { module: "operation", value: ["view", "create", "alter", "change-request", "verify"] },
+      { module: "dashboard", value: ["view"] },
+      { module: "hotel", value: ["view","alter"] },
+
+    ],
+  },
+  {
     role: "FrontDesk",
     permissions: [
       { module: "inquiry", value: ["view"] },
