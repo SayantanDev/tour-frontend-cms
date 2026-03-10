@@ -70,7 +70,7 @@ const Inquiry = () => {
         const fetchUsers = async () => {
             try {
                 const response = await getAllUsers();
-                const usersOnly = response.data.filter(u => u.permission === "User");
+                const usersOnly = response.data.filter(u => u.permission === "User" || u.permission === "Operation");
                 setUserList(usersOnly);
             } catch (err) {
                 console.error("Error fetching users:", err);
