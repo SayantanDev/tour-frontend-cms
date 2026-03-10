@@ -82,7 +82,6 @@ const Sayantan = () => {
                             <TableRow>
                                 <TableCell><b>Name</b></TableCell>
                                 <TableCell><b>Email</b></TableCell>
-                                <TableCell><b>Phone</b></TableCell>
                                 <TableCell><b>Message</b></TableCell>
                                 <TableCell align="right"><b>Actions</b></TableCell>
                             </TableRow>
@@ -93,7 +92,6 @@ const Sayantan = () => {
                                     <TableRow key={contact._id || contact.id || Math.random()}>
                                         <TableCell>{contact.name || contact.fullName || 'N/A'}</TableCell>
                                         <TableCell>{contact.email || 'N/A'}</TableCell>
-                                        <TableCell>{contact.phone || contact.mobile || 'N/A'}</TableCell>
                                         <TableCell>{contact.message || contact.msg || 'N/A'}</TableCell>
                                         <TableCell align="right">
                                             <IconButton color="error" onClick={() => handleDelete(contact._id || contact.id)}>
