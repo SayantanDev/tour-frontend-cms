@@ -429,8 +429,9 @@ export const calculateCarCost = (configData, season, tripDetails) => {
     const totalDays = (parseInt(tripDetails.duration) || 0) + 1;
 
     if (tripDetails.location === 'Sandakphu') {
-        return totalDays === 3 ? (twoNightPerDayCarAmount * carDetails[0].car_count) :
-            totalDays === 4 ? (threeNightPerDayCarAmount * carDetails[0].car_count) : (oneNightPerDayCarAmount * carDetails[0].car_count);
+        const carCount = carDetails[0]?.car_count || 1;
+        return totalDays === 3 ? (twoNightPerDayCarAmount * carCount) :
+            totalDays === 4 ? (threeNightPerDayCarAmount * carCount) : (oneNightPerDayCarAmount * carCount);
     }
 
     return carDetails.reduce((acc, carDetail) => {

@@ -199,7 +199,7 @@ const CostEstimateCard = ({
                                         </Grid>
                                         <Grid item xs={4} textAlign="right">
                                             <Typography variant="subtitle2" fontWeight={700} color="primary.dark">
-                                                ₹{finalCost.toLocaleString()}
+                                                ₹{(Number(finalCost) || 0).toLocaleString()}
                                             </Typography>
                                         </Grid>
                                     </Grid>
@@ -224,7 +224,7 @@ const CostEstimateCard = ({
                             onClick={() => setShowBreakdown(!showBreakdown)}
                         >
                             <Typography variant="body2" fontWeight={600}>Total Car Cost Included:</Typography>
-                            <Typography variant="body2" fontWeight={600}>₹{carTotal.toLocaleString()}</Typography>
+                            <Typography variant="body2" fontWeight={600}>₹{(Number(carTotal) || 0).toLocaleString()}</Typography>
                         </Box>
                         <Collapse in={showBreakdown}>
                             <Box sx={{ p: 1.5, bgcolor: 'background.paper' }}>
@@ -274,7 +274,7 @@ const CostEstimateCard = ({
                             onClick={() => setShowHotelBreakdown(!showHotelBreakdown)}
                         >
                             <Typography variant="body2" fontWeight={600}>Total Hotel Cost Included:</Typography>
-                            <Typography variant="body2" fontWeight={600}>₹{hotelTotal.toLocaleString()}</Typography>
+                            <Typography variant="body2" fontWeight={600}>₹{(Number(hotelTotal) || 0).toLocaleString()}</Typography>
                         </Box>
                         <Collapse in={showHotelBreakdown}>
                             <Box sx={{ p: 1.5, bgcolor: 'background.paper' }}>

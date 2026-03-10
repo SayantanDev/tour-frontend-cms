@@ -10,7 +10,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import AddIcon from '@mui/icons-material/Add';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import EditIcon from '@mui/icons-material/Edit';
+import EditNoteIcon from '@mui/icons-material/EditNote';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -28,8 +29,9 @@ import DownloadIcon from '@mui/icons-material/Download';
 
 import { deleteQueries, getAllQueries, updateQueries } from "../../api/queriesAPI";
 import usePermissions from "../../hooks/UsePermissions";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setSelectedquerie } from "../../reduxcomponents/slices/queriesSlice";
+import { setSelectedInquiry } from "../../reduxcomponents/slices/inquirySlice";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import useSnackbar from "../../hooks/useSnackbar";
 import { getAllUsers } from "../../api/userAPI";
@@ -127,6 +129,7 @@ const EditableNumberCell = ({ value, onChange }) => (
 const Query = () => {
   const checkPermission = usePermissions();
   const dispatch = useDispatch();
+  const userRole = useSelector((state) => state.tokens?.user?.permission);
   const navigate = useNavigate();
   const canView = checkPermission("queries", "view");
   // const canEdit = checkPermission("queries", "alter");
@@ -145,6 +148,7 @@ const Query = () => {
   const [hasMore, setHasMore] = useState(true);
   const [quickEditOpen, setQuickEditOpen] = useState(false);
   const [selectedQuickEditId, setSelectedQuickEditId] = useState(null);
+  const [isQuickEditLocked, setIsQuickEditLocked] = useState(false);
   const [editedRowData, setEditedRowData] = useState({});
   const [pdfLoading, setPdfLoading] = useState(null); // id of current loading pdf
 
@@ -379,6 +383,20 @@ const Query = () => {
     }
   };
 
+  const handleFullEdit = (rowData) => {
+    // Map backend response fields to what CreateInquiry expects
+    const mappedData = {
+      ...rowData,
+      _id: rowData._id,
+      guest_name: rowData.guest_info?.guest_name,
+      guest_email: rowData.guest_info?.guest_email,
+      guest_phone: rowData.guest_info?.guest_phone,
+      guest_country_code: rowData.guest_info?.guest_country_code,
+    };
+    dispatch(setSelectedInquiry(mappedData));
+    navigate("/createItinerary");
+  };
+
   // Column definitions for @tanstack/react-table
   const columns = useMemo(() => {
     const cols = [
@@ -487,6 +505,8 @@ const Query = () => {
               <Tooltip title="Quick Edit">
                 <IconButton size="small" color="primary" onClick={() => {
                   setSelectedQuickEditId(rowData._id);
+                  const isLocked = (userRole === "User" || userRole === "Operation") && rowData.advance > 0;
+                  setIsQuickEditLocked(isLocked);
                   setEditedRowData({
                     guest_name: rowData.guest_info?.guest_name || "",
                     guest_phone: rowData.guest_info?.guest_phone || "",
@@ -497,16 +517,35 @@ const Query = () => {
                   });
                   setQuickEditOpen(true);
                 }}>
-                  <EditOutlinedIcon fontSize="small" />
+                  <EditNoteIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
-              {rowData.advance > 0 && (
-                <Tooltip title="Manage Itinerary">
-                  <IconButton size="small" color="info" onClick={() => handleEditOpen(rowData)}>
-                    <VisibilityIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              )}
+              {(() => {
+                const isLocked = (userRole === "User" || userRole === "Operation") && rowData.advance > 0;
+                return (
+                  <Tooltip title={isLocked ? "Locked after advance" : "Full Edit"}>
+                    <span>
+                      <IconButton
+                        size="small"
+                        color="warning"
+                        onClick={() => handleFullEdit(rowData)}
+                        disabled={isLocked}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                );
+              })()}
+              {
+                rowData.advance > 0 && (
+                  <Tooltip title="Manage Itinerary">
+                    <IconButton size="small" color="info" onClick={() => handleEditOpen(rowData)}>
+                      <VisibilityIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )
+              }
               <Tooltip title="Download PDF">
                 <IconButton
                   size="small"
@@ -521,14 +560,16 @@ const Query = () => {
                   )}
                 </IconButton>
               </Tooltip>
-              {checkPermission("queries", "assuser") && (
-                <Tooltip title="Assign Users">
-                  <IconButton size="small" color="secondary" onClick={() => openUserModal(rowData)}>
-                    <AssignmentIndIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              )}
-            </Stack>
+              {
+                checkPermission("queries", "assuser") && (
+                  <Tooltip title="Assign Users">
+                    <IconButton size="small" color="secondary" onClick={() => openUserModal(rowData)}>
+                      <AssignmentIndIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )
+              }
+            </Stack >
           );
         },
       },
@@ -1038,15 +1079,19 @@ const Query = () => {
                 fullWidth
                 label="Total Cost"
                 type="number"
+                disabled={isQuickEditLocked}
                 value={(editedRowData.cost === 0 || editedRowData.cost === '0') ? 0 : (editedRowData.cost || "")}
                 onChange={(e) => setEditedRowData(prev => ({ ...prev, cost: e.target.value }))}
+                helperText={isQuickEditLocked ? "Locked after advance" : ""}
               />
               <TextField
                 fullWidth
                 label="Advance"
                 type="number"
+                disabled={isQuickEditLocked}
                 value={(editedRowData.advance === 0 || editedRowData.advance === '0') ? 0 : (editedRowData.advance || "")}
                 onChange={(e) => setEditedRowData(prev => ({ ...prev, advance: e.target.value }))}
+                helperText={isQuickEditLocked ? "Locked after advance" : ""}
               />
             </Stack>
           </Stack>

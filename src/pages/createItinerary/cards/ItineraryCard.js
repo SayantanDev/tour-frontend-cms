@@ -47,7 +47,7 @@ const ItineraryCard = ({ itinerary, onItineraryChange, allPackages, onAddDay, on
                     </Typography>
                     <Stack direction="row" spacing={1} flexWrap="wrap">
                         {safeItinerary.length > 0 && (
-                            <Chip label={`${safeItinerary.length} Days`} size="small" color="success" variant="outlined" />
+                            <Chip label={`${safeItinerary.length} Day${safeItinerary.length > 1 ? 's' : ''}`} size="small" color="primary" variant="filled" />
                         )}
                     </Stack>
                 </Box>
@@ -72,9 +72,12 @@ const ItineraryCard = ({ itinerary, onItineraryChange, allPackages, onAddDay, on
                                     size="small"
                                     openOnFocus={false}
                                     options={uniqueItineraryOptions}
-                                    value={day}
+                                    value={String(day || '')}
                                     onInputChange={(event, newInputValue) => {
-                                        onItineraryChange(index, newInputValue);
+                                        onItineraryChange(index, newInputValue || '');
+                                    }}
+                                    onChange={(event, newValue) => {
+                                        onItineraryChange(index, newValue || '');
                                     }}
                                     renderInput={(params) => (
                                         <TextField

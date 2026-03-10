@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 
 import {
     Box, Grid, TextField, Button, Typography, Alert, Snackbar, CircularProgress, Backdrop, Dialog, DialogTitle, DialogContent,
-    DialogActions, Skeleton,
+    DialogActions, Skeleton, Chip,
 } from '@mui/material';
 import { Save, Clear, PictureAsPdf, Email, SaveAlt, Edit as EditIcon } from '@mui/icons-material';
 import { useDispatch, useSelector } from 'react-redux';
@@ -46,10 +46,18 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     const allPackages = useSelector((state) => state.package.allPackages || []);
     const allHotels = useSelector((state) => state.hotels.allHotels || []);
     const configData = useSelector((state) => state.config.configData || {});
-    const [currentMargin, setCurrentMargin] = useState(configData?.additionalCosts?.margin_cost_percent);
+    const isEditMode = Boolean(existingInquiry) || (reduxSelectedInquiry && Object.keys(reduxSelectedInquiry).length > 0);
+    const [currentMargin, setCurrentMargin] = useState(configData?.additionalCosts?.margin_cost_percent || 20);
     const pdfRef = useRef(null);
     const guestNameRef = useRef(null);
     const ignoreSuggestionsRef = useRef(false);
+
+    // Sync margin when config loads
+    useEffect(() => {
+        if (configData?.additionalCosts?.margin_cost_percent && !isEditMode) {
+            setCurrentMargin(configData.additionalCosts.margin_cost_percent);
+        }
+    }, [configData, isEditMode]);
 
     // Focus guest name on open
     useEffect(() => {
@@ -74,9 +82,6 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     const [itineraryDialogOpen, setItineraryDialogOpen] = useState(false);
     const [detailedItinerary, setDetailedItinerary] = useState('');
     const [previewOpen, setPreviewOpen] = useState(false);
-
-    // Edit mode
-    const isEditMode = Boolean(existingInquiry);
 
     // Form States
     const [guestInfo, setGuestInfo] = useState({
@@ -205,23 +210,44 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         // Load cost
         setCost(inquiry.cost || 0);
 
-        // Load package if package_id exists
-        if (inquiry.package_id && allPackages.length > 0) {
-            const pkg = allPackages.find(p => p._id === inquiry.package_id);
+        // Load itinerary - Initial load from followup_details as fallback
+        if (inquiry.followup_details && inquiry.followup_details.length > 0) {
+            const manualItinerary = inquiry.followup_details.map(item => item.destination || '');
+            const duration = parseInt(inquiry.duration) || 0;
+            setItinerary(updateItineraryByDuration(manualItinerary, duration));
+        } else if (inquiry.duration) {
+            // If no itinerary but duration exists, create empty slots
+            setItinerary(new Array(parseInt(inquiry.duration) + 1).fill(''));
+        }
+
+        // Load package - If package_id exists, load its full descriptive itinerary
+        const pkgId = inquiry.package_id?._id || inquiry.package_id;
+        if (pkgId && allPackages.length > 0) {
+            const pkg = allPackages.find(p => p._id.toString() === pkgId.toString());
             if (pkg) {
                 // Use handlePackageSelect logic to populate itinerary and hotels
                 setSelectedPackage(pkg);
 
-                // Set editable short itinerary
+                // Set editable short itinerary from package (priority)
+                // This ensures we show "NJP to Gangtok" instead of just "Gangtok"
                 const extractedItinerary = extractItineraryFromPackage(pkg.details);
-                setItinerary(extractedItinerary);
+                if (extractedItinerary.length > 0) {
+                    setItinerary(extractedItinerary);
+                }
 
-                // Extract locations from shortItinerary and pre-populate hotel selections
-                if (pkg.details?.shortItinerary && Array.isArray(pkg.details.shortItinerary)) {
-                    const newHotelSelections = prePopulateHotelSelections(pkg.details.shortItinerary, allHotels);
-                    setHotelSelections(newHotelSelections);
+                // If hotel selections are missing in the inquiry, pre-populate from package
+                if (!inquiry.hotel_selections || Object.keys(inquiry.hotel_selections).length === 0) {
+                    if (pkg.details?.shortItinerary && Array.isArray(pkg.details.shortItinerary)) {
+                        const newHotelSelections = prePopulateHotelSelections(pkg.details.shortItinerary, allHotels);
+                        setHotelSelections(newHotelSelections);
+                    }
                 }
             }
+        }
+
+        // Load hotel selections if they exist (overrides package defaults)
+        if (inquiry.hotel_selections && Object.keys(inquiry.hotel_selections).length > 0) {
+            setHotelSelections(inquiry.hotel_selections);
         }
     };
 
@@ -459,8 +485,9 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
         //important code
         try {
-            if (isEditMode && existingInquiry?._id) {
-                await axios.put(`${QRY_URL}/update/${existingInquiry._id}`, payload);
+            const inquiryId = existingInquiry?._id || reduxSelectedInquiry?._id;
+            if (isEditMode && inquiryId) {
+                await axios.put(`${QRY_URL}/update/${inquiryId}`, payload);
                 showSnackbar('Inquiry updated successfully!', 'success');
             } else {
                 await axios.post(`${QRY_URL}/create-queries`, payload);
@@ -724,9 +751,17 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 }}
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                        {isEditMode ? 'Edit Inquiry' : 'Create New Inquiry'}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                            {isEditMode ? 'Edit Inquiry' : 'Create New Inquiry'}
+                        </Typography>
+                        <Chip
+                            label={`Total: ₹${(Number(cost) || 0).toLocaleString('en-IN')}`}
+                            color="success"
+                            variant="filled"
+                            sx={{ fontWeight: 800, fontSize: '1.2rem', py: 2.5, px: 2, height: 'auto' }}
+                        />
+                    </Box>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                         <Button
                             variant="outlined"
@@ -861,20 +896,22 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                         size="small"
                         startIcon={isEditMode ? <EditIcon /> : <Save />}
                         onClick={handleOpenPreview}
-                        disabled={loading || !selectedPackage || selectedPackage?._id === 'custom'}
+                        disabled={loading || !selectedPackage}
                         fullWidth
                     >
                         {loading ? 'Saving...' : isEditMode ? 'Update Inquiry' : 'Create Inquiry'}
                     </Button>
-                    <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<Clear />}
-                        onClick={onClose || resetForm}
-                        disabled={loading}
-                    >
-                        {onClose ? 'Cancel' : 'Reset'}
-                    </Button>
+                    {!isEditMode && (
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<Clear />}
+                            onClick={onClose || resetForm}
+                            disabled={loading}
+                        >
+                            {onClose ? 'Cancel' : 'Reset'}
+                        </Button>
+                    )}
                 </Box>
             </Box>
 
