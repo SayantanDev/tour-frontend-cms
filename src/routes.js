@@ -5,6 +5,8 @@ import {
   Route,
   RouterProvider,
 } from "react-router-dom";
+import { useSelector } from "react-redux";
+
 
 import Layout from "./components/layout";
 import RootLayout from "./components/layout/RootLayout";
@@ -35,137 +37,145 @@ import PackageUploadInPlaces from "./pages/packageUpload/inPlaces";
 import CategoryPackageUploadInPlaces from "./pages/packageUpload/inCategoryPackage";
 import AllPermissions from "./pages/allPermissions";
 import AllUserPermissions from "./pages/allUserPermissions";
+import Sayantan from "./pages/sayantan";
 import Profile from "./pages/Profile";
 import WhatsappInbox from "./pages/whatsappInbox";
 
 const RootLayoutWithRedirect = withAuthRedirect(RootLayout);
 
-// Create routes using React Router v6.15+ with future flags
-const router = createBrowserRouter(
-  createRoutesFromElements(
-    <>
-      {/* Public routes */}
-      <Route path="/" element={<RootLayoutWithRedirect />}>
-        <Route index element={<Login />} />
-        <Route path="logout" element={<Logout />} />
-      </Route>
-
-      {/* Protected routes */}
-      <Route path="/" element={<Layout />}>
-        <Route
-          path="dashboard"
-          element={<ProtectedRoute Element={Dashboard} module="dashboard" />}
-        />
-        <Route
-          path="query"
-          element={<ProtectedRoute Element={Query} module="queries" />}
-        />
-        <Route
-          path="inquiry"
-          element={<ProtectedRoute Element={Itinerary} module="inquiry" />}
-        />
-        <Route
-          path="createItinerary"
-          element={<ProtectedRoute Element={CreateItinerary} module="inquiry" />}
-        />
-        <Route
-          path="packages"
-          element={<ProtectedRoute Element={AllPackages} module="packages" />}
-        />
-        <Route
-          path="profile"
-          element={<ProtectedRoute Element={Profile} module="packages" />}
-        />
-        <Route
-          path="hotels"
-          element={<ProtectedRoute Element={Hotels} module="hotel" />}
-        />
-        <Route
-          path="Vehicles"
-          element={<ProtectedRoute Element={Vehicles} module="Vehicles" />}
-        />
-        <Route
-          path="packages/view/:id"
-          element={<ProtectedRoute Element={View} module="packages" />}
-        />
-        <Route
-          path="packages/createandedit"
-          element={<ProtectedRoute Element={PackageCreate} module="packages" />}
-        />
-        <Route
-          path="category-packages/createandedit"
-          element={<ProtectedRoute Element={CtgForm} module="packages" />}
-        />
-        <Route
-          path="category-packages/view"
-          element={<ProtectedRoute Element={CategoryPackage} module="packages" />}
-        />
-        <Route
-          path="upload/categorypackages/:id"
-          element={<ProtectedRoute Element={CategoryPackageUploadInPlaces} module="places" />}
-        />
-        <Route
-          path="places/createandedit"
-          element={<ProtectedRoute Element={PlacesForm} module="places" />}
-        />
-        <Route
-          path="places/view"
-          element={<ProtectedRoute Element={AllPlaces} module="places" />}
-        />
-        <Route
-          path="upload/:schema/:id"
-          element={<ProtectedRoute Element={ImageManagerPage} module="places" />}
-        />
-        <Route
-          path="upload/packages/:id"
-          element={<ProtectedRoute Element={PackageUploadInPlaces} module="places" />}
-        />
-        <Route
-          path="query/view"
-          element={<ProtectedRoute Element={SingleQueriesView} module="queries" />}
-        />
-        <Route
-          path="packages/edit"
-          element={<ProtectedRoute Element={Edit} module="packages" />}
-        />
-        <Route
-          path="costTable"
-          element={<ProtectedRoute Element={AdditionalCost} module="costs" />}
-        />
-        <Route
-          path="users"
-          element={<ProtectedRoute Element={Users} module="user" />}
-        />
-        <Route
-          path="permission"
-          element={<ProtectedRoute Element={AllPermissions} module="permission" />}
-        />
-        <Route
-          path="user-permission"
-          element={<ProtectedRoute Element={AllUserPermissions} module="user-permission" />}
-        />
-        <Route
-          path="whatsapp-inbox"
-          element={<ProtectedRoute Element={WhatsappInbox} module="whatsapp" />}
-        />
-        <Route path="not-authorized" element={<NotAuthorized />} />
-      </Route>
-    </>
-  ),
-  {
-    future: {
-      v7_startTransition: true,
-      v7_relativeSplatPath: true,
-      v7_fetcherPersist: true,
-      v7_normalizeFormMethod: true,
-      v7_partialHydration: true,
-      v7_skipActionErrorRevalidation: true,
-    },
-  }
-);
-
 // Provide the router
 const Router = () => {
+  const { user } = useSelector(state => state.tokens);
+
+  const router = React.useMemo(() => createBrowserRouter(
+    createRoutesFromElements(
+      <>
+        {/* Public routes */}
+        <Route path="/" element={<RootLayoutWithRedirect />}>
+          <Route index element={<Login />} />
+          <Route path="logout" element={<Logout />} />
+        </Route>
+
+        {/* Protected routes */}
+        <Route path="/" element={<Layout />}>
+          <Route
+            path="dashboard"
+            element={<ProtectedRoute Element={Dashboard} module="dashboard" />}
+          />
+          <Route
+            path="query"
+            element={<ProtectedRoute Element={Query} module="queries" />}
+          />
+          <Route
+            path="inquiry"
+            element={<ProtectedRoute Element={Itinerary} module="inquiry" />}
+          />
+          <Route
+            path="createItinerary"
+            element={<ProtectedRoute Element={CreateItinerary} module="inquiry" />}
+          />
+          <Route
+            path="packages"
+            element={<ProtectedRoute Element={AllPackages} module="packages" />}
+          />
+          <Route
+            path="profile"
+            element={<ProtectedRoute Element={Profile} module="packages" />}
+          />
+          <Route
+            path="hotels"
+            element={<ProtectedRoute Element={Hotels} module="hotel" />}
+          />
+          <Route
+            path="Vehicles"
+            element={<ProtectedRoute Element={Vehicles} module="Vehicles" />}
+          />
+          <Route
+            path="packages/view/:id"
+            element={<ProtectedRoute Element={View} module="packages" />}
+          />
+          <Route
+            path="packages/createandedit"
+            element={<ProtectedRoute Element={PackageCreate} module="packages" />}
+          />
+          <Route
+            path="category-packages/createandedit"
+            element={<ProtectedRoute Element={CtgForm} module="packages" />}
+          />
+          <Route
+            path="category-packages/view"
+            element={<ProtectedRoute Element={CategoryPackage} module="packages" />}
+          />
+          <Route
+            path="upload/categorypackages/:id"
+            element={<ProtectedRoute Element={CategoryPackageUploadInPlaces} module="places" />}
+          />
+          <Route
+            path="places/createandedit"
+            element={<ProtectedRoute Element={PlacesForm} module="places" />}
+          />
+          <Route
+            path="places/view"
+            element={<ProtectedRoute Element={AllPlaces} module="places" />}
+          />
+          <Route
+            path="upload/:schema/:id"
+            element={<ProtectedRoute Element={ImageManagerPage} module="places" />}
+          />
+          <Route
+            path="upload/packages/:id"
+            element={<ProtectedRoute Element={PackageUploadInPlaces} module="places" />}
+          />
+          <Route
+            path="query/view"
+            element={<ProtectedRoute Element={SingleQueriesView} module="queries" />}
+          />
+          <Route
+            path="packages/edit"
+            element={<ProtectedRoute Element={Edit} module="packages" />}
+          />
+          <Route
+            path="costTable"
+            element={<ProtectedRoute Element={AdditionalCost} module="costs" />}
+          />
+          <Route
+            path="users"
+            element={<ProtectedRoute Element={Users} module="user" />}
+          />
+          <Route
+            path="permission"
+            element={<ProtectedRoute Element={AllPermissions} module="permission" />}
+          />
+          <Route
+            path="user-permission"
+            element={<ProtectedRoute Element={AllUserPermissions} module="user-permission" />}
+          />
+          {user?.permission === 'Admin' && (
+            <Route
+              path="sayantan"
+              element={<ProtectedRoute Element={Sayantan} module="sayantan" />}
+            />
+          )}
+          <Route
+            path="whatsapp-inbox"
+            element={<ProtectedRoute Element={WhatsappInbox} module="whatsapp" />}
+          />
+          <Route path="not-authorized" element={<NotAuthorized />} />
+        </Route>
+      </>
+    ),
+    {
+      future: {
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+        v7_fetcherPersist: true,
+        v7_normalizeFormMethod: true,
+        v7_partialHydration: true,
+        v7_skipActionErrorRevalidation: true,
+      },
+    }
+  ), [user?.permission]);
+
   return <RouterProvider router={router} />;
 };
 
