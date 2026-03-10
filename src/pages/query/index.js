@@ -22,6 +22,9 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import EventIcon from '@mui/icons-material/Event';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import DownloadIcon from '@mui/icons-material/Download';
 
 import { deleteQueries, getAllQueries, updateQueries } from "../../api/queriesAPI";
 import usePermissions from "../../hooks/UsePermissions";
@@ -30,7 +33,8 @@ import { setSelectedquerie } from "../../reduxcomponents/slices/queriesSlice";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import useSnackbar from "../../hooks/useSnackbar";
 import { getAllUsers } from "../../api/userAPI";
-import { getChangeRequest, getRejectedChanges, handleChangeRequestApproval } from "../../api/operationAPI";
+import { getChangeRequest, getRejectedChanges, handleChangeRequestApproval, getSingleOperation, getQueriesByoperation } from "../../api/operationAPI";
+import { exportQueryViewPDF, mapOperationToPdfData } from "../createItinerary/createInquiryCalculation";
 
 const getStatusStyles = (status) => {
   switch (status) {
@@ -142,6 +146,7 @@ const Query = () => {
   const [quickEditOpen, setQuickEditOpen] = useState(false);
   const [selectedQuickEditId, setSelectedQuickEditId] = useState(null);
   const [editedRowData, setEditedRowData] = useState({});
+  const [pdfLoading, setPdfLoading] = useState(null); // id of current loading pdf
 
   // Modal and team management
   const [userModalOpen, setUserModalOpen] = useState(false);
@@ -358,6 +363,22 @@ const Query = () => {
     }
   };
 
+  const handleDownloadPDF = async (rowData) => {
+    setPdfLoading(rowData._id);
+    try {
+      const operationData = await getSingleOperation(rowData.operation_id || rowData._id);
+      const queriesData = await getQueriesByoperation(operationData._id);
+      const { guestInfo, itineraryData } = mapOperationToPdfData(operationData, queriesData);
+      await exportQueryViewPDF({ guestInfo, itineraryData }, { isPreview: false }, (loading) => {
+        if (!loading) setPdfLoading(null);
+      }, showSnackbar);
+    } catch (error) {
+      console.error("PDF generation failed:", error);
+      showSnackbar("Failed to generate PDF", "error");
+      setPdfLoading(null);
+    }
+  };
+
   // Column definitions for @tanstack/react-table
   const columns = useMemo(() => {
     const cols = [
@@ -436,6 +457,26 @@ const Query = () => {
           );
         },
       },
+      ...(checkPermission("user", "view") ? [
+        {
+          accessorKey: "created_by_name",
+          header: "Created By",
+          cell: ({ getValue }) => (
+            <Typography variant="caption" sx={{ fontStyle: 'italic', color: 'text.secondary' }}>
+              {getValue() || "-"}
+            </Typography>
+          )
+        },
+        {
+          accessorKey: "confirmed_by_name",
+          header: "Confirmed By",
+          cell: ({ getValue }) => (
+            <Typography variant="caption" sx={{ fontStyle: 'italic', fontWeight: 'bold', color: 'success.dark' }}>
+              {getValue() || "-"}
+            </Typography>
+          )
+        }
+      ] : []),
       {
         id: "actions",
         header: "Actions",
@@ -466,6 +507,20 @@ const Query = () => {
                   </IconButton>
                 </Tooltip>
               )}
+              <Tooltip title="Download PDF">
+                <IconButton
+                  size="small"
+                  sx={{ color: '#d32f2f' }}
+                  onClick={() => handleDownloadPDF(rowData)}
+                  disabled={pdfLoading === rowData._id}
+                >
+                  {pdfLoading === rowData._id ? (
+                    <CircularProgress size={16} color="inherit" />
+                  ) : (
+                    <PictureAsPdfIcon fontSize="small" />
+                  )}
+                </IconButton>
+              </Tooltip>
               {checkPermission("queries", "assuser") && (
                 <Tooltip title="Assign Users">
                   <IconButton size="small" color="secondary" onClick={() => openUserModal(rowData)}>

@@ -37,12 +37,15 @@ import LocalDiningIcon from '@mui/icons-material/LocalDining';
 import BedroomParentIcon from '@mui/icons-material/BedroomParent';
 import ContactPhoneIcon from '@mui/icons-material/ContactPhone';
 import GroupsIcon from '@mui/icons-material/Groups';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import DownloadIcon from '@mui/icons-material/Download';
 import { useSelector } from 'react-redux';
 import { useReactTable, getCoreRowModel, flexRender } from '@tanstack/react-table';
 import { getAllHotels } from '../../api/hotelsAPI';
 import { getAllVehicle } from '../../api/vehicleAPI';
 import { addChangeRequest, addChangeRequestForItineray, getQueriesByoperation, getSingleOperation, updateFollowupDetails } from '../../api/operationAPI';
-import { calculateSingleHotelCost } from '../createItinerary/createInquiryCalculation';
+import { calculateSingleHotelCost, exportQueryViewPDF, mapOperationToPdfData } from '../createItinerary/createInquiryCalculation';
 // import { fetchOperationByQueries } from '../../api/queriesAPI';
 import useSnackbar from '../../hooks/useSnackbar';
 import usePermissions from '../../hooks/UsePermissions';
@@ -127,6 +130,7 @@ const SingleQueriesView = () => {
   const [rejectedReason, setRejectedReason] = useState('');
   const [verifyIndex, setVerifyIndex] = useState(null); // index of the itinerary row
   const [loading, setLoading] = useState(true);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const [error, setError] = useState(null);
   const [rejectedViewOpen, setRejectedViewOpen] = useState(false);
 
@@ -143,65 +147,19 @@ const SingleQueriesView = () => {
       if (!operationData) return;
       setOperationId(operationData._id);
 
-      const followUpData = operationData?.followup_details?.map((item, index) => ({
-        id: item._id,
-        day: (index + 1).toString(),
-        date: item.journey_date || '',
-        place: item.destination || '',
-        hotelName: item.hotel_name || '',
-        hotelAmount: item.hotel_amount || '',
-        hotelConfirmation: item.hotel_confirmation || '',
-        checkinDate: item.checkin_date || '',
-        checkoutDate: item.checkout_date || '',
-        mealPlan: item.meal_plan || '',
-        vehicleName: item.vehicle_name || '',
-        vehiclePayment: item.vehicle_payment || '',
-        vehicleStatus: item.vehicle_status || '',
-        driverName: item.driver || '',
-        hotelId: item.hotel_id || '',
-        roomType: item.room_type || item.roomType || '',
-        mealPlan: item.meal_plan || item.mealPlan || '',
-        status: item.approved_status || '',
-        rejected_reason: item.rejected_reason || [],
-      })) || []
-
-      setItineraryData(followUpData);
       const queriesData = await getQueriesByoperation(operationData._id);
-
+      const { guestInfo: mappedGuestInfo, itineraryData: mappedItineraryData } = mapOperationToPdfData(operationData, queriesData);
+      setItineraryData(mappedItineraryData);
+      setGuestInfo(mappedGuestInfo);
       setTripDetails({
         pax: operationData?.trip_details?.number_of_adults || 0,
         kids_above_5: operationData?.trip_details?.number_of_kids || 0,
         duration: operationData?.trip_details?.duration || 0,
       });
-
       setStayInfo({
         hotel: queriesData?.stay_info?.hotel || '',
         rooms: queriesData?.stay_info?.rooms || 0,
       });
-
-      const guestAndStayData = {
-        name: operationData?.guest_info?.name || '',
-        country_code: operationData?.guest_info?.country_code || '+91',
-        contact: operationData?.guest_info?.phone || '',
-        email: operationData?.guest_info?.email || '',
-        pax: operationData?.trip_details?.number_of_adults || '',
-        hotel: queriesData?.stay_info?.hotel || '',
-        roomType: queriesData?.stay_info?.room_type || queriesData?.stay_info?.roomType || '',
-        rooms: queriesData?.stay_info?.rooms || '',
-        carname: queriesData?.car_details?.car_name || '',
-        carcount: queriesData?.car_details?.car_count || '',
-        source: queriesData?.lead_source || '',
-        bookingDate: operationData?.createdAt?.slice(0, 10) || '',
-        tourDate: queriesData?.travel_date?.slice(0, 10) || '',
-        bookingStatus: queriesData?.lead_stage || '',
-        cost: queriesData?.cost || '',
-        advancePayment: queriesData?.advance || '',
-        duePayment:
-          !isNaN(parseFloat(queriesData?.cost)) && !isNaN(parseFloat(queriesData?.advance))
-            ? parseFloat(queriesData.cost) - parseFloat(queriesData.advance)
-            : '',
-      }
-      setGuestInfo(guestAndStayData);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching operation data:", error);
@@ -517,6 +475,24 @@ const SingleQueriesView = () => {
             <Typography variant="subtitle1" sx={{ opacity: 0.9 }}>Overview of guest information and booking status</Typography>
           </Box>
           <Stack direction="row" spacing={2}>
+            <Button
+              variant="contained"
+              disabled={pdfLoading}
+              startIcon={pdfLoading ? <CircularProgress size={16} color="inherit" /> : <VisibilityOutlinedIcon />}
+              sx={{ bgcolor: 'rgba(255,255,255,0.2)', '&:hover': { bgcolor: 'rgba(255,255,255,0.3)' }, color: 'white', borderRadius: 2 }}
+              onClick={() => exportQueryViewPDF({ guestInfo, itineraryData }, { isPreview: true }, setPdfLoading, showSnackbar)}
+            >
+              Preview PDF
+            </Button>
+            <Button
+              variant="contained"
+              disabled={pdfLoading}
+              startIcon={pdfLoading ? <CircularProgress size={16} color="inherit" /> : <DownloadIcon />}
+              sx={{ bgcolor: 'white', color: '#1976d2', '&:hover': { bgcolor: '#f0f0f0' }, borderRadius: 2 }}
+              onClick={() => exportQueryViewPDF({ guestInfo, itineraryData }, { isPreview: false }, setPdfLoading, showSnackbar)}
+            >
+              Download PDF
+            </Button>
             {hasPermission("operation", "change-request") && (
               <Button
                 variant="contained"

@@ -884,3 +884,246 @@ export const exportQuotationPDF = async (
     }
 };
 
+/**
+ * Maps operation and query data to the format expected by exportQueryViewPDF.
+ */
+export const mapOperationToPdfData = (operationData, queriesData) => {
+    const itineraryData = operationData?.followup_details?.map((item, index) => ({
+        id: item._id,
+        day: (index + 1).toString(),
+        date: item.journey_date || '',
+        place: item.destination || '',
+        hotelName: item.hotel_name || '',
+        hotelAmount: item.hotel_amount || '',
+        hotelConfirmation: item.hotel_confirmation || '',
+        checkinDate: item.checkin_date || '',
+        checkoutDate: item.checkout_date || '',
+        mealPlan: item.meal_plan || '',
+        vehicleName: item.vehicle_name || '',
+        vehiclePayment: item.vehicle_payment || '',
+        vehicleStatus: item.vehicle_status || '',
+        driverName: item.driver || '',
+        hotelId: item.hotel_id || '',
+        roomType: item.room_type || item.roomType || '',
+        status: item.approved_status || '',
+        rejected_reason: item.rejected_reason || [],
+    })) || [];
+
+    const guestInfo = {
+        name: operationData?.guest_info?.name || '',
+        country_code: operationData?.guest_info?.country_code || '+91',
+        contact: operationData?.guest_info?.phone || '',
+        email: operationData?.guest_info?.email || '',
+        pax: operationData?.trip_details?.number_of_adults || '',
+        kids_above_5: operationData?.trip_details?.number_of_kids || 0,
+        hotel: queriesData?.stay_info?.hotel || '',
+        roomType: queriesData?.stay_info?.room_type || queriesData?.stay_info?.roomType || '',
+        rooms: queriesData?.stay_info?.rooms || '',
+        carname: queriesData?.car_details?.[0]?.car_name || queriesData?.car_details?.car_name || '',
+        carcount: queriesData?.car_details?.[0]?.car_count || queriesData?.car_details?.car_count || '',
+        source: queriesData?.lead_source || '',
+        bookingDate: operationData?.createdAt?.slice(0, 10) || '',
+        tourDate: queriesData?.travel_date?.slice(0, 10) || '',
+        bookingStatus: queriesData?.lead_stage || '',
+        cost: queriesData?.cost || '',
+        advancePayment: queriesData?.advance || '',
+        location: queriesData?.destination || queriesData?.location || '',
+        duePayment:
+            !isNaN(parseFloat(queriesData?.cost)) && !isNaN(parseFloat(queriesData?.advance))
+                ? parseFloat(queriesData.cost) - parseFloat(queriesData.advance)
+                : 0,
+    };
+
+    return { guestInfo, itineraryData };
+};
+
+/**
+ * Generates and downloads/previews a PDF for the Single Query View.
+ */
+export const exportQueryViewPDF = async (
+    {
+        guestInfo,
+        itineraryData,
+    },
+    { isPreview = false } = {},
+    setLoading,
+    showSnackbar
+) => {
+    const { default: jsPDF } = await import('jspdf');
+
+    let logoDataUrl = null;
+    try {
+        const resp = await fetch('/easo.png');
+        const blob = await resp.blob();
+        logoDataUrl = await new Promise((res) => {
+            const reader = new FileReader();
+            reader.onload = () => res(reader.result);
+            reader.readAsDataURL(blob);
+        });
+    } catch (_) { }
+
+    setLoading(true);
+    try {
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const W = pdf.internal.pageSize.getWidth();
+        const H = pdf.internal.pageSize.getHeight();
+        const marginL = 14;
+        const marginR = W - 14;
+        const contentW = marginR - marginL;
+        let y = 0;
+
+        const DARK_GREEN = [27, 94, 32];
+        const WHITE = [255, 255, 255];
+        const DARK = [31, 41, 55];
+        const MID = [107, 114, 128];
+        const LIGHT_BG = [245, 247, 250];
+
+        const setC = (c) => pdf.setTextColor(...c);
+        const fillC = (c) => pdf.setFillColor(...c);
+        const drawC = (c) => pdf.setDrawColor(...c);
+
+        const addFooter = () => {
+            const pg = pdf.internal.getNumberOfPages();
+            pdf.setPage(pg);
+            fillC(DARK_GREEN);
+            pdf.rect(0, H - 18, W, 18, 'F');
+            setC(WHITE); pdf.setFontSize(8);
+            pdf.text('\u2295  www.easotrip.com', marginL + 10, H - 8);
+            pdf.text('\u260E  +91 70017 24300', W / 2, H - 8, { align: 'center' });
+            pdf.text('\u2709  easogroup@gmail.com', marginR - 10, H - 8, { align: 'right' });
+            drawC(WHITE); pdf.setLineWidth(0.3);
+            pdf.line(0, H - 18, W, H - 18);
+        };
+
+        const checkPage = (needed = 8) => {
+            if (y + needed > H - 22) {
+                addFooter();
+                pdf.addPage();
+                y = 14;
+            }
+        };
+
+        const sectionTitle = (title) => {
+            checkPage(14);
+            fillC(DARK_GREEN);
+            pdf.rect(marginL, y, contentW, 7, 'F');
+            setC(WHITE); pdf.setFontSize(9); pdf.setFont(undefined, 'bold');
+            pdf.text(title.toUpperCase(), marginL + 3, y + 5);
+            y += 10;
+            pdf.setFont(undefined, 'normal');
+        };
+
+        const twoCol = (lblL, valL, lblR, valR) => {
+            checkPage(7);
+            const colL = marginL;
+            const colLV = marginL + 42;
+            const colR = marginL + (contentW / 2) + 4;
+            const colRV = colR + 38;
+
+            setC(MID); pdf.setFontSize(8);
+            pdf.text(lblL, colL, y);
+            setC(DARK); pdf.setFont(undefined, 'bold'); pdf.setFontSize(8.5);
+            pdf.text(String(valL || '—'), colLV, y);
+
+            if (lblR) {
+                setC(MID); pdf.setFontSize(8); pdf.setFont(undefined, 'normal');
+                pdf.text(lblR, colR, y);
+                setC(DARK); pdf.setFont(undefined, 'bold'); pdf.setFontSize(8.5);
+                pdf.text(String(valR || '—'), colRV, y);
+            }
+            pdf.setFont(undefined, 'normal');
+            y += 5.5;
+        };
+
+        // Header Background
+        fillC(WHITE); pdf.rect(0, 0, W, 40, 'F');
+        fillC(DARK_GREEN); pdf.circle(-18, -10, 38, 'F');
+        drawC([220, 220, 220]); pdf.setLineWidth(0.4);
+        pdf.line(0, 40, W, 40);
+
+        if (logoDataUrl) {
+            pdf.addImage(logoDataUrl, 'PNG', W - 54, 3, 44, 18);
+        } else {
+            setC(DARK_GREEN); pdf.setFontSize(16); pdf.setFont(undefined, 'bold');
+            pdf.text('EASOTRIP', W - 14, 16, { align: 'right' });
+        }
+
+        y = 48;
+
+        sectionTitle('Guest & Booking Information');
+        twoCol('Guest Name', guestInfo.name, 'Booking Status', guestInfo.bookingStatus);
+        twoCol('Contact', `${guestInfo.country_code || '+91'} ${guestInfo.contact}`, 'Source', guestInfo.source);
+        twoCol('Email', guestInfo.email, 'Booking Date', guestInfo.bookingDate);
+        twoCol('Destination', guestInfo.location || guestInfo.package_location || '—', 'Tour Date', guestInfo.tourDate);
+        y += 4;
+
+        sectionTitle('Trip & Stay Details');
+        twoCol('Adults (Pax)', guestInfo.pax, 'Rooms', guestInfo.rooms);
+        twoCol('Kids (5+)', guestInfo.kids_above_5 || 0, 'Room Type', guestInfo.roomType);
+        twoCol('Car Name', guestInfo.carname, 'Car Count', guestInfo.carcount);
+        y += 4;
+
+        if (itineraryData && itineraryData.length > 0) {
+            sectionTitle('Short Itinerary');
+            itineraryData.forEach((item, idx) => {
+                const label = `Day ${item.day}:  `;
+                const labelWidth = pdf.getStringUnitWidth(label) * 8.5 / pdf.internal.scaleFactor;
+                const place = item.place || '—';
+                const hotel = item.hotelName ? `Hotel: ${item.hotelName}` : '';
+                const vehicle = item.vehicleName ? ` | Vehicle: ${item.vehicleName}` : '';
+                const content = `${place}${hotel ? ' (' + hotel + ')' : ''}${vehicle}`;
+
+                const bodyLines = pdf.splitTextToSize(content, contentW - 10 - labelWidth);
+                const rowH = Math.max(7, 5 * (bodyLines.length || 1) + 2);
+                checkPage(rowH + 2);
+
+                if (idx % 2 === 0) {
+                    fillC(LIGHT_BG);
+                    pdf.rect(marginL, y - 1, contentW, rowH, 'F');
+                }
+
+                setC(DARK_GREEN); pdf.setFontSize(8.5); pdf.setFont(undefined, 'bold');
+                pdf.text(label, marginL + 2, y + 4);
+
+                setC(DARK); pdf.setFontSize(8); pdf.setFont(undefined, 'normal');
+                if (bodyLines.length > 0) {
+                    pdf.text(bodyLines[0], marginL + 2 + labelWidth, y + 4);
+                    bodyLines.slice(1).forEach((line, li) => {
+                        pdf.text(line, marginL + 2 + labelWidth, y + 4 + (li + 1) * 5);
+                    });
+                }
+                y += rowH + 1;
+            });
+            y += 4;
+        }
+
+        checkPage(20);
+        fillC(DARK_GREEN);
+        pdf.rect(marginL, y, contentW, 11, 'F');
+        setC(WHITE); pdf.setFontSize(11); pdf.setFont(undefined, 'bold');
+        pdf.text('TOTAL QUOTED PRICE : ', marginL + 4, y + 7.5);
+        const costVal = Number(guestInfo.cost || 0);
+        pdf.text(`INR ${costVal.toLocaleString('en-IN')}`, marginR - 35, y + 7.5, { align: 'right' });
+        y += 16;
+
+        const advance = Number(guestInfo.advancePayment || 0);
+        const due = Number(guestInfo.duePayment || 0);
+        twoCol('Advance Paid', `INR ${advance.toLocaleString('en-IN')}`, 'Amount Due', `INR ${due.toLocaleString('en-IN')}`);
+
+        addFooter();
+
+        const filename = `${guestInfo.name || 'query'}_quotation_${Date.now()}.pdf`;
+        if (isPreview) {
+            window.open(pdf.output('bloburl'), '_blank');
+        } else {
+            pdf.save(filename);
+        }
+        showSnackbar(isPreview ? 'PDF Preview opened' : 'PDF Downloaded successfully', 'success');
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        showSnackbar('Failed to generate PDF', 'error');
+    } finally {
+        setLoading(false);
+    }
+};
+
