@@ -104,6 +104,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     const [stayInfo, setStayInfo] = useState({
         rooms: '',
         hotel: '',
+        room_type: '',
     });
 
     // Package Suggestions
@@ -197,6 +198,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             setStayInfo({
                 rooms: inquiry.stay_info.rooms?.toString() || '',
                 hotel: inquiry.stay_info.hotel || '',
+                room_type: inquiry.stay_info.room_type || '',
             });
         }
 

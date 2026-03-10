@@ -314,7 +314,7 @@ const TripDetailsCard = ({
                             inputProps={{ min: 0 }}
                         />
                     </Grid>
-                    <Grid item xs={12} md={6}>
+                    <Grid item xs={12} md={4}>
                         <FormControl fullWidth size="small">
                             <InputLabel>Hotel Type</InputLabel>
                             <Select
@@ -333,6 +333,21 @@ const TripDetailsCard = ({
                                         <MenuItem key="Premium" value="Premium">Premium</MenuItem>,
                                         <MenuItem key="Luxury" value="Luxury">Luxury</MenuItem>
                                     ]}
+                            </Select>
+                        </FormControl>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                        <FormControl fullWidth size="small">
+                            <InputLabel>Room Type</InputLabel>
+                            <Select
+                                name="room_type"
+                                value={stayInfo.room_type || ""}
+                                onChange={handleStayInfoChange}
+                                label="Room Type"
+                            >
+                                {["Standard", "Deluxe", "Super Deluxe", "Luxury", "Suite", "Family Room"].map((type) => (
+                                    <MenuItem key={type} value={type}>{type}</MenuItem>
+                                ))}
                             </Select>
                         </FormControl>
                     </Grid>

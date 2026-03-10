@@ -276,6 +276,7 @@ export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, st
         stay_info: {
             rooms: parseInt(stayInfo.rooms) || 0,
             hotel: stayInfo.hotel,
+            room_type: stayInfo.room_type || "",
         },
         followup_details, // New field for day-wise details
         hotel_selections: hotelSelections, // Add raw hotel selections
