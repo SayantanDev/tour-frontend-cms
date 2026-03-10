@@ -203,7 +203,7 @@ const Query = () => {
   const fetchUsers = async () => {
     try {
       const users = await getAllUsers();
-      const filtered = users.data.filter(u => u.permission === "User");
+      const filtered = users.data.filter(u => u.permission === "User" || u.permission === "Operation");
       setAllUsers(filtered);
     } catch (error) {
       console.error("Error fetching users:", error);
