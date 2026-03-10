@@ -27,7 +27,7 @@ import { deleteQueries, getAllQueries, updateQueries } from "../../api/queriesAP
 import usePermissions from "../../hooks/UsePermissions";
 import { useDispatch } from "react-redux";
 import { setSelectedquerie } from "../../reduxcomponents/slices/queriesSlice";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import useSnackbar from "../../hooks/useSnackbar";
 import { getAllUsers } from "../../api/userAPI";
 import { getChangeRequest, getRejectedChanges, handleChangeRequestApproval } from "../../api/operationAPI";
@@ -64,6 +64,62 @@ const ModernStatusChip = ({ status }) => {
   );
 };
 
+// --- Stable Editable Cell Components ---
+
+const EditableTextCell = ({ value, onChange, placeholder, autoFocus }) => (
+  <TextField
+    size="small"
+    fullWidth
+    autoFocus={autoFocus}
+    value={value || ""}
+    onChange={(e) => onChange(e.target.value)}
+    placeholder={placeholder}
+    sx={{ '& .MuiInputBase-input': { py: '4px', fontSize: '0.8rem' } }}
+  />
+);
+
+const EditablePhoneCell = ({ countryCode, phone, onCountryCodeChange, onPhoneChange }) => (
+  <Box sx={{ display: 'flex', gap: 0.5 }}>
+    <TextField
+      size="small"
+      sx={{ width: 60, '& .MuiInputBase-input': { py: '4px', fontSize: '0.8rem' } }}
+      value={countryCode === undefined ? "+91" : countryCode}
+      onChange={(e) => onCountryCodeChange(e.target.value)}
+      placeholder="+91"
+    />
+    <TextField
+      size="small"
+      sx={{ '& .MuiInputBase-input': { py: '4px', fontSize: '0.8rem' } }}
+      value={phone || ""}
+      onChange={(e) => onPhoneChange(e.target.value)}
+    />
+  </Box>
+);
+
+const EditableSelectCell = ({ value, onChange, options }) => (
+  <Select
+    size="small"
+    fullWidth
+    value={value ?? ""}
+    onChange={(e) => onChange(e.target.value)}
+    sx={{ height: 32, fontSize: '0.8rem' }}
+  >
+    {options.map((opt) => (
+      <MenuItem key={opt} value={opt} sx={{ fontSize: '0.8rem' }}>{opt}</MenuItem>
+    ))}
+  </Select>
+);
+
+const EditableNumberCell = ({ value, onChange }) => (
+  <TextField
+    size="small"
+    type="number"
+    value={(value === 0 || value === '0') ? 0 : (value || "")}
+    onChange={(e) => onChange(e.target.value)}
+    sx={{ width: 100, '& .MuiInputBase-input': { py: '4px', fontSize: '0.8rem' } }}
+  />
+);
+
 const Query = () => {
   const checkPermission = usePermissions();
   const dispatch = useDispatch();
@@ -73,16 +129,18 @@ const Query = () => {
   const { showSnackbar, SnackbarComponent } = useSnackbar();
 
   // const [query, setQuery] = useState([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [queries, setQueries] = useState([]);
-  // const [filteredQuery, setFilteredQuery] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [dateQuery, setDateQuery] = useState("");
-  const [statusQuery, setStatusQuery] = useState("");
-  const [locationQuery, setLocationQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
+  const [dateQuery, setDateQuery] = useState(searchParams.get("date") || "");
+  const [statusQuery, setStatusQuery] = useState(searchParams.get("stage") || "");
+  const [locationQuery, setLocationQuery] = useState(searchParams.get("location") || "");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [editingRowId, setEditingRowId] = useState(null);
+  const [quickEditOpen, setQuickEditOpen] = useState(false);
+  const [selectedQuickEditId, setSelectedQuickEditId] = useState(null);
   const [editedRowData, setEditedRowData] = useState({});
 
   // Modal and team management
@@ -104,23 +162,19 @@ const Query = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [queryToDelete, setQueryToDelete] = useState(null);
 
-  const fetchQuery = useCallback(async (pageNum = 1) => {
+  const fetchQuery = useCallback(async (pageNum = 1, filters = {}) => {
     setLoading(true);
     try {
-      const response = await getAllQueries(pageNum, 30);
-      // const sortedData = response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)); 
-      // Server should ideally handle sorting with pagination
+      const response = await getAllQueries(pageNum, 30, filters);
       const newData = response.data || [];
 
       setQueries(prev => {
         if (pageNum === 1) return newData;
-        // Filter out duplicates if any
         const existingIds = new Set(prev.map(i => i._id));
         const uniqueNew = newData.filter(i => !existingIds.has(i._id));
         return [...prev, ...uniqueNew];
       });
 
-      setHasMore(response.pagination?.hasNextPage || false);
       setHasMore(response.pagination?.hasNextPage || false);
     } catch (error) {
       console.error("Error fetching query:", error);
@@ -128,6 +182,23 @@ const Query = () => {
       setLoading(false);
     }
   }, []);
+
+  // Sync state to URL and fetch on filter change
+  useEffect(() => {
+    const filters = {};
+    if (searchQuery) filters.search = searchQuery;
+    if (statusQuery) filters.stage = statusQuery;
+    if (locationQuery) filters.location = locationQuery;
+    if (dateQuery) filters.date = dateQuery;
+
+    // Update URL
+    const params = new URLSearchParams(filters);
+    setSearchParams(params, { replace: true });
+
+    // Fetch leads (Reset to page 1)
+    setPage(1);
+    if (canView) fetchQuery(1, filters);
+  }, [searchQuery, statusQuery, locationQuery, dateQuery, canView, fetchQuery, setSearchParams]);
 
   const fetchUsers = async () => {
     try {
@@ -141,8 +212,8 @@ const Query = () => {
 
   useEffect(() => {
     fetchUsers();
-    if (canView) fetchQuery(1);
-  }, [canView, fetchQuery]);
+    // Initial fetch is handled by the filter useEffect above
+  }, []);
 
   const handleScroll = (e) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target;
@@ -158,26 +229,27 @@ const Query = () => {
   //   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   // };
 
-  const handleSaveEdit = useCallback(async (id) => {
+  const handleSaveEdit = useCallback(async (id, dataToSave) => {
     try {
       const updatedFields = {};
-      if (editedRowData.guest_name !== undefined) updatedFields.guest_name = editedRowData.guest_name;
-      if (editedRowData.guest_phone !== undefined) updatedFields.guest_phone = editedRowData.guest_phone;
-      if (editedRowData.guest_country_code !== undefined) updatedFields.guest_country_code = editedRowData.guest_country_code;
-      if (editedRowData.cost !== undefined) updatedFields.cost = editedRowData.cost;
-      if (editedRowData.advance !== undefined) updatedFields.advance = editedRowData.advance;
-      if (editedRowData.lead_stage !== undefined) updatedFields.lead_stage = editedRowData.lead_stage;
+      if (dataToSave.guest_name !== undefined) updatedFields.guest_name = dataToSave.guest_name;
+      if (dataToSave.guest_phone !== undefined) updatedFields.guest_phone = dataToSave.guest_phone;
+      if (dataToSave.guest_country_code !== undefined) updatedFields.guest_country_code = dataToSave.guest_country_code;
+      if (dataToSave.cost !== undefined) updatedFields.cost = dataToSave.cost;
+      if (dataToSave.advance !== undefined) updatedFields.advance = dataToSave.advance;
+      if (dataToSave.lead_stage !== undefined) updatedFields.lead_stage = dataToSave.lead_stage;
 
       const response = await updateQueries(id, updatedFields);
       if (response.success) showSnackbar(response.message, "success");
 
       fetchQuery();
-      setEditingRowId(null);
+      setQuickEditOpen(false);
+      setSelectedQuickEditId(null);
       setEditedRowData({});
     } catch (error) {
       console.error("Update failed:", error);
     }
-  }, [editedRowData, fetchQuery, showSnackbar]);
+  }, [fetchQuery, showSnackbar]);
 
   const getStatusColor = useCallback((status) => {
     return getStatusStyles(status).color;
@@ -294,17 +366,6 @@ const Query = () => {
         header: "Lead Name",
         cell: ({ row }) => {
           const rowData = row.original;
-          if (editingRowId === rowData._id) {
-            return (
-              <TextField
-                size="small"
-                autoFocus
-                value={editedRowData.guest_name}
-                onChange={(e) => setEditedRowData({ ...editedRowData, guest_name: e.target.value })}
-                sx={{ '& .MuiInputBase-input': { py: '4px', fontSize: '0.8rem' } }}
-              />
-            );
-          }
           return (
             <Stack
               direction="row"
@@ -335,25 +396,6 @@ const Query = () => {
         header: "Contact Details",
         cell: ({ row }) => {
           const rowData = row.original;
-          if (editingRowId === rowData._id) {
-            return (
-              <Box sx={{ display: 'flex', gap: 0.5 }}>
-                <TextField
-                  size="small"
-                  sx={{ width: 60, '& .MuiInputBase-input': { py: '4px', fontSize: '0.8rem' } }}
-                  value={editedRowData.guest_country_code}
-                  onChange={(e) => setEditedRowData({ ...editedRowData, guest_country_code: e.target.value })}
-                  placeholder="+91"
-                />
-                <TextField
-                  size="small"
-                  sx={{ '& .MuiInputBase-input': { py: '4px', fontSize: '0.8rem' } }}
-                  value={editedRowData.guest_phone}
-                  onChange={(e) => setEditedRowData({ ...editedRowData, guest_phone: e.target.value })}
-                />
-              </Box>
-            );
-          }
           return (
             <Box>
               <Typography variant="body2" fontWeight={500}>{`${rowData.guest_info?.guest_country_code || "+91"} ${rowData.guest_info?.guest_phone || ""}`}</Typography>
@@ -367,20 +409,6 @@ const Query = () => {
         header: "Stage",
         cell: ({ row }) => {
           const rowData = row.original;
-          if (editingRowId === rowData._id) {
-            return (
-              <Select
-                size="small"
-                value={editedRowData.lead_stage}
-                onChange={(e) => setEditedRowData({ ...editedRowData, lead_stage: e.target.value })}
-                sx={{ height: 32, fontSize: '0.8rem' }}
-              >
-                {["Confirm", "Cancel", "FollowUp", "Postponed", "Higher Priority"].map((status) => (
-                  <MenuItem key={status} value={status} sx={{ fontSize: '0.8rem' }}>{status}</MenuItem>
-                ))}
-              </Select>
-            );
-          }
           return <ModernStatusChip status={rowData.lead_stage} />;
         },
       },
@@ -389,17 +417,6 @@ const Query = () => {
         header: "Total Cost",
         cell: ({ row }) => {
           const rowData = row.original;
-          if (editingRowId === rowData._id) {
-            return (
-              <TextField
-                size="small"
-                type="number"
-                value={editedRowData.cost}
-                onChange={(e) => setEditedRowData({ ...editedRowData, cost: e.target.value })}
-                sx={{ width: 100, '& .MuiInputBase-input': { py: '4px', fontSize: '0.8rem' } }}
-              />
-            );
-          }
           return (
             <Typography variant="body2" fontWeight={700} color="primary.main">
               ₹{Number(rowData.cost || 0).toLocaleString('en-IN')}
@@ -412,17 +429,6 @@ const Query = () => {
         header: "Advance",
         cell: ({ row }) => {
           const rowData = row.original;
-          if (editingRowId === rowData._id) {
-            return (
-              <TextField
-                size="small"
-                type="number"
-                value={editedRowData.advance}
-                onChange={(e) => setEditedRowData({ ...editedRowData, advance: e.target.value })}
-                sx={{ width: 100, '& .MuiInputBase-input': { py: '4px', fontSize: '0.8rem' } }}
-              />
-            );
-          }
           return (
             <Typography variant="body2" fontWeight={600} color={rowData.advance > 0 ? "success.main" : "text.secondary"}>
               ₹{Number(rowData.advance || 0).toLocaleString('en-IN')}
@@ -435,23 +441,11 @@ const Query = () => {
         header: "Actions",
         cell: ({ row }) => {
           const rowData = row.original;
-          if (editingRowId === rowData._id) {
-            return (
-              <Stack direction="row" spacing={0.5}>
-                <IconButton size="small" color="success" onClick={() => handleSaveEdit(rowData._id)}>
-                  <CheckCircleIcon fontSize="small" />
-                </IconButton>
-                <IconButton size="small" color="error" onClick={() => { setEditingRowId(null); setEditedRowData({}); }}>
-                  <ErrorOutlineIcon fontSize="small" />
-                </IconButton>
-              </Stack>
-            );
-          }
           return (
             <Stack direction="row" spacing={1}>
               <Tooltip title="Quick Edit">
                 <IconButton size="small" color="primary" onClick={() => {
-                  setEditingRowId(rowData._id);
+                  setSelectedQuickEditId(rowData._id);
                   setEditedRowData({
                     guest_name: rowData.guest_info?.guest_name || "",
                     guest_phone: rowData.guest_info?.guest_phone || "",
@@ -460,6 +454,7 @@ const Query = () => {
                     advance: rowData.advance || "",
                     lead_stage: rowData.lead_stage || "",
                   });
+                  setQuickEditOpen(true);
                 }}>
                   <EditOutlinedIcon fontSize="small" />
                 </IconButton>
@@ -549,7 +544,7 @@ const Query = () => {
     }
 
     return cols;
-  }, [editingRowId, editedRowData, checkPermission, handleSaveEdit, handleEditOpen, openUserModal, openRejectedChangeModal, openChangeRequestModal, handleOpenDeleteDialog]);
+  }, [checkPermission, handleEditOpen, openUserModal, openRejectedChangeModal, openChangeRequestModal, handleOpenDeleteDialog]);
 
   // Table instance
   const table = useReactTable({
@@ -937,6 +932,79 @@ const Query = () => {
           <Button onClick={() => setDeleteDialogOpen(false)} sx={{ color: 'text.secondary' }}>Keep Lead</Button>
           <Button color="error" variant="contained" onClick={handleDeleteQuery} sx={{ borderRadius: '8px', px: 3 }}>
             Delete Permanently
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Quick Edit Dialog */}
+      <Dialog
+        open={quickEditOpen}
+        onClose={() => setQuickEditOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: '16px' } }}
+      >
+        <DialogTitle sx={{ fontWeight: 800, bgcolor: '#f1f5f9', py: 2 }}>Quick Edit Lead</DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <Stack spacing={3} sx={{ pt: 1 }}>
+            <TextField
+              fullWidth
+              label="Lead Name"
+              value={editedRowData.guest_name || ""}
+              onChange={(e) => setEditedRowData(prev => ({ ...prev, guest_name: e.target.value }))}
+            />
+            <Stack direction="row" spacing={1}>
+              <TextField
+                sx={{ width: 100 }}
+                label="Code"
+                value={editedRowData.guest_country_code || "+91"}
+                onChange={(e) => setEditedRowData(prev => ({ ...prev, guest_country_code: e.target.value }))}
+              />
+              <TextField
+                fullWidth
+                label="Phone Number"
+                value={editedRowData.guest_phone || ""}
+                onChange={(e) => setEditedRowData(prev => ({ ...prev, guest_phone: e.target.value }))}
+              />
+            </Stack>
+            <TextField
+              fullWidth
+              select
+              label="Lead Stage"
+              value={editedRowData.lead_stage || ""}
+              onChange={(e) => setEditedRowData(prev => ({ ...prev, lead_stage: e.target.value }))}
+            >
+              {["Confirm", "Cancel", "FollowUp", "Postponed", "Higher Priority"].map((status) => (
+                <MenuItem key={status} value={status}>{status}</MenuItem>
+              ))}
+            </TextField>
+            <Stack direction="row" spacing={2}>
+              <TextField
+                fullWidth
+                label="Total Cost"
+                type="number"
+                value={(editedRowData.cost === 0 || editedRowData.cost === '0') ? 0 : (editedRowData.cost || "")}
+                onChange={(e) => setEditedRowData(prev => ({ ...prev, cost: e.target.value }))}
+              />
+              <TextField
+                fullWidth
+                label="Advance"
+                type="number"
+                value={(editedRowData.advance === 0 || editedRowData.advance === '0') ? 0 : (editedRowData.advance || "")}
+                onChange={(e) => setEditedRowData(prev => ({ ...prev, advance: e.target.value }))}
+              />
+            </Stack>
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, bgcolor: '#f8fafc' }}>
+          <Button onClick={() => setQuickEditOpen(false)} sx={{ color: 'text.secondary', fontWeight: 600 }}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => handleSaveEdit(selectedQuickEditId, editedRowData)}
+            sx={{ borderRadius: '8px', px: 4, fontWeight: 700 }}
+          >
+            Save Changes
           </Button>
         </DialogActions>
       </Dialog>

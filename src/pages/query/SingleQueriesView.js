@@ -937,17 +937,13 @@ const SingleQueriesView = () => {
               if (col.field === 'vehicleName') {
                 return (
                   <Grid item xs={12} key={col.field}>
-                    <Autocomplete
+                    <TextField
                       fullWidth
-                      options={vehicles.flatMap(v => v.vehicles)}
-                      getOptionLabel={(option) => option.vehicle_name}
-                      renderInput={(params) => <TextField {...params} label="Vehicle Name" />}
-                      value={vehicles.flatMap(v => v.vehicles).find(v => v.vehicle_name === editRow.vehicleName) || null}
-                      onChange={(e, value) => {
-                        setEditRow({ ...editRow, vehicleName: value?.vehicle_name || '' });
-                        const owner = vehicles.find(v => v.vehicles.some(veh => veh.vehicle_name === value?.vehicle_name));
-                        setDriverOptions(owner?.drivers || []);
-                      }}
+                      size="small"
+                      label="Vehicle Name"
+                      name="vehicleName"
+                      value={editRow.vehicleName || ''}
+                      onChange={handleEditChange}
                     />
                   </Grid>
                 );
@@ -955,14 +951,13 @@ const SingleQueriesView = () => {
               if (col.field === 'driverName') {
                 return (
                   <Grid item xs={12} key={col.field}>
-                    <Autocomplete
+                    <TextField
                       fullWidth
-                      options={driverOptions}
-                      getOptionLabel={(option) => option.driver_name}
-                      renderInput={(params) => <TextField {...params} label="Driver Name" />}
-                      onChange={(e, value) => {
-                        setEditRow({ ...editRow, driverName: value?.driver_name || '' });
-                      }}
+                      size="small"
+                      label="Driver Name"
+                      name="driverName"
+                      value={editRow.driverName || ''}
+                      onChange={handleEditChange}
                     />
                   </Grid>
                 );

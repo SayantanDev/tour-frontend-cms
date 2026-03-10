@@ -8,13 +8,14 @@ export async function createQueries(payload) {
     return result.data;
 };
 
-export async function getAllQueries(page, size) {
+export async function getAllQueries(page, size, filters = {}) {
     try {
         const GETUSER_URL = `${QRY_URL}/get-all-queries`;
         const result = await axios.get(GETUSER_URL, {
             params: {
-                page: page,
-                size: size
+                page,
+                size,
+                ...filters
             }
         });
         return result.data;

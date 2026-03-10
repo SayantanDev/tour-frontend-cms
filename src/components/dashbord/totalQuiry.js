@@ -8,7 +8,10 @@ import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 
 
+import { useNavigate } from 'react-router-dom';
+
 function TotalQuiry() {
+  const navigate = useNavigate();
   const [filteredQuery, setFilteredQuery] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,9 +36,13 @@ function TotalQuiry() {
   const postpond = filteredQuery.filter(q => q.lead_stage === "Postponed");
   const cancle = filteredQuery.filter(q => q.lead_stage === "Cancel");
 
-  const renderCard = (label, count, icon, gradient, iconBg) => (
+  const renderCard = (label, count, icon, gradient, iconBg, stage = null) => (
     <Card
       className="fade-in"
+      onClick={() => {
+        if (stage) navigate(`/query?stage=${stage}`);
+        else navigate('/query');
+      }}
       sx={{
         width: '10vw',
         minWidth: 160,
@@ -119,7 +126,8 @@ function TotalQuiry() {
             confirm.length,
             <CheckCircleIcon sx={{ fontSize: 32, color: '#fff' }} />,
             'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
-            'rgba(255,255,255,0.2)'
+            'rgba(255,255,255,0.2)',
+            'Confirm'
           )}
         </Grid>
         <Grid item>
@@ -128,7 +136,8 @@ function TotalQuiry() {
             New.length,
             <NewReleasesIcon sx={{ fontSize: 32, color: '#fff' }} />,
             'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-            'rgba(255,255,255,0.2)'
+            'rgba(255,255,255,0.2)',
+            'New'
           )}
         </Grid>
         <Grid item>
@@ -137,7 +146,8 @@ function TotalQuiry() {
             postpond.length,
             <PauseCircleIcon sx={{ fontSize: 32, color: '#fff' }} />,
             'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-            'rgba(255,255,255,0.2)'
+            'rgba(255,255,255,0.2)',
+            'Postponed'
           )}
         </Grid>
         <Grid item>
@@ -146,7 +156,8 @@ function TotalQuiry() {
             cancle.length,
             <CancelIcon sx={{ fontSize: 32, color: '#fff' }} />,
             'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-            'rgba(255,255,255,0.2)'
+            'rgba(255,255,255,0.2)',
+            'Cancel'
           )}
         </Grid>
       </Grid>
