@@ -3,7 +3,7 @@ import {
   Container, Typography, IconButton, Tooltip, Box, Chip, MenuItem, Modal, Paper,
   TextField, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Select, Checkbox, Dialog, DialogTitle, DialogContent, DialogActions,
-  Stack, Avatar, InputAdornment, CircularProgress, Divider, Grid as MuiGrid
+  Stack, Avatar, InputAdornment, CircularProgress, Divider, Grid as MuiGrid, Card, CardContent
 } from "@mui/material";
 import { useReactTable, getCoreRowModel, getPaginationRowModel, flexRender } from "@tanstack/react-table";
 import SearchIcon from '@mui/icons-material/Search';
@@ -22,10 +22,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import EventIcon from '@mui/icons-material/Event';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
-import DownloadIcon from '@mui/icons-material/Download';
 
 import { deleteQueries, getAllQueries, updateQueries } from "../../api/queriesAPI";
 import usePermissions from "../../hooks/UsePermissions";
@@ -69,62 +66,6 @@ const ModernStatusChip = ({ status }) => {
     />
   );
 };
-
-// --- Stable Editable Cell Components ---
-
-const EditableTextCell = ({ value, onChange, placeholder, autoFocus }) => (
-  <TextField
-    size="small"
-    fullWidth
-    autoFocus={autoFocus}
-    value={value || ""}
-    onChange={(e) => onChange(e.target.value)}
-    placeholder={placeholder}
-    sx={{ '& .MuiInputBase-input': { py: '4px', fontSize: '0.8rem' } }}
-  />
-);
-
-const EditablePhoneCell = ({ countryCode, phone, onCountryCodeChange, onPhoneChange }) => (
-  <Box sx={{ display: 'flex', gap: 0.5 }}>
-    <TextField
-      size="small"
-      sx={{ width: 60, '& .MuiInputBase-input': { py: '4px', fontSize: '0.8rem' } }}
-      value={countryCode === undefined ? "+91" : countryCode}
-      onChange={(e) => onCountryCodeChange(e.target.value)}
-      placeholder="+91"
-    />
-    <TextField
-      size="small"
-      sx={{ '& .MuiInputBase-input': { py: '4px', fontSize: '0.8rem' } }}
-      value={phone || ""}
-      onChange={(e) => onPhoneChange(e.target.value)}
-    />
-  </Box>
-);
-
-const EditableSelectCell = ({ value, onChange, options }) => (
-  <Select
-    size="small"
-    fullWidth
-    value={value ?? ""}
-    onChange={(e) => onChange(e.target.value)}
-    sx={{ height: 32, fontSize: '0.8rem' }}
-  >
-    {options.map((opt) => (
-      <MenuItem key={opt} value={opt} sx={{ fontSize: '0.8rem' }}>{opt}</MenuItem>
-    ))}
-  </Select>
-);
-
-const EditableNumberCell = ({ value, onChange }) => (
-  <TextField
-    size="small"
-    type="number"
-    value={(value === 0 || value === '0') ? 0 : (value || "")}
-    onChange={(e) => onChange(e.target.value)}
-    sx={{ width: 100, '& .MuiInputBase-input': { py: '4px', fontSize: '0.8rem' } }}
-  />
-);
 
 const Query = () => {
   const checkPermission = usePermissions();
@@ -260,9 +201,9 @@ const Query = () => {
     }
   }, [fetchQuery, showSnackbar]);
 
-  const getStatusColor = useCallback((status) => {
-    return getStatusStyles(status).color;
-  }, []);
+  // const getStatusColor = useCallback((status) => {
+  //   return getStatusStyles(status).color;
+  // }, []);
 
   const stats = useMemo(() => {
     const s = { total: queries.length, confirm: 0, followUp: 0, pending: 0 };
@@ -663,13 +604,22 @@ const Query = () => {
       <Box sx={{ mb: 3 }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
           <Box>
-            <Typography variant="h4" fontWeight={850} color="primary.main" sx={{ letterSpacing: '-0.5px' }}>
+            <Typography variant="h5" fontWeight={850} color="primary.main" sx={{ letterSpacing: '-0.5px' }}>
               Lead Management
             </Typography>
-            <Typography variant="body2" color="text.secondary" fontWeight={500}>
-              Monitor and manage your travel inquiries in real-time
-            </Typography>
           </Box>
+          <Stack direction="row" spacing={2} sx={{ display: { xs: 'none', md: 'flex' } }}>
+            {[
+              { label: 'Total Leads', value: stats.total, color: '#1e293b', icon: <MoreVertIcon fontSize="small" /> },
+              { label: 'Confirmed', value: stats.confirm, color: '#2e7d32', icon: <CheckCircleIcon fontSize="small" /> },
+              { label: 'Follow Ups', value: stats.followUp, color: '#ed6c02', icon: <PendingActionsIcon fontSize="small" /> },
+              { label: 'Pending/New', value: stats.pending, color: '#0288d1', icon: <TrendingUpIcon fontSize="small" /> },
+            ].map((stat, i) => (
+              <Button key={i} variant="outlined" sx={{ minWidth: 140, borderRadius: '12px', border: '1px solid #e2e8f0', borderLeft: `4px solid ${stat.color}`, boxShadow: '0 2px 8px rgba(0,0,0,0.05)', textTransform: 'none', display: 'flex', justifyContent: 'flex-start', px: 2, py: 1, bgcolor: 'background.paper', '&:hover': { bgcolor: '#f8fafc', border: '1px solid #cbd5e1', borderLeft: `4px solid ${stat.color}` } }}>
+                {stat.label} ({stat.value})
+              </Button>
+            ))}
+          </Stack>
           <Stack direction="row" spacing={1.5}>
             <Button
               variant="outlined"
@@ -690,30 +640,7 @@ const Query = () => {
           </Stack>
         </Stack>
 
-        <MuiGrid container spacing={2}>
-          {[
-            { label: 'Total Leads', value: stats.total, color: '#1e293b', icon: <MoreVertIcon fontSize="small" /> },
-            { label: 'Confirmed', value: stats.confirm, color: '#2e7d32', icon: <CheckCircleIcon fontSize="small" /> },
-            { label: 'Follow Ups', value: stats.followUp, color: '#ed6c02', icon: <PendingActionsIcon fontSize="small" /> },
-            { label: 'Pending/New', value: stats.pending, color: '#0288d1', icon: <TrendingUpIcon fontSize="small" /> },
-          ].map((stat, i) => (
-            <MuiGrid item xs={12} sm={6} md={3} key={i}>
-              <Paper sx={{ p: 2, borderRadius: '12px', borderLeft: `4px solid ${stat.color}`, display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar sx={{ bgcolor: `${stat.color}15`, color: stat.color, width: 40, height: 40 }}>
-                  {stat.icon}
-                </Avatar>
-                <Box>
-                  <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    {stat.label}
-                  </Typography>
-                  <Typography variant="h6" fontWeight={800} color="text.primary">
-                    {stat.value}
-                  </Typography>
-                </Box>
-              </Paper>
-            </MuiGrid>
-          ))}
-        </MuiGrid>
+
       </Box>
 
       {/* Filter Section */}
