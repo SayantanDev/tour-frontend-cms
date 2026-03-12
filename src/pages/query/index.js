@@ -361,9 +361,6 @@ const Query = () => {
                 transition: 'all 0.2s ease'
               }}
             >
-              <Avatar sx={{ bgcolor: 'primary.main', width: 28, height: 28, fontSize: '0.8rem', fontWeight: 'bold', transition: 'transform 0.2s' }}>
-                {rowData.guest_info?.guest_name?.charAt(0) || 'G'}
-              </Avatar>
               <Typography variant="body2" fontWeight={600} color="text.primary" sx={{ transition: 'color 0.2s' }}>
                 {rowData.guest_info?.guest_name || "N/A"}
               </Typography>
