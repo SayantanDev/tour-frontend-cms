@@ -25,6 +25,7 @@ import {
     calculatePackageCost,
     updateItineraryByDuration,
     prePopulateHotelSelections,
+    mapFollowupToHotelSelections,
     extractItineraryFromPackage,
     validateForm as validateFormData,
     buildPayload as buildPayloadData,
@@ -47,6 +48,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     const allHotels = useSelector((state) => state.hotels.allHotels || []);
     const configData = useSelector((state) => state.config.configData || {});
     const isEditMode = Boolean(existingInquiry) || (reduxSelectedInquiry && Object.keys(reduxSelectedInquiry).length > 0);
+    const isInitialLoad = useRef(true);
     const [currentMargin, setCurrentMargin] = useState(configData?.additionalCosts?.margin_cost_percent || 20);
     const pdfRef = useRef(null);
     const guestNameRef = useRef(null);
@@ -210,11 +212,15 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         // Load cost
         setCost(inquiry.cost || 0);
 
-        // Load itinerary - Initial load from followup_details as fallback
-        if (inquiry.followup_details && inquiry.followup_details.length > 0) {
+        // Load itinerary - Priority: 1. inquiry.itinerary (if complete), 2. followup_details, 3. empty slots
+        if (inquiry.itinerary && Array.isArray(inquiry.itinerary) && inquiry.itinerary.length > 1) {
+            setItinerary(inquiry.itinerary);
+        } else if (inquiry.followup_details && inquiry.followup_details.length > 0) {
             const manualItinerary = inquiry.followup_details.map(item => item.destination || '');
             const duration = parseInt(inquiry.duration) || 0;
             setItinerary(updateItineraryByDuration(manualItinerary, duration));
+        } else if (inquiry.itinerary && Array.isArray(inquiry.itinerary) && inquiry.itinerary.length > 0) {
+            setItinerary(inquiry.itinerary);
         } else if (inquiry.duration) {
             // If no itinerary but duration exists, create empty slots
             setItinerary(new Array(parseInt(inquiry.duration) + 1).fill(''));
@@ -228,10 +234,11 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 // Use handlePackageSelect logic to populate itinerary and hotels
                 setSelectedPackage(pkg);
 
-                // Set editable short itinerary from package (priority)
-                // This ensures we show "NJP to Gangtok" instead of just "Gangtok"
+                // Set editable short itinerary from package (if not already set or partial)
                 const extractedItinerary = extractItineraryFromPackage(pkg.details);
-                if (extractedItinerary.length > 0) {
+                const hasExistingItinerary = inquiry.itinerary?.length > 1 || (inquiry.followup_details?.length > 1);
+                
+                if (extractedItinerary.length > 0 && !hasExistingItinerary) {
                     setItinerary(extractedItinerary);
                 }
 
@@ -248,6 +255,9 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         // Load hotel selections if they exist (overrides package defaults)
         if (inquiry.hotel_selections && Object.keys(inquiry.hotel_selections).length > 0) {
             setHotelSelections(inquiry.hotel_selections);
+        } else if (inquiry.followup_details && inquiry.followup_details.length > 0) {
+            const reconstructedHotels = mapFollowupToHotelSelections(inquiry.followup_details);
+            setHotelSelections(reconstructedHotels);
         }
     };
 
@@ -271,12 +281,14 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         }
     }, [tripDetails.duration, tripDetails.location, tripDetails.keywords, allPackages]);
 
-    // Update itinerary based on duration for custom packages
+    // Update itinerary based on duration
     useEffect(() => {
-        if (!selectedPackage || selectedPackage._id === 'custom') {
-            setItinerary(prev => updateItineraryByDuration(prev, tripDetails.duration));
+        if (isInitialLoad.current && isEditMode) {
+            isInitialLoad.current = false;
+            return;
         }
-    }, [tripDetails.duration, selectedPackage]);
+        setItinerary(prev => updateItineraryByDuration(prev, tripDetails.duration));
+    }, [tripDetails.duration, isEditMode]);
 
     useEffect(() => {
         const hasNorthSikkimInItinerary = itinerary.some(item => {
@@ -469,6 +481,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             hotelSelections,
             allHotels,
             hotelSeason,
+            itinerary,
             isDraft
         });
     };

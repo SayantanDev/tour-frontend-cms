@@ -25,6 +25,7 @@ import EventIcon from '@mui/icons-material/Event';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 import { deleteQueries, getAllQueries, updateQueries } from "../../api/queriesAPI";
+import { getSinglePackages } from "../../api/packageAPI";
 import usePermissions from "../../hooks/UsePermissions";
 import { useDispatch, useSelector } from "react-redux";
 import { setSelectedquerie } from "../../reduxcomponents/slices/queriesSlice";
@@ -33,7 +34,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import useSnackbar from "../../hooks/useSnackbar";
 import { getAllUsers } from "../../api/userAPI";
 import { getChangeRequest, getRejectedChanges, handleChangeRequestApproval, getSingleOperation, getQueriesByoperation } from "../../api/operationAPI";
-import { exportQueryViewPDF, mapOperationToPdfData } from "../createItinerary/createInquiryCalculation";
+import { exportQueryViewPDF, mapOperationToPdfData, mapOperationToInquiry } from "../createItinerary/createInquiryCalculation";
 
 const getStatusStyles = (status) => {
   switch (status) {
@@ -324,18 +325,54 @@ const Query = () => {
     }
   };
 
-  const handleFullEdit = (rowData) => {
-    // Map backend response fields to what CreateInquiry expects
-    const mappedData = {
-      ...rowData,
-      _id: rowData._id,
-      guest_name: rowData.guest_info?.guest_name,
-      guest_email: rowData.guest_info?.guest_email,
-      guest_phone: rowData.guest_info?.guest_phone,
-      guest_country_code: rowData.guest_info?.guest_country_code,
-    };
-    dispatch(setSelectedInquiry(mappedData));
-    navigate("/createItinerary");
+  const handleFullEdit = async (rowData) => {
+    setLoading(true);
+    try {
+      // Fetch full operation and query data to ensure we have the itinerary
+      const opId = rowData.operation_id || rowData._id;
+      const [operationData, queriesData] = await Promise.all([
+        getSingleOperation(opId),
+        getQueriesByoperation(opId)
+      ]);
+
+      let packageData = null;
+      const pkgId = queriesData?.package_id?._id || queriesData?.package_id;
+      if (pkgId) {
+        try {
+          const pkgRes = await getSinglePackages(pkgId);
+          packageData = pkgRes.data?.data || pkgRes.data;
+        } catch (err) {
+          console.warn("Failed to fetch package details, continuing without it", err);
+        }
+      }
+
+      const mappedData = mapOperationToInquiry(operationData, queriesData, packageData);
+      
+      if (mappedData) {
+        dispatch(setSelectedInquiry(mappedData));
+        navigate("/createItinerary");
+      } else {
+        // Fallback to basic mapping if API fails
+        const fallbackData = {
+          ...rowData,
+          _id: rowData._id,
+          guest_name: rowData.guest_info?.guest_name,
+          guest_email: rowData.guest_info?.guest_email,
+          guest_phone: rowData.guest_info?.guest_phone,
+          guest_country_code: rowData.guest_info?.guest_country_code,
+        };
+        dispatch(setSelectedInquiry(fallbackData));
+        navigate("/createItinerary");
+      }
+    } catch (error) {
+      console.error("Full Edit failed to fetch detailed data:", error);
+      showSnackbar("Failed to load full details, using basic info", "warning");
+      // Fallback
+      dispatch(setSelectedInquiry(rowData));
+      navigate("/createItinerary");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Column definitions for @tanstack/react-table

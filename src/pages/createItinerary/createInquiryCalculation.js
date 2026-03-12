@@ -152,6 +152,21 @@ export const prePopulateHotelSelections = (shortItinerary, allHotels) => {
     return newHotelSelections;
 };
 
+export const mapFollowupToHotelSelections = (followupDetails) => {
+    if (!followupDetails || !Array.isArray(followupDetails)) return {};
+    const selections = {};
+    followupDetails.forEach((item, index) => {
+        selections[index] = {
+            location: item.destination || '',
+            hotelId: item.hotel_id || '',
+            roomType: item.room_type || '',
+            mealPlan: item.meal_plan || '',
+            availableHotels: [] // Will be populated by component if needed
+        };
+    });
+    return selections;
+};
+
 export const calculatePdfDimensions = (canvas, pdf) => {
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
@@ -214,7 +229,7 @@ export const validateForm = (guestInfo, tripDetails, selectedPackage) => {
     return { isValid: true };
 };
 
-export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, stayInfo, hotelSelections, allHotels, hotelSeason, isDraft = false }) => {
+export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, stayInfo, hotelSelections, allHotels, hotelSeason, itinerary, isDraft = false }) => {
     const gPhone = guestInfo.guest_phone || '';
     const gCountryCode = guestInfo.country_code || '+91';
     const cleanedPhone = gPhone.startsWith(gCountryCode)
@@ -279,6 +294,7 @@ export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, st
             room_type: stayInfo.room_type || "",
         },
         followup_details, // New field for day-wise details
+        itinerary: itinerary, // Store the short itinerary strings/objects
         hotel_selections: hotelSelections, // Add raw hotel selections
         travel_date: tripDetails.travel_date || '',
         pickup_location: tripDetails.pickup_location || 'NJP / IXB',
@@ -936,6 +952,49 @@ export const mapOperationToPdfData = (operationData, queriesData) => {
     };
 
     return { guestInfo, itineraryData };
+};
+
+/**
+ * Maps operation and query data specifically for CreateInquiry editing.
+ */
+export const mapOperationToInquiry = (operationData, queriesData, packageData = null) => {
+    if (!operationData || !queriesData) return null;
+
+    const pkg = packageData || queriesData.package_id;
+    const pkgDetails = pkg?.details || pkg;
+
+    return {
+        ...queriesData,
+        _id: queriesData._id,
+        operation_id: operationData._id,
+        guest_info: {
+            guest_name: operationData.guest_info?.name || queriesData.guest_info?.guest_name,
+            guest_email: operationData.guest_info?.email || queriesData.guest_info?.guest_email,
+            guest_phone: operationData.guest_info?.phone || queriesData.guest_info?.guest_phone,
+            guest_country_code: operationData.guest_info?.country_code || queriesData.guest_info?.guest_country_code || '+91',
+        },
+        pax: operationData.trip_details?.number_of_adults || queriesData.pax,
+        kids_above_5: operationData.trip_details?.number_of_kids || queriesData.kids_above_5,
+        destination: queriesData.destination || queriesData.location || pkg?.location,
+        duration: queriesData.duration || pkg?.duration,
+        travel_date: queriesData.travel_date,
+        // Prioritize: 1. Followup destinations (most accurate for confirmed), 2. Manual itinerary in query, 3. Package short itinerary
+        itinerary: (operationData?.followup_details?.length > 1) 
+            ? operationData.followup_details.map(d => d.destination || '')
+            : (queriesData?.itinerary?.length > 1) 
+                ? queriesData.itinerary 
+                : (pkgDetails?.shortItinerary && Array.isArray(pkgDetails.shortItinerary) && pkgDetails.shortItinerary.length > 0
+                    ? extractItineraryFromPackage(pkgDetails) 
+                    : (queriesData?.itinerary?.length > 0
+                        ? queriesData.itinerary
+                        : (operationData?.followup_details?.length > 0
+                            ? operationData.followup_details.map(d => d.destination || '')
+                            : []
+                          )
+                      )
+                  ),
+        followup_details: operationData?.followup_details || queriesData?.followup_details,
+    };
 };
 
 /**
