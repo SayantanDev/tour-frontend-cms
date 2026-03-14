@@ -227,8 +227,11 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
         // Load cost
         setCost(inquiry.cost || 0);
-        setHotelSeason(inquiry.hotel_season || 'off_season_price');
         setCarSeason(inquiry.car_season || 'off_season_price');
+        setHotelSeason(inquiry.hotel_season || 'off_season_price');
+        if (inquiry.margin !== undefined) {
+            setCurrentMargin(inquiry.margin);
+        }
 
         // Load itinerary - Priority: 1. inquiry.itinerary (if complete), 2. followup_details, 3. empty slots
         if (inquiry.itinerary && Array.isArray(inquiry.itinerary) && inquiry.itinerary.length > 1) {
@@ -549,6 +552,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             allHotels,
             hotelSeason,
             carSeason,
+            margin: currentMargin,
             itinerary,
             isDraft
         });
