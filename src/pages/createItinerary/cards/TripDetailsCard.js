@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-    Paper, Box, Typography, Button, Grid, TextField, Autocomplete, FormControl, InputLabel, Select, MenuItem, Chip, Stack, IconButton, List, ListItem, ListItemText, Collapse, Checkbox, FormControlLabel
+    Paper, Box, Typography, Button, Grid, TextField, Autocomplete, FormControl, InputLabel, Select, MenuItem, Chip, Stack, IconButton, List, ListItem, ListItemText, Collapse, Checkbox, FormControlLabel, Divider
 } from '@mui/material';
 import { Add as AddIcon, Remove as RemoveIcon } from '@mui/icons-material';
 
@@ -21,8 +21,15 @@ const TripDetailsCard = ({
     onPackageSelect,
     carSeason,
     handleCarSeasonChange,
-    handleCarDetailsChange
+    handleCarDetailsChange,
+    handleOptionalExtraToggle
 }) => {
+    const SIKKIM_EXTRAS = [
+        { id: 'nathula', name: 'Nathu la', price: 4500, detail: 'With Tsongmo Lake' },
+        { id: 'zeropoint', name: 'Zero Point', price: 4000, detail: 'with Yumthang Valley' },
+        { id: 'mtkatao', name: 'Mt Katao', price: 3000, detail: 'on Lachung to Gangtok day' },
+        { id: 'namchi', name: 'Namchi and Ravangla', price: 3000, detail: 'On Gangtok to Pelling day' }
+    ];
     const [isExpanded, setIsExpanded] = useState(true);
     const user = JSON.parse(localStorage.getItem('user'));
     // Helper function to get car count for a specific car type
@@ -375,6 +382,45 @@ const TripDetailsCard = ({
                             placeholder="NJP / IXB"
                         />
                     </Grid>
+                    {(tripDetails?.location?.toLowerCase() === 'sikkim' || tripDetails?.location?.toLowerCase()?.includes('sikkim')) && (
+                        <Grid item xs={12}>
+                            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, color: '#1976d2' }}>
+                                Optional Extras (Sikkim)
+                            </Typography>
+                            <Grid container spacing={1}>
+                                {SIKKIM_EXTRAS.map((extra) => {
+                                    const isSelected = (tripDetails.optional_extras || []).some(e => {
+                                        const storedName = typeof e === 'object' ? (e.name || '') : e;
+                                        return (storedName || '').toLowerCase().trim() === extra.name.toLowerCase().trim();
+                                    });
+                                    return (
+                                        <Grid item xs={12} sm={6} md={3} key={extra.id}>
+                                            <FormControlLabel
+                                                control={
+                                                    <Checkbox
+                                                        size="small"
+                                                        checked={isSelected}
+                                                        onChange={() => handleOptionalExtraToggle(extra.name, extra.price)}
+                                                    />
+                                                }
+                                                label={
+                                                    <Box>
+                                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                                            {extra.name} (₹{extra.price.toLocaleString()}/-)
+                                                        </Typography>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {extra.detail}
+                                                        </Typography>
+                                                    </Box>
+                                                }
+                                            />
+                                        </Grid>
+                                    );
+                                })}
+                            </Grid>
+                            <Divider sx={{ my: 2 }} />
+                        </Grid>
+                    )}
 
                     {/* Keywords Row */}
                     <Grid item xs={12}>

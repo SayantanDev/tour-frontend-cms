@@ -73,8 +73,8 @@ export const calculatePackageCost = (packageDetails, tripDetails) => {
     return basePrice * (pax || 1);
 };
 
-export const totalCost = (hotelCost, carCost, margin, northSikkimMargin) => {
-    const subtotal = (parseFloat(hotelCost) || 0) + (parseFloat(carCost) || 0) + parseFloat(northSikkimMargin || 0);
+export const totalCost = (hotelCost, carCost, margin, northSikkimMargin, optionalExtrasCost = 0) => {
+    const subtotal = (parseFloat(hotelCost) || 0) + (parseFloat(carCost) || 0) + parseFloat(northSikkimMargin || 0) + parseFloat(optionalExtrasCost || 0);
     const marginAmount = subtotal * (parseFloat(margin) / 100 || 0);
     return Math.round(subtotal + marginAmount);
 };
@@ -299,6 +299,7 @@ export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, st
         travel_date: tripDetails.travel_date || '',
         pickup_location: tripDetails.pickup_location || 'NJP / IXB',
         dropoff_location: tripDetails.dropoff_location || 'NJP / IXB',
+        optional_extras: tripDetails.optional_extras || [],
         lead_source: 'website',
         lead_stage: isDraft ? 'Draft' : 'New',
         verified: !isDraft,
@@ -835,6 +836,21 @@ export const exportQuotationPDF = async (
             y += 4;
         }
 
+        const extras = tripDetails.optional_extras || [];
+        if (extras.length > 0) {
+            sectionTitle('Optional Extras');
+            extras.forEach((extra) => {
+                checkPage(7);
+                setC(DARK); pdf.setFontSize(8.5);
+                pdf.text(`• ${extra.name}`, marginL + 5, y);
+                setC(DARK); pdf.setFont(undefined, 'bold');
+                pdf.text(`₹${(extra.price || 0).toLocaleString()}/-`, marginR - 5, y, { align: 'right' });
+                pdf.setFont(undefined, 'normal');
+                y += 5.5;
+            });
+            y += 4;
+        }
+
         const hotelDays = Object.keys(hotelSelections).filter(d => hotelSelections[d]?.hotelId);
         if (hotelDays.length > 0) {
             sectionTitle('Hotel Selections');
@@ -994,7 +1010,70 @@ export const mapOperationToInquiry = (operationData, queriesData, packageData = 
                       )
                   ),
         followup_details: operationData?.followup_details || queriesData?.followup_details,
+        optional_extras: investigationExtras(queriesData, operationData),
     };
+};
+
+/**
+ * Helper to find optional extras in possibly nested structures.
+ * Merges and normalizes found extras.
+ */
+const investigationExtras = (q, o) => {
+    if (!q && !o) return [];
+
+    // Extract relevant query object if it's nested or an array
+    const resolveQuery = (input) => {
+        if (!input) return null;
+        if (Array.isArray(input)) return input[0] || null;
+        if (input.data && Array.isArray(input.data)) return input.data[0] || null;
+        return input;
+    };
+
+    const query = resolveQuery(q);
+    const operation = o || {};
+
+    // Collect all potential sources of extras
+    const sources = [
+        query?.optional_extras,
+        query?.details?.cost?.optionalExtras,
+        operation?.optional_extras,
+        operation?.trip_details?.optional_extras,
+        // Add more legacy/variant fields if any
+    ];
+
+    const allRaw = [];
+    sources.forEach(source => {
+        if (Array.isArray(source)) {
+            allRaw.push(...source);
+        } else if (source && typeof source === 'object') {
+            // In case it's a single object (rare but possible)
+            allRaw.push(source);
+        }
+    });
+
+    const uniqueMap = new Map();
+
+    allRaw.forEach(item => {
+        if (!item) return;
+        let name = '';
+        let price = 0;
+
+        if (typeof item === 'string') {
+            name = item.trim();
+        } else if (typeof item === 'object') {
+            name = (item.name || item.tagValue || item.tagName || item.label || '').trim();
+            price = Number(item.price || 0);
+        }
+
+        if (name) {
+            const key = name.toLowerCase();
+            if (!uniqueMap.has(key)) {
+                uniqueMap.set(key, { name, price });
+            }
+        }
+    });
+
+    return Array.from(uniqueMap.values());
 };
 
 /**

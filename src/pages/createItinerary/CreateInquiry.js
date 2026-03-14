@@ -103,6 +103,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         duration: '',
         pickup_location: 'NJP / IXB',
         dropoff_location: 'NJP / IXB',
+        optional_extras: [], // Array of {name, price}
     });
 
     const [selectedPackage, setSelectedPackage] = useState(null);
@@ -187,8 +188,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         });
         setEmailAddress(gEmail);
 
-        // Load trip details
-        setTripDetails({
+        const tripDetailsObj = {
             pax: (inquiry.pax || inquiry.guest_count || '')?.toString() || '',
             kids_above_5: inquiry.kids_above_5 || 0,
             car_details: inquiry.car_details || [],
@@ -198,7 +198,21 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             duration: inquiry.duration?.toString() || '',
             pickup_location: inquiry.pickup_location || 'NJP / IXB',
             dropoff_location: inquiry.dropoff_location || 'NJP / IXB',
-        });
+            optional_extras: [
+                ...(Array.isArray(inquiry.optional_extras) ? inquiry.optional_extras : []),
+                ...(Array.isArray(inquiry.details?.cost?.optionalExtras) ? inquiry.details.cost.optionalExtras : []),
+                ...(Array.isArray(inquiry.trip_details?.optional_extras) ? inquiry.trip_details.optional_extras : [])
+            ].map(e => {
+                const name = typeof e === 'object' ? (e.name || e.tagValue || e.tagName || e.label || '') : e;
+                const price = typeof e === 'object' ? (e.price || 0) : 0;
+                return { name: (name || '').trim(), price: Number(price || 0) };
+            }).filter((item, index, self) => 
+                item.name && self.findIndex(t => t.name.toLowerCase() === item.name.toLowerCase()) === index
+            ),
+        };
+
+        console.log("Final Trip Details loaded:", tripDetailsObj);
+        setTripDetails(tripDetailsObj);
 
         // Load stay info
         if (inquiry.stay_info) {
@@ -301,20 +315,20 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         const northSikkimMargin = (hasNorthSikkimInItinerary || isNorthSikkimLocation)
             ? (configData?.additionalCosts?.north_sikkim_extra || 3000) : 0;
 
+        const extrasCost = (tripDetails.optional_extras || []).reduce((acc, extra) => acc + (extra.price || 0), 0);
         let tCost = 0;
-
         if (tripDetails.location && tripDetails.location !== 'Sandakphu') {
             const hCost = hotelCostCalculation(hotelSelections, allHotels, hotelSeason, tripDetails, stayInfo);
             const cCost = calculateCarCost(configData, carSeason, tripDetails);
-            tCost = totalCost(hCost, cCost, currentMargin, northSikkimMargin);
+            tCost = totalCost(hCost, cCost, currentMargin, northSikkimMargin, extrasCost);
             setCost(tCost);
         } else if (tripDetails.location === 'Sandakphu') {
             const hCostSandakphu = hotelCostCalculation(hotelSelections, allHotels, hotelSeason, tripDetails, stayInfo);
             const cCostSandakphu = calculateCarCost(configData, carSeason, tripDetails);
             tCost = totalCostSandakphu(hCostSandakphu, cCostSandakphu, currentMargin, tripDetails, selectedPackage);
-            setCost(tCost);
+            setCost(tCost + extrasCost);
         }
-    }, [hotelSelections, tripDetails.car_details, tripDetails.duration, tripDetails.pax, tripDetails.kids_above_5, carSeason, hotelSeason, currentMargin, allHotels, configData, stayInfo, stayInfo.rooms, tripDetails.location, itinerary, selectedPackage]);
+    }, [hotelSelections, tripDetails.car_details, tripDetails.duration, tripDetails.pax, tripDetails.kids_above_5, carSeason, hotelSeason, currentMargin, allHotels, configData, stayInfo, stayInfo.rooms, tripDetails.location, itinerary, selectedPackage, tripDetails.optional_extras]);
 
     const handleGuestInfoChange = (e) => {
         const { name, value } = e.target;
@@ -434,6 +448,24 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
     const handleCarSeasonChange = (e) => setCarSeason(e.target.value);
     const handleHotelSeasonChange = (e) => setHotelSeason(e.target.value);
+
+    const handleOptionalExtraToggle = (extraName, price) => {
+        setTripDetails(prev => {
+            const currentExtras = prev.optional_extras || [];
+            const isAlreadySelected = currentExtras.some(e => 
+                (e.name || '').toLowerCase().trim() === extraName.toLowerCase().trim()
+            );
+            let newExtras;
+            if (isAlreadySelected) {
+                newExtras = currentExtras.filter(e => 
+                    (e.name || '').toLowerCase().trim() !== extraName.toLowerCase().trim()
+                );
+            } else {
+                newExtras = [...currentExtras, { name: extraName.trim(), price }];
+            }
+            return { ...prev, optional_extras: newExtras };
+        });
+    };
 
     const handleItineraryChange = (index, value) => {
         setItinerary(prev => updateItineraryItem(prev, index, value));
@@ -837,6 +869,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     carSeason={carSeason}
                     handleCarSeasonChange={handleCarSeasonChange}
                     handleCarDetailsChange={handleCarDetailsChange}
+                    handleOptionalExtraToggle={handleOptionalExtraToggle}
                 />
 
                 {/* Short Itinerary */}

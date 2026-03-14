@@ -208,6 +208,32 @@ const CostEstimateCard = ({
                         })()}
                     </Box>
                 )}
+                {(tripDetails.optional_extras || []).length > 0 && (
+                    <Box sx={{ mt: 1, borderRadius: 1, overflow: 'hidden', border: '1px solid', borderColor: 'secondary.light' }}>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                p: 1,
+                                bgcolor: 'secondary.light',
+                                color: 'white',
+                            }}
+                        >
+                            <Typography variant="body2" fontWeight={600}>Optional Extras:</Typography>
+                            <Typography variant="body2" fontWeight={600}>
+                                ₹{(tripDetails.optional_extras || []).reduce((acc, e) => acc + (e.price || 0), 0).toLocaleString()}
+                            </Typography>
+                        </Box>
+                        <Box sx={{ p: 1.5, bgcolor: 'background.paper' }}>
+                            {tripDetails.optional_extras.map((extra, idx) => (
+                                <Box key={idx} sx={{ mb: 0.5, display: 'flex', justifyContent: 'space-between' }}>
+                                    <Typography variant="caption">{extra.name}</Typography>
+                                    <Typography variant="caption">₹{extra.price.toLocaleString()}</Typography>
+                                </Box>
+                            ))}
+                        </Box>
+                    </Box>
+                )}
                 {tripDetails?.location !== "Sandakphu" && user?.permission === 'Admin' && carTotal > 0 && (
                     <Box sx={{ borderRadius: 1, overflow: 'hidden', border: '1px solid', borderColor: 'primary.light' }}>
                         <Box

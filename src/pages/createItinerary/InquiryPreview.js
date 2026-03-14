@@ -223,6 +223,21 @@ const InquiryPreview = ({
                     )}
                 </Box>
 
+                {/* Optional Extras */}
+                {tripDetails.optional_extras && tripDetails.optional_extras.length > 0 && (
+                    <>
+                        <SectionTitle title="Optional Extras" />
+                        <Box sx={{ px: 1, mb: 3 }}>
+                            {tripDetails.optional_extras.map((extra, idx) => (
+                                <Box key={idx} sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                                    <Typography sx={{ color: DARK, fontSize: '0.85rem' }}>{extra.name}</Typography>
+                                    <Typography sx={{ color: DARK, fontWeight: 700, fontSize: '0.9rem' }}>₹{extra.price?.toLocaleString()}</Typography>
+                                </Box>
+                            ))}
+                        </Box>
+                    </>
+                )}
+
                 {/* Hotel Selections */}
                 {Object.keys(hotelSelections).filter(d => hotelSelections[d]?.hotelId).length > 0 && (
                     <>

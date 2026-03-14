@@ -147,7 +147,9 @@ const SingleQueriesView = () => {
       if (!operationData) return;
       setOperationId(operationData._id);
 
-      const queriesData = await getQueriesByoperation(operationData._id);
+      const queriesDataRaw = await getQueriesByoperation(operationData._id);
+      const queriesData = Array.isArray(queriesDataRaw) ? (queriesDataRaw[0] || {}) : queriesDataRaw;
+      
       const { guestInfo: mappedGuestInfo, itineraryData: mappedItineraryData } = mapOperationToPdfData(operationData, queriesData);
       setItineraryData(mappedItineraryData);
       setGuestInfo(mappedGuestInfo);

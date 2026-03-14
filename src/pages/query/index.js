@@ -335,8 +335,12 @@ const Query = () => {
         getQueriesByoperation(opId)
       ]);
 
+      // Handle queriesData if it's an array or nested under .data
+      const rawQueries = queriesData?.data || queriesData;
+      let queryObj = Array.isArray(rawQueries) ? (rawQueries.find(q => q._id === rowData._id) || rawQueries[0]) : rawQueries;
+
       let packageData = null;
-      const pkgId = queriesData?.package_id?._id || queriesData?.package_id;
+      const pkgId = queryObj?.package_id?._id || queryObj?.package_id;
       if (pkgId) {
         try {
           const pkgRes = await getSinglePackages(pkgId);
@@ -346,7 +350,8 @@ const Query = () => {
         }
       }
 
-      const mappedData = mapOperationToInquiry(operationData, queriesData, packageData);
+      const mappedData = mapOperationToInquiry(operationData, queryObj, packageData);
+      console.log("Mapped Data for Full Edit:", mappedData);
       
       if (mappedData) {
         dispatch(setSelectedInquiry(mappedData));

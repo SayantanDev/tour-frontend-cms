@@ -104,14 +104,15 @@ const PdfPreview = ({ guestInfo, tripDetails, selectedPackage, hotelSelections, 
             )}
 
             {/* Optional Extras */}
-            {selectedPackage?.details?.cost?.optionalExtras && (
+            {tripDetails.optional_extras && tripDetails.optional_extras.length > 0 && (
                 <Paper elevation={0} sx={{ p: 2, mb: 3, backgroundColor: '#f8f9fa' }}>
                     <Typography variant="h6" fontWeight={700} gutterBottom sx={{ color: '#2d5016' }}>
-                        Optionals Extra: (Per Car)
+                        Optional Extras:
                     </Typography>
-                    {selectedPackage.details.cost.optionalExtras.map((extra, index) => (
-                        <Typography key={index} variant="body2">
-                            {typeof extra === 'object' ? (extra.name || extra.tagValue || extra.tagName) : extra}: ₹{typeof extra === 'object' ? (extra.price || 0) : 0}/-
+                    {tripDetails.optional_extras.map((extra, index) => (
+                        <Typography key={index} variant="body2" sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <span>{extra.name}</span>
+                            <strong>₹{extra.price?.toLocaleString()}/-</strong>
                         </Typography>
                     ))}
                 </Paper>
