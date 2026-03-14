@@ -18,6 +18,7 @@ import TripDetailsCard from './cards/TripDetailsCard';
 // import SelectedPackageCard from './cards/SelectedPackageCard';
 import ItineraryCard from './cards/ItineraryCard';
 import HotelSelectionCard from './cards/HotelSelectionCard';
+import CarSelectionCard from './cards/CarSelectionCard';
 import CostEstimateCard from './cards/CostEstimateCard';
 import InquiryPreview from './InquiryPreview';
 import {
@@ -108,6 +109,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
 
     const [selectedPackage, setSelectedPackage] = useState(null);
     const [hotelSelections, setHotelSelections] = useState({});
+    const [carSelections, setCarSelections] = useState({});
     const [cost, setCost] = useState(0);
     const [stayInfo, setStayInfo] = useState({
         rooms: '',
@@ -273,6 +275,11 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             const reconstructedHotels = mapFollowupToHotelSelections(inquiry.followup_details);
             setHotelSelections(reconstructedHotels);
         }
+
+        // Load car selections
+        if (inquiry.car_selections && Object.keys(inquiry.car_selections).length > 0) {
+            setCarSelections(inquiry.car_selections);
+        }
     };
 
     // Advanced package filtering based on duration, location, and keyword-in-tags match
@@ -319,16 +326,16 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         let tCost = 0;
         if (tripDetails.location && tripDetails.location !== 'Sandakphu') {
             const hCost = hotelCostCalculation(hotelSelections, allHotels, hotelSeason, tripDetails, stayInfo);
-            const cCost = calculateCarCost(configData, carSeason, tripDetails);
+            const cCost = calculateCarCost(configData, carSeason, tripDetails, carSelections);
             tCost = totalCost(hCost, cCost, currentMargin, northSikkimMargin, extrasCost);
             setCost(tCost);
         } else if (tripDetails.location === 'Sandakphu') {
             const hCostSandakphu = hotelCostCalculation(hotelSelections, allHotels, hotelSeason, tripDetails, stayInfo);
-            const cCostSandakphu = calculateCarCost(configData, carSeason, tripDetails);
+            const cCostSandakphu = calculateCarCost(configData, carSeason, tripDetails, carSelections);
             tCost = totalCostSandakphu(hCostSandakphu, cCostSandakphu, currentMargin, tripDetails, selectedPackage);
             setCost(tCost + extrasCost);
         }
-    }, [hotelSelections, tripDetails.car_details, tripDetails.duration, tripDetails.pax, tripDetails.kids_above_5, carSeason, hotelSeason, currentMargin, allHotels, configData, stayInfo, stayInfo.rooms, tripDetails.location, itinerary, selectedPackage, tripDetails.optional_extras]);
+    }, [hotelSelections, carSelections, tripDetails.car_details, tripDetails.duration, tripDetails.pax, tripDetails.kids_above_5, carSeason, hotelSeason, currentMargin, allHotels, configData, stayInfo, stayInfo.rooms, tripDetails.location, itinerary, selectedPackage, tripDetails.optional_extras]);
 
     const handleGuestInfoChange = (e) => {
         const { name, value } = e.target;
@@ -431,11 +438,17 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     const handleLocationChange = (newValue) => {
         setTripDetails(prev => ({ ...prev, location: newValue || '', duration: 0 }));
         setHotelSelections({});
+        setCarSelections({});
     };
 
     const handleHotelReset = () => {
         setHotelSeason('');
         setHotelSelections(prev => resetHotelSelections(prev));
+    };
+
+    const handleCarReset = () => {
+        setCarSeason('');
+        setCarSelections({});
     };
 
     const handleHotelChange = (dayIndex, field, value) => {
@@ -494,6 +507,25 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         });
     };
 
+    const handleCarSelectionChange = (dayIndex, carName, newCount) => {
+        setCarSelections(prev => {
+            const dayCars = [...(prev[dayIndex] || [])];
+            const existingIndex = dayCars.findIndex(c => c.car_name === carName);
+
+            if (newCount <= 0) {
+                if (existingIndex !== -1) dayCars.splice(existingIndex, 1);
+            } else {
+                if (existingIndex !== -1) {
+                    dayCars[existingIndex] = { ...dayCars[existingIndex], car_count: newCount };
+                } else {
+                    dayCars.push({ car_name: carName, car_count: newCount });
+                }
+            }
+
+            return { ...prev, [dayIndex]: dayCars };
+        });
+    };
+
     const validateForm = () => {
         const validation = validateFormData(guestInfo, tripDetails, selectedPackage);
         if (!validation.isValid) {
@@ -511,6 +543,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
             cost,
             stayInfo,
             hotelSelections,
+            carSelections,
             allHotels,
             hotelSeason,
             itinerary,
@@ -689,6 +722,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                 configData,
                 currentMargin,
                 detailedItinerary,
+                carSelections,
             },
             setLoading,
             showSnackbar
@@ -759,6 +793,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
         setEmailAddress('');
         setCarSeason('');
         setHotelSeason('');
+        setCarSelections({});
     };
 
     const showSnackbar = (message, severity = 'success') => {
@@ -905,6 +940,17 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                     selectedDay={selectedDay}
                     setSelectedDay={setSelectedDay}
                     handleHotelChange={handleHotelChange}
+                />
+                
+                <CarSelectionCard
+                    tripDetails={tripDetails}
+                    carSelections={carSelections}
+                    carSeason={carSeason}
+                    itinerary={itinerary}
+                    handleCarSeasonChange={handleCarSeasonChange}
+                    handleCarReset={handleCarReset}
+                    handleCarSelectionChange={handleCarSelectionChange}
+                    configData={configData}
                 />
 
                 <CostEstimateCard
@@ -1059,6 +1105,7 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
                         cost={cost}
                         detailedItinerary={detailedItinerary}
                         onDetailedItineraryChange={setDetailedItinerary}
+                        carSelections={carSelections}
                     />
                 </DialogContent>
                 <DialogActions>

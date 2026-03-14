@@ -13,7 +13,8 @@ const InquiryPreview = ({
     selectedPackage,
     cost,
     detailedItinerary,
-    onDetailedItineraryChange
+    onDetailedItineraryChange,
+    carSelections = {}
 }) => {
     const [isEditingItinerary, setIsEditingItinerary] = React.useState(false);
     const [tempDetailedItinerary, setTempDetailedItinerary] = React.useState(detailedItinerary || '');
@@ -187,9 +188,16 @@ const InquiryPreview = ({
                                         <Typography sx={{ fontWeight: 700, color: DARK_GREEN, width: '70px', fontSize: '0.85rem' }}>
                                             Day {idx + 1}:
                                         </Typography>
-                                        <Typography sx={{ color: DARK, fontSize: '0.85rem', flex: 1 }}>
-                                            {itemText}
-                                        </Typography>
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography sx={{ color: DARK, fontSize: '0.85rem' }}>
+                                                {itemText}
+                                            </Typography>
+                                            {carSelections[idx] && carSelections[idx].length > 0 && (
+                                                <Typography variant="caption" sx={{ color: DARK_GREEN, fontWeight: 700, mt: 0.5, display: 'block' }}>
+                                                    Vehicles: {carSelections[idx].map(c => `${c.car_name} (${c.car_count})`).join(', ')}
+                                                </Typography>
+                                            )}
+                                        </Box>
                                     </Box>
                                 );
                             })}

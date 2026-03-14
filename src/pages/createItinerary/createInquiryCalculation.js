@@ -229,14 +229,14 @@ export const validateForm = (guestInfo, tripDetails, selectedPackage) => {
     return { isValid: true };
 };
 
-export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, stayInfo, hotelSelections, allHotels, hotelSeason, itinerary, isDraft = false }) => {
+export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, stayInfo, hotelSelections, carSelections, allHotels, hotelSeason, itinerary, isDraft = false }) => {
     const gPhone = guestInfo.guest_phone || '';
     const gCountryCode = guestInfo.country_code || '+91';
     const cleanedPhone = gPhone.startsWith(gCountryCode)
         ? gPhone.replace(gCountryCode, '').trim()
         : gPhone;
 
-    // Map hotelSelections to followup_details
+    // Map selections to followup_details
     const followup_details = [];
     const duration = parseInt(tripDetails.duration) || 0;
     const startDate = tripDetails.travel_date ? new Date(tripDetails.travel_date) : null;
@@ -257,6 +257,7 @@ export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, st
         }
 
         const selection = hotelSelections?.[i];
+        const carSelection = carSelections?.[i] || [];
         const hotel = allHotels?.find(h => h._id === selection?.hotelId);
 
         followup_details.push({
@@ -269,6 +270,7 @@ export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, st
             checkout_date: checkoutDate,
             room_type: selection?.roomType || '',
             meal_plan: selection?.mealPlan || '',
+            vehicle_name: carSelection.map(c => `${c.car_name} (${c.car_count})`).join(', '),
             approved_status: 'Pending',
             rejected_reason: []
         });
@@ -296,6 +298,7 @@ export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, st
         followup_details, // New field for day-wise details
         itinerary: itinerary, // Store the short itinerary strings/objects
         hotel_selections: hotelSelections, // Add raw hotel selections
+        car_selections: carSelections, // Add raw car selections
         travel_date: tripDetails.travel_date || '',
         pickup_location: tripDetails.pickup_location || 'NJP / IXB',
         dropoff_location: tripDetails.dropoff_location || 'NJP / IXB',
@@ -435,7 +438,32 @@ export const hotelCostCalculation = (hotelSelections, allHotels, season, tripDet
     }, 0);
 };
 
-export const calculateCarCost = (configData, season, tripDetails) => {
+export const calculateCarCost = (configData, season, tripDetails, carSelections = null) => {
+    // If we have day-wise car selections, use them
+    if (carSelections && Object.keys(carSelections).length > 0) {
+        return Object.values(carSelections).reduce((dayAcc, dayCars) => {
+            if (!Array.isArray(dayCars)) return dayAcc;
+            
+            const dayCost = dayCars.reduce((carAcc, carDetail) => {
+                const carConfig = configData?.additionalCosts?.car?.find(c => c.type === carDetail.car_name);
+                let unitPrice = carConfig?.cost?.[season] || 0;
+
+                // Restore Darjeeling Logic
+                if (tripDetails.location === 'Darjeeling') {
+                    if (carDetail.car_name === 'Bolero') {
+                        unitPrice = season === 'off_season_price' ? 3500 : 4000;
+                    } else if (carDetail.car_name === 'Innova') {
+                        unitPrice = season === 'off_season_price' ? 4000 : 4500;
+                    }
+                }
+                return carAcc + (unitPrice * (carDetail.car_count || 0));
+            }, 0);
+            
+            return dayAcc + dayCost;
+        }, 0);
+    }
+
+    // Fallback to legacy global car_details
     const carDetails = tripDetails?.car_details || [];
     const oneNightPerDayCarAmount = 4000;
     const twoNightPerDayCarAmount = 8500;
@@ -499,6 +527,7 @@ export const exportQuotationPDF = async (
         configData,
         currentMargin,
         detailedItinerary,
+        carSelections = {},
     },
     setLoading,
     showSnackbar
@@ -801,7 +830,17 @@ export const exportQuotationPDF = async (
                     ? pdf.splitTextToSize(itemText, firstLineW > 40 ? firstLineW : contentW - 6)
                     : [];
 
-                const rowH = Math.max(7, 5 * (bodyLines.length || 1) + 2);
+                // Prepare car info if present
+                const dayCars = carSelections?.[idx] || [];
+                const hasCars = dayCars.length > 0;
+                let carLines = [];
+                if (hasCars) {
+                    const carStr = `Vehicles: ${dayCars.map(c => `${c.car_name} (${c.car_count})`).join(', ')}`;
+                    carLines = pdf.splitTextToSize(carStr, contentW - 6 - labelWidth);
+                }
+
+                const totalTextLines = bodyLines.length + carLines.length;
+                const rowH = Math.max(7, 5 * (totalTextLines || 1) + 2);
                 checkPage(rowH + 2);
 
                 // Alternating light bg
@@ -823,6 +862,16 @@ export const exportQuotationPDF = async (
                         pdf.text(line, marginL + 2 + labelWidth, y + 4 + (li + 1) * 5);
                     });
                 }
+
+                // Append day-wise vehicles if present
+                if (hasCars) {
+                    setC(DARK_GREEN); pdf.setFontSize(7.5); pdf.setFont(undefined, 'bold');
+                    carLines.forEach((cLine, ci) => {
+                        pdf.text(cLine, marginL + 2 + labelWidth, y + 4 + (bodyLines.length + ci) * 5);
+                    });
+                    pdf.setFont(undefined, 'normal');
+                }
+
                 pdf.setFont(undefined, 'normal');
                 y += rowH + 1;
             });
@@ -844,7 +893,7 @@ export const exportQuotationPDF = async (
                 setC(DARK); pdf.setFontSize(8.5);
                 pdf.text(`• ${extra.name}`, marginL + 5, y);
                 setC(DARK); pdf.setFont(undefined, 'bold');
-                pdf.text(`₹${(extra.price || 0).toLocaleString()}/-`, marginR - 5, y, { align: 'right' });
+                pdf.text(`Rs. ${(extra.price || 0).toLocaleString()}/-`, marginR - 5, y, { align: 'right' });
                 pdf.setFont(undefined, 'normal');
                 y += 5.5;
             });
@@ -888,7 +937,7 @@ export const exportQuotationPDF = async (
         pdf.rect(marginL, y, contentW, 11, 'F');
         setC(WHITE); pdf.setFontSize(11); pdf.setFont(undefined, 'bold');
         pdf.text('TOTAL QUOTED PRICE : ', marginL + 4, y + 7.5);
-        pdf.text(`INR ${cost.toLocaleString('en-IN')}`, marginR - 27, y + 7.5);
+        pdf.text(`Rs. ${cost.toLocaleString('en-IN')}`, marginR - 27, y + 7.5);
         pdf.setFont(undefined, 'normal');
         y += 14;
 
@@ -961,6 +1010,7 @@ export const mapOperationToPdfData = (operationData, queriesData) => {
         cost: queriesData?.cost || '',
         advancePayment: queriesData?.advance || '',
         location: queriesData?.destination || queriesData?.location || '',
+        car_selections: queriesData?.car_selections || {},
         duePayment:
             !isNaN(parseFloat(queriesData?.cost)) && !isNaN(parseFloat(queriesData?.advance))
                 ? parseFloat(queriesData.cost) - parseFloat(queriesData.advance)
@@ -1010,6 +1060,7 @@ export const mapOperationToInquiry = (operationData, queriesData, packageData = 
                       )
                   ),
         followup_details: operationData?.followup_details || queriesData?.followup_details,
+        car_selections: queriesData?.car_selections || {},
         optional_extras: investigationExtras(queriesData, operationData),
     };
 };
@@ -1210,10 +1261,22 @@ export const exportQueryViewPDF = async (
                 const place = item.place || '—';
                 const hotel = item.hotelName ? `Hotel: ${item.hotelName}` : '';
                 const vehicle = item.vehicleName ? ` | Vehicle: ${item.vehicleName}` : '';
-                const content = `${place}${hotel ? ' (' + hotel + ')' : ''}${vehicle}`;
+                
+                // Base itinerary content
+                const itineraryContent = `${place}${hotel ? ' (' + hotel + ')' : ''}${vehicle}`;
+                const bodyLines = pdf.splitTextToSize(itineraryContent, contentW - 10 - labelWidth);
 
-                const bodyLines = pdf.splitTextToSize(content, contentW - 10 - labelWidth);
-                const rowH = Math.max(7, 5 * (bodyLines.length || 1) + 2);
+                // Prepare car info if present in car_selections
+                const dayCars = guestInfo.car_selections?.[idx] || [];
+                const hasCars = dayCars.length > 0;
+                let carLines = [];
+                if (hasCars) {
+                    const carStr = `Vehicles: ${dayCars.map(c => `${c.car_name} (${c.car_count})`).join(', ')}`;
+                    carLines = pdf.splitTextToSize(carStr, contentW - 10 - labelWidth);
+                }
+
+                const totalTextLines = bodyLines.length + carLines.length;
+                const rowH = Math.max(7, 5 * (totalTextLines || 1) + 2);
                 checkPage(rowH + 2);
 
                 if (idx % 2 === 0) {
@@ -1231,6 +1294,15 @@ export const exportQueryViewPDF = async (
                         pdf.text(line, marginL + 2 + labelWidth, y + 4 + (li + 1) * 5);
                     });
                 }
+                
+                if (hasCars) {
+                    setC(DARK_GREEN); pdf.setFontSize(7.5); pdf.setFont(undefined, 'bold');
+                    carLines.forEach((cLine, ci) => {
+                        pdf.text(cLine, marginL + 2 + labelWidth, y + 4 + (bodyLines.length + ci) * 5);
+                    });
+                    pdf.setFont(undefined, 'normal');
+                }
+
                 y += rowH + 1;
             });
             y += 4;
@@ -1242,12 +1314,12 @@ export const exportQueryViewPDF = async (
         setC(WHITE); pdf.setFontSize(11); pdf.setFont(undefined, 'bold');
         pdf.text('TOTAL QUOTED PRICE : ', marginL + 4, y + 7.5);
         const costVal = Number(guestInfo.cost || 0);
-        pdf.text(`INR ${costVal.toLocaleString('en-IN')}`, marginR - 35, y + 7.5, { align: 'right' });
+        pdf.text(`Rs. ${costVal.toLocaleString('en-IN')}`, marginR - 35, y + 7.5, { align: 'right' });
         y += 16;
 
         const advance = Number(guestInfo.advancePayment || 0);
         const due = Number(guestInfo.duePayment || 0);
-        twoCol('Advance Paid', `INR ${advance.toLocaleString('en-IN')}`, 'Amount Due', `INR ${due.toLocaleString('en-IN')}`);
+        twoCol('Advance Paid', `Rs. ${advance.toLocaleString('en-IN')}`, 'Amount Due', `Rs. ${due.toLocaleString('en-IN')}`);
 
         addFooter();
 
