@@ -229,7 +229,7 @@ export const validateForm = (guestInfo, tripDetails, selectedPackage) => {
     return { isValid: true };
 };
 
-export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, stayInfo, hotelSelections, carSelections, allHotels, hotelSeason, itinerary, isDraft = false }) => {
+export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, stayInfo, hotelSelections, carSelections, allHotels, hotelSeason, carSeason, itinerary, isDraft = false }) => {
     const gPhone = guestInfo.guest_phone || '';
     const gCountryCode = guestInfo.country_code || '+91';
     const cleanedPhone = gPhone.startsWith(gCountryCode)
@@ -303,6 +303,8 @@ export const buildPayload = ({ guestInfo, tripDetails, selectedPackage, cost, st
         pickup_location: tripDetails.pickup_location || 'NJP / IXB',
         dropoff_location: tripDetails.dropoff_location || 'NJP / IXB',
         optional_extras: tripDetails.optional_extras || [],
+        hotel_season: hotelSeason,
+        car_season: carSeason,
         lead_source: 'website',
         lead_stage: isDraft ? 'Draft' : 'New',
         verified: !isDraft,
@@ -1061,6 +1063,8 @@ export const mapOperationToInquiry = (operationData, queriesData, packageData = 
                   ),
         followup_details: operationData?.followup_details || queriesData?.followup_details,
         car_selections: queriesData?.car_selections || {},
+        hotel_season: queriesData?.hotel_season || 'off_season_price',
+        car_season: queriesData?.car_season || 'off_season_price',
         optional_extras: investigationExtras(queriesData, operationData),
     };
 };
