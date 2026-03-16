@@ -20,6 +20,8 @@ import {
   Menu,
   Select,
   Checkbox,
+  Stack,
+  Container
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { getAllplaces, getSinglePlace, deletePlace } from "../../api/placeApi";
@@ -176,41 +178,50 @@ const AllPlaces = () => {
   const packageToDelete = paginatedRows.find(pkg => pkg._id === deleteId);
 
   return (
-    <Box display="flex" flexDirection="column" minHeight="100vh">
-      {/* Main content */}
-      <Box flex="1" p={3}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} flexWrap="wrap" gap={2}>
-          <Typography variant="h5">All Places</Typography>
-          {getPermission('places', 'create') &&
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => {
-                dispatch(removeSelectedPlace());
-                navigate("/places/createandedit");
-              }}
-            >
-              Create New Place
-            </Button>
-          }
-        </Box>
+    <Container maxWidth={false} disableGutters>
+      <Box display="flex" flexDirection="column" minHeight="100vh">
 
-        {/* Filters */}
-        <Box mb={3} display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap">
-          <Box mb={3} display="flex" gap={2} flexWrap="wrap">
+      <Box
+        px={3}
+        sx={{
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          bgcolor: "background.default",
+          pt: 2,
+          // borderBottom: "1px solid",
+          // borderColor: "divider",
+        }}
+      >
+        <Stack
+          direction={{ xs: "column", md: "row" }}
+          justifyContent="space-between"
+          alignItems="center"
+          spacing={2}
+          sx={{ mb: 3 }}
+        >
+          {/* Title */}
+          <Typography variant="h5" fontWeight={850} color="primary.main" sx={{ letterSpacing: '-0.5px' }}>
+            All Places
+          </Typography>
+
+          {/* Filters grouped in the middle */}
+          <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
             <TextField
               label="Search by Name"
               variant="outlined"
+              size="small"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             <TextField
               label="Filter by Zone"
               variant="outlined"
+              size="small"
               select
               value={selectedZone}
               onChange={(e) => setSelectedZone(e.target.value)}
-              sx={{ minWidth: 200 }}
+              sx={{ minWidth: 150 }}
             >
               <MenuItem value="">All Zones</MenuItem>
               {zones.map((zone, index) => (
@@ -224,6 +235,7 @@ const AllPlaces = () => {
               display="flex"
               alignItems="center"
               gap={1}
+              variant="body2"
             >
               Ranking
               <Checkbox
@@ -231,10 +243,30 @@ const AllPlaces = () => {
                 disabled={!selectedZone}
                 checked={rankingFilter}
                 onChange={(e) => setRankingFilter(e.target.checked)}
+                size="small"
               />
             </Typography>
-          </Box>
-        </Box>
+          </Stack>
+
+          {/* Action Button at the end */}
+          {getPermission('places', 'create') && (
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              onClick={() => {
+                dispatch(removeSelectedPlace());
+                navigate("/places/createandedit");
+              }}
+            >
+              Create New Place
+            </Button>
+          )}
+        </Stack>
+      </Box>
+
+      {/* Main content */}
+      <Box flex="1" px={3} sx={{ overflowY: 'auto' }}>
 
         {/* Cards */}
         {paginatedRows.length === 0 ? <Typography>No Data Found</Typography> :
@@ -376,7 +408,8 @@ const AllPlaces = () => {
         </DialogActions>
       </Dialog>
       <SnackbarComponent />
-    </Box>
+      </Box>
+    </Container>
   );
 };
 
