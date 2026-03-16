@@ -35,13 +35,11 @@ export function deletePackage(pkgId) {
 export function verifyPackage(id, obj) {
     const UPDATEPKG__URL = `${PKG_URL}/verify/${id}`;
     return axios.put(UPDATEPKG__URL, obj);
-
 }
 
 export function updatePackageRanking(id, obj) {
     const UPDATEPKG__URL = `${PKG_URL}/update/ranking/${id}`;
     return axios.put(UPDATEPKG__URL, obj);
-
 }
 
 export function getPackagesByLocation(location) {

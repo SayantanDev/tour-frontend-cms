@@ -1,14 +1,13 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import {
   Container, Typography, Button, IconButton, TextField, Box, Autocomplete,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
-  TablePagination, Chip, Switch, CircularProgress, Tooltip, Select, MenuItem,
+  Chip, Switch, CircularProgress, Tooltip, Select, MenuItem,
   Checkbox
 } from '@mui/material';
 import {
   useReactTable,
   getCoreRowModel,
-  getPaginationRowModel,
   flexRender,
 } from "@tanstack/react-table";
 import EditIcon from '@mui/icons-material/Edit';
@@ -61,8 +60,20 @@ const AllPackages = () => {
   const [filterLocation, setFilterLocation] = useState(null);
   const [filterType, setFilterType] = useState(null);
   const [searchLabel, setSearchLabel] = useState('');
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [visibleCount, setVisibleCount] = useState(20);
+
+  // Infinite Scroll Observer
+  const observerRef = useRef(null);
+  const lastElementRef = useCallback((node) => {
+    if (observerRef.current) observerRef.current.disconnect();
+    observerRef.current = new IntersectionObserver(entries => {
+      // increase visible count when we intersect the bottom sentinel
+      if (entries[0].isIntersecting) {
+        setVisibleCount(prev => prev + 20);
+      }
+    });
+    if (node) observerRef.current.observe(node);
+  }, []);
 
   //navigatyion from dashboard
   const location = useLocation();
@@ -490,55 +501,16 @@ const AllPackages = () => {
     },
   ], [getPermission, toggleLoading, rankingLoading, handleToggleVerified, handleChangeRanking, handleImageUpload, handleView, handleEdit, handleOpenDialog]);
 
+  const visiblePackages = useMemo(() => {
+    return filteredPackages.slice(0, visibleCount);
+  }, [filteredPackages, visibleCount]);
+
   // Table instance
   const table = useReactTable({
-    data: filteredPackages,
+    data: visiblePackages,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: {
-      pagination: {
-        pageSize: rowsPerPage,
-        pageIndex: page,
-      },
-    },
-    state: {
-      pagination: {
-        pageIndex: page,
-        pageSize: rowsPerPage,
-      },
-    },
-    onPaginationChange: (updater) => {
-      const newPagination = typeof updater === "function"
-        ? updater({ pageIndex: page, pageSize: rowsPerPage })
-        : updater;
-      setPage(newPagination.pageIndex);
-      setRowsPerPage(newPagination.pageSize);
-    },
-    manualPagination: false,
   });
-
-  // Sync table pagination with state
-  useEffect(() => {
-    if (table.getState().pagination.pageIndex !== page) {
-      table.setPageIndex(page);
-    }
-    if (table.getState().pagination.pageSize !== rowsPerPage) {
-      table.setPageSize(rowsPerPage);
-    }
-  }, [page, rowsPerPage, table]);
-
-  const handleChangePage = (_, newPage) => {
-    setPage(newPage);
-    table.setPageIndex(newPage);
-  };
-  const handleChangeRowsPerPage = (event) => {
-    const newRowsPerPage = +event.target.value;
-    setRowsPerPage(newRowsPerPage);
-    setPage(0);
-    table.setPageSize(newRowsPerPage);
-    table.setPageIndex(0);
-  };
 
   return (
     <Container maxWidth={false} sx={{ py: 2 }}>
@@ -694,15 +666,7 @@ const AllPackages = () => {
             </TableBody>
           </Table>
         </TableContainer>
-        <TablePagination
-          component="div"
-          count={filteredPackages.length}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-          rowsPerPageOptions={[5, 10, 20]}
-        />
+        <div ref={lastElementRef} style={{ height: "20px" }}></div>
       </Paper>
 
       {/* Dialog (Optional) */}

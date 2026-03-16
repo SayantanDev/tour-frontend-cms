@@ -1,39 +1,82 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { Box, Typography, Grid, Card, CardContent, Avatar } from '@mui/material';
+import { useSelector } from 'react-redux';
+import { Box, Typography } from '@mui/material';
+import usePermissions from '../../hooks/UsePermissions';
+
 import TotalQuiry from '../../components/dashbord/totalQuiry';
 import TotalInquiry from '../../components/dashbord/totalInquiry';
-import PlacePackageSummary from '../../components/dashbord/PlacePackageSummary';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import WavingHandIcon from '@mui/icons-material/WavingHand';
+import TotalPackage from '../../components/dashbord/totalPackage';
+import TotalPlace from '../../components/dashbord/totalPlace';
+import AdminDashboard from '../../components/dashbord/AdminDashboard';
 
 const Dashboard = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const user = useSelector(state => state.tokens?.user);
+  const role = user?.permission;
+  const getPermission = usePermissions();
+
+  // Admin gets the full graphical analytics view
+  if (role === 'Admin') {
+    return (
+      <Box
+        className="fade-in"
+        sx={{ minHeight: 'calc(100vh - 100px)', px: { xs: 2, md: 3 }, py: 3 }}
+      >
+        <AdminDashboard />
+      </Box>
+    );
+  }
+
+  // For all other roles, show sections based on their permissions
+  const canViewQueries = getPermission('queries', 'view');
+  const canViewInquiry = getPermission('inquiry', 'view');
+  const canViewPackages = getPermission('packages', 'view');
+  const canViewPlaces = getPermission('places', 'view');
+
+  const hasAnything = canViewQueries || canViewInquiry || canViewPackages || canViewPlaces;
 
   return (
     <Box
       className="fade-in"
-      sx={{
-        minHeight: 'calc(100vh - 100px)',
-        px: { xs: 2, md: 3 },
-        py: 3,
-      }}
+      sx={{ minHeight: 'calc(100vh - 100px)', px: { xs: 2, md: 3 }, py: 3 }}
     >
-
-      {/* Queries Section */}
-      <Box sx={{ mb: 4 }}>
-        <TotalQuiry />
+      {/* Personalised greeting */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary' }}>
+          Welcome back{user?.name ? `, ${user.name}` : ''}! 👋
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Here's a quick overview of your workspace.
+        </Typography>
       </Box>
 
-      {/* Inquiries Section */}
-      <Box sx={{ mb: 4 }}>
-        <TotalInquiry />
-      </Box>
+      {!hasAnything && (
+        <Typography color="text.secondary">
+          No dashboard sections are available for your role.
+        </Typography>
+      )}
 
-      {/* Places & Packages Summary */}
-      <PlacePackageSummary />
+      {canViewQueries && (
+        <Box sx={{ mb: 4 }}>
+          <TotalQuiry />
+        </Box>
+      )}
+
+      {canViewInquiry && (
+        <Box sx={{ mb: 4 }}>
+          <TotalInquiry />
+        </Box>
+      )}
+
+      {canViewPackages && (
+        <Box sx={{ mb: 4 }}>
+          <TotalPackage />
+        </Box>
+      )}
+
+      {canViewPlaces && (
+        <Box sx={{ mb: 4 }}>
+          <TotalPlace />
+        </Box>
+      )}
     </Box>
   );
 };

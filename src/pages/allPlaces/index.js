@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   Typography,
   Grid,
@@ -20,13 +20,12 @@ import {
   Menu,
   Select,
   Checkbox,
-  Pagination,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { getAllplaces, getSinglePlace, deletePlace } from "../../api/placeApi";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { removeSelectedPlace, setSelectedPlace } from "../../reduxcomponents/slices/placesSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { removeSelectedPlace, setSelectedPlace, setAllPlaces, removePlaceFromStore } from "../../reduxcomponents/slices/placesSlice";
 import useSnackbar from "../../hooks/useSnackbar";
 import CheckIcon from "@mui/icons-material/Check";
 import { handleChangeRanking } from "../allPackages/rankingUtil"; // adjust path
@@ -37,26 +36,30 @@ const AllPlaces = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const getPermission = usePermissions();
-  const [allPlaces, setAllPlaces] = useState([]);
+
+  // Connect to Redux
+  const { allPlaces, placesPagination } = useSelector((state) => state.place);
+
   const [filteredPlaces, setFilteredPlaces] = useState([]);
   const [rankingLoading, setRankingLoading] = useState({});
 
   //navigated from dashboard
   const location = useLocation();
 
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const zoneFromURL = params.get("zone");
+  const [visibleCount, setVisibleCount] = useState(9);
 
-    if (zoneFromURL) {
-      setSelectedZone(zoneFromURL);
-    }
-  }, [location.search]);
-
-
-
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(9);
+  // Infinite Scroll Observer
+  const observerRef = useRef(null);
+  const lastElementRef = useCallback((node) => {
+    if (observerRef.current) observerRef.current.disconnect();
+    observerRef.current = new IntersectionObserver(entries => {
+      // increase visible count when we intersect the bottom sentinel
+      if (entries[0].isIntersecting) {
+        setVisibleCount(prev => prev + 9);
+      }
+    });
+    if (node) observerRef.current.observe(node);
+  }, []);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedZone, setSelectedZone] = useState("");
@@ -73,19 +76,33 @@ const AllPlaces = () => {
   const menuOpen = Boolean(menuAnchorEl);
 
   useEffect(() => {
-    getAllplaces()
+    const params = new URLSearchParams(location.search);
+    const zoneFromURL = params.get("zone");
+    if (zoneFromURL) {
+      setSelectedZone(zoneFromURL);
+    }
+  }, [location.search]);
+
+  // Fetch data with pagination parameters
+  useEffect(() => {
+    const filters = {};
+    if (searchTerm) filters.search = searchTerm;
+    if (selectedZone) filters.zone = selectedZone;
+
+    getAllplaces(1, 1000, filters)
       .then((res) => {
-        setAllPlaces(res);
-        setFilteredPlaces(res);
+        dispatch(setAllPlaces(res));
       }).catch((err) => {
         console.error("Failed to fetch places", err);
       });
-  }, []);
+  }, [searchTerm, selectedZone, dispatch]);
 
-  const zones = [...new Set(allPlaces.map((place) => place.zone))];
+  // We extract zones from allPlaces (might only be current page if server paginated, but handles non-paginated gracefully)
+  const zones = [...new Set((allPlaces || []).map((place) => place?.zone).filter(Boolean))];
 
+  // Client side sorting and filtering (Fallback for non-server filtered data)
   useEffect(() => {
-    let filtered = allPlaces;
+    let filtered = [...(allPlaces || [])];
 
     if (searchTerm) {
       filtered = filtered.filter((place) =>
@@ -127,7 +144,7 @@ const AllPlaces = () => {
   const confirmDelete = async () => {
     try {
       await deletePlace(deleteId);
-      setAllPlaces((prev) => prev.filter((place) => place._id !== deleteId));
+      dispatch(removePlaceFromStore(deleteId));
       setConfirmOpen(false);
       showSnackbar("Place Deleted successfully", "success");
     } catch (err) {
@@ -154,7 +171,7 @@ const AllPlaces = () => {
     handleMenuClose();
   };
 
-  const paginatedRows = filteredPlaces.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  const paginatedRows = filteredPlaces.slice(0, visibleCount);
 
   const packageToDelete = paginatedRows.find(pkg => pkg._id === deleteId);
 
@@ -329,39 +346,7 @@ const AllPlaces = () => {
       </Box>
 
       {/* Pagination bar at bottom */}
-
-      {paginatedRows.length >= 1 &&
-        <Box p={2} mt="auto" display="flex" justifyContent="flex-end" alignItems="center" mb={2}>
-          <Box display="flex" alignItems="center">
-            <Typography variant="body2" mr={1}>
-              Places per page:
-            </Typography>
-            <Select
-              value={rowsPerPage}
-              onChange={(e) => {
-                setRowsPerPage(parseInt(e.target.value, 10));
-                setPage(0);
-              }}
-              size="small"
-            >
-              {[9, 18, 27].map((option) => (
-                <MenuItem key={option} value={option}>
-                  {option}
-                </MenuItem> 
-              ))}
-            </Select>
-          </Box>
-
-          <Pagination
-            component="div"
-            count={Math.ceil(filteredPlaces.length / rowsPerPage)}
-            page={page + 1}
-            onChange={(_, value) => setPage(value - 1)}
-            color="primary"
-            shape="rounded"
-          />
-        </Box>
-      }
+      <div ref={lastElementRef} style={{ height: "20px" }}></div>
 
       {/* Per-card menu */}
       {getPermission('places', 'add-packages') &&

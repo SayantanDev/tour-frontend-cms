@@ -11,7 +11,8 @@ import {
 } from '@mui/material';
 import { Delete } from '@mui/icons-material';
 import useSnackbar from '../../hooks/useSnackbar';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { addPlaceToStore, updatePlaceInStore } from '../../reduxcomponents/slices/placesSlice';
 
 import _ from 'lodash';
 import { insertPlace, updatePlace } from '../../api/placeApi';
@@ -157,6 +158,7 @@ const RenderEditableList = ({ name, values, setFieldValue, label }) => {
 
 const PlacesForm = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { fetchSelectedPlace: selectedPlace } = useSelector((state) => state.place);
   // const getInitialValues = (selectedPlace) => selectedPlace || initialValues;
 
@@ -167,20 +169,20 @@ const PlacesForm = () => {
     try {
       // let res;
       if (selectedPlace && selectedPlace._id) {
-        const res = await updatePlace(values, selectedPlace._id); // You'll need to import and define this API
+        const res = await updatePlace(values, selectedPlace._id); 
         if (res) {
+          // Check if res itself is the updated object or if it's nested under res.data/res.place
+          // Assuming updatePlace returns the updated place object or a wrapper
+          dispatch(updatePlaceInStore(res.data || res.place || res || values));
           showSnackbar('Package updated successfully', 'success');
-
         }
       } else {
-        const res = await insertPlace(values); // You'll need to import and define this API
-
+        const res = await insertPlace(values); 
         if (res) {
+          dispatch(addPlaceToStore(res.data || res.place || res || values));
           showSnackbar('You created a new place', 'success');
           navigate(`/places/view`);
         }
-
-
       }
     } catch (error) {
       console.error('Error submitting form:', error);

@@ -1,45 +1,47 @@
 import axios from './interceptor';
 
-const QRY_URL = `${process.env.REACT_APP_BASE_URL}/place`;
+const PLACE_URL = `${process.env.REACT_APP_BASE_URL}/place`;
 
 export async function insertPlace(payload) {
-    const ADDUSER_URL = `${QRY_URL}/create`;
+    const ADDUSER_URL = `${PLACE_URL}/create`;
     const result = await axios.post(ADDUSER_URL, payload);
     return result.data;
 };
 
 export async function updatePlace(payload, id) {
-    const ADDUSER_URL = `${QRY_URL}/update/${id}`;
+    const ADDUSER_URL = `${PLACE_URL}/update/${id}`;
     const result = await axios.put(ADDUSER_URL, payload);
     return result.data;
 };
 
-export async function getAllplaces() {
-    const ADDUSER_URL = `${QRY_URL}/get-all`;
-    const result = await axios.get(ADDUSER_URL);
+export async function getAllplaces(page = 1, limit = 10, filters = {}) {
+    const ADDUSER_URL = `${PLACE_URL}/get-all`;
+    const result = await axios.get(ADDUSER_URL, {
+        params: { page, limit, ...filters }
+    });
     return result.data;
 };
 
 export async function getSinglePlace(id) {
-    const ADDUSER_URL = `${QRY_URL}/get-single/${id}`;
+    const ADDUSER_URL = `${PLACE_URL}/get-single/${id}`;
     const result = await axios.get(ADDUSER_URL);
     return result.data;
 };
 
 export async function deletePlace(id) {
-    const ADDUSER_URL = `${QRY_URL}/delete/${id}`;
+    const ADDUSER_URL = `${PLACE_URL}/delete/${id}`;
     const result = await axios.delete(ADDUSER_URL);
     return result.data;
 }
 
 export async function updatePlaceRanking(id, payload) {
-    const ADDUSER_URL = `${QRY_URL}/update/ranking/${id}`;
+    const ADDUSER_URL = `${PLACE_URL}/update/ranking/${id}`;
     const result = await axios.put(ADDUSER_URL, payload);
     return result.data;
 }
 
 export async function UpdatePlacesPacakges(id, payload) {
-    const ADDUSER_URL = `${QRY_URL}/packages/${id}`;
+    const ADDUSER_URL = `${PLACE_URL}/packages/${id}`;
     const result = await axios.patch(ADDUSER_URL, payload);
     return result.data;
 }
