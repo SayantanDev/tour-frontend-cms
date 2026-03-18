@@ -317,22 +317,12 @@ const CreateInquiry = ({ existingInquiry = null, onClose = null }) => {
     }, [tripDetails.duration, isEditMode]);
 
     useEffect(() => {
-        const hasNorthSikkimInItinerary = itinerary.some(item => {
-            const val = typeof item === 'string' ? item : (item?.tagValue || item?.tagName || '');
-            return val?.toLowerCase().includes("lachung") || val?.toLowerCase().includes("lachen");
-        });
-
-        const isNorthSikkimLocation = tripDetails.location?.toLowerCase().includes("north sikkim");
-
-        const northSikkimMargin = (hasNorthSikkimInItinerary || isNorthSikkimLocation)
-            ? (configData?.additionalCosts?.north_sikkim_extra || 3000) : 0;
-
         const extrasCost = (tripDetails.optional_extras || []).reduce((acc, extra) => acc + (extra.price || 0), 0);
         let tCost = 0;
         if (tripDetails.location && tripDetails.location !== 'Sandakphu') {
             const hCost = hotelCostCalculation(hotelSelections, allHotels, hotelSeason, tripDetails, stayInfo);
             const cCost = calculateCarCost(configData, carSeason, tripDetails, carSelections);
-            tCost = totalCost(hCost, cCost, currentMargin, northSikkimMargin, extrasCost);
+            tCost = totalCost(hCost, cCost, currentMargin, extrasCost);
             setCost(tCost);
         } else if (tripDetails.location === 'Sandakphu') {
             const hCostSandakphu = hotelCostCalculation(hotelSelections, allHotels, hotelSeason, tripDetails, stayInfo);

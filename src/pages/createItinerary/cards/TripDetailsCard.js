@@ -26,6 +26,7 @@ const TripDetailsCard = ({
 }) => {
     const SIKKIM_EXTRAS = [
         { id: 'nathula', name: 'Nathu la', price: 4500, detail: 'With Tsongmo Lake' },
+        { id: 'kalapatthar', name: 'Kala Patthar', price: 3000, detail: 'With Gurudongmar Lake' },
         { id: 'zeropoint', name: 'Zero Point', price: 4000, detail: 'with Yumthang Valley' },
         { id: 'mtkatao', name: 'Mt Katao', price: 3000, detail: 'on Lachung to Gangtok day' },
         { id: 'namchi', name: 'Namchi and Ravangla', price: 3000, detail: 'On Gangtok to Pelling day' }

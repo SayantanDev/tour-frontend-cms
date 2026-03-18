@@ -73,8 +73,8 @@ export const calculatePackageCost = (packageDetails, tripDetails) => {
     return basePrice * (pax || 1);
 };
 
-export const totalCost = (hotelCost, carCost, margin, northSikkimMargin, optionalExtrasCost = 0) => {
-    const subtotal = (parseFloat(hotelCost) || 0) + (parseFloat(carCost) || 0) + parseFloat(northSikkimMargin || 0) + parseFloat(optionalExtrasCost || 0);
+export const totalCost = (hotelCost, carCost, margin, optionalExtrasCost = 0) => {
+    const subtotal = (parseFloat(hotelCost) || 0) + (parseFloat(carCost) || 0) + parseFloat(optionalExtrasCost || 0);
     const marginAmount = subtotal * (parseFloat(margin) / 100 || 0);
     return Math.round(subtotal + marginAmount);
 };
